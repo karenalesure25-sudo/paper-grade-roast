@@ -15,7 +15,7 @@ export function Hero() {
           </h1>
           <p className="mt-7 max-w-md text-lg leading-relaxed text-muted-foreground sm:text-xl">
             Upload it. Get roasted. Get better.{" "}
-            <span className="marker font-semibold text-ink">Free.</span>
+            <span className="marker font-semibold">Free.</span>
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
