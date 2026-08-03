@@ -92,6 +92,7 @@ function SidebarTemplate({ data, photo }: { data: ResumeData; photo: string | nu
         </div>
       </section>
 
+      {data.education.length > 0 && (
       <section className="mt-4">
         <div className="flex items-center">
           <span className="bg-[#d6001c] px-2.5 py-[3px] text-[8px] font-bold tracking-wide text-white uppercase">
