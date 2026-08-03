@@ -111,7 +111,9 @@ function SidebarTemplate({ data, photo }: { data: ResumeData; photo: string | nu
           ))}
         </div>
       </section>
+      )}
 
+      {data.skills.length > 0 && (
       <section className="mt-4">
         <div className="flex items-center">
           <span className="bg-[#d6001c] px-2.5 py-[3px] text-[8px] font-bold tracking-wide text-white uppercase">
@@ -121,6 +123,8 @@ function SidebarTemplate({ data, photo }: { data: ResumeData; photo: string | nu
         </div>
         <p className="mt-2 text-[9px] leading-relaxed">{data.skills.join(" \u00b7 ")}</p>
       </section>
+      )}
+
     </div>
   );
 }
