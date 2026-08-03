@@ -5,7 +5,14 @@ import { StampButton } from "@/components/StampButton";
 import type { StoredOrder } from "@/lib/order-session";
 
 /** The finished, unlocked résumé plus download/print actions. */
-export function ResumeDeliverable({ order }: { order: StoredOrder }) {
+export function ResumeDeliverable({
+  order,
+  photo = null,
+}: {
+  order: StoredOrder;
+  photo?: string | null;
+}) {
+
   const sheetRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"idle" | "working" | "error">("idle");
 
