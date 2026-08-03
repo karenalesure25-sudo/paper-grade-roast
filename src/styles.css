@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Callback design system — "graded paper" aesthetic.
- * paper white / navy ink / red pen / highlighter yellow
+ * Callback design system — "chalkboard grading" aesthetic.
+ * charcoal board / chalk ink / red pen / highlighter yellow
  */
 
 @theme inline {
@@ -45,12 +45,13 @@
   --color-paper: var(--paper);
   --color-paper-shade: var(--paper-shade);
   --color-rule: var(--rule);
+  --color-board: var(--board);
   --font-stamp: "Special Elite", "Courier Prime", ui-monospace, monospace;
   --font-typewriter: "Courier Prime", ui-monospace, monospace;
   --font-hand: "Caveat", "Special Elite", cursive;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --shadow-paper: 0 1px 2px rgb(27 42 74 / 0.08), 0 12px 28px -14px rgb(27 42 74 / 0.28);
-  --shadow-paper-lift: 0 2px 4px rgb(27 42 74 / 0.1), 0 26px 48px -18px rgb(27 42 74 / 0.35);
+  --shadow-paper: 0 1px 2px rgb(0 0 0 / 0.5), 0 12px 28px -14px rgb(0 0 0 / 0.7);
+  --shadow-paper-lift: 0 2px 4px rgb(0 0 0 / 0.55), 0 26px 48px -18px rgb(0 0 0 / 0.8);
   --shadow-stamp: 0 4px 0 0 var(--redpen-deep);
   --animate-stamp-in: stamp-in 0.55s cubic-bezier(0.2, 1.5, 0.4, 1) both;
   --animate-rise: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -59,18 +60,21 @@
 :root {
   --radius: 0.25rem;
 
-  --paper: oklch(0.977 0.008 90);
-  --paper-shade: oklch(0.945 0.012 90);
-  --ink: oklch(0.286 0.062 265);
-  --ink-soft: oklch(0.47 0.045 265);
-  --redpen: oklch(0.535 0.229 27.5);
-  --redpen-deep: oklch(0.43 0.2 27.5);
-  --highlighter: oklch(0.918 0.145 97);
-  --rule: oklch(0.87 0.03 250);
+  /* chalkboard surfaces */
+  --board: oklch(0.185 0.004 260);
+  --paper: oklch(0.205 0.005 260);
+  --paper-shade: oklch(0.262 0.007 260);
+  /* chalk ink */
+  --ink: oklch(0.949 0.006 90);
+  --ink-soft: oklch(0.755 0.008 90);
+  --redpen: oklch(0.598 0.222 26.5);
+  --redpen-deep: oklch(0.475 0.19 26.5);
+  --highlighter: oklch(0.885 0.176 92);
+  --rule: oklch(0.34 0.008 260);
 
   --background: var(--paper);
   --foreground: var(--ink);
-  --card: oklch(0.99 0.005 90);
+  --card: oklch(0.238 0.006 260);
   --card-foreground: var(--ink);
   --popover: var(--card);
   --popover-foreground: var(--ink);
@@ -81,11 +85,11 @@
   --muted: var(--paper-shade);
   --muted-foreground: var(--ink-soft);
   --accent: var(--highlighter);
-  --accent-foreground: var(--ink);
+  --accent-foreground: var(--board);
   --destructive: var(--redpen);
   --destructive-foreground: oklch(0.985 0.008 90);
-  --border: oklch(0.885 0.018 260);
-  --input: oklch(0.885 0.018 260);
+  --border: oklch(0.33 0.007 260);
+  --input: oklch(0.36 0.008 260);
   --ring: var(--redpen);
 }
 
@@ -130,8 +134,8 @@
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.5;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.16'/%3E%3C/svg%3E");
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
   }
 }
 
@@ -147,6 +151,7 @@
 @utility marker {
   position: relative;
   display: inline-block;
+  color: var(--board);
   &::before {
     content: "";
     position: absolute;
@@ -218,6 +223,6 @@
 
   ::selection {
     background: var(--highlighter);
-    color: var(--ink);
+    color: var(--board);
   }
 }
