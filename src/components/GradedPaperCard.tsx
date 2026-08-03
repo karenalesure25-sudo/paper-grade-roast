@@ -99,7 +99,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
             ? "Couldn't build the image. Try again."
             : status === "shared"
               ? "Image ready \u2014 post it and tag the roast."
-              : "Saves a square card for Instagram or TikTok."}
+              : "Saves the card as an image for Instagram or TikTok."}
         </p>
       </div>
     </div>
