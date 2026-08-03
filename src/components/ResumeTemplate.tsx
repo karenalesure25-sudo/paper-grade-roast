@@ -50,7 +50,9 @@ function SidebarTemplate({ data, photo }: { data: ResumeData; photo: string | nu
       {[
         { label: "Summary", body: data.summary },
         { label: "Objective", body: data.objective },
-      ].map((block) => (
+      ]
+        .filter((block) => Boolean(block.body?.trim()))
+        .map((block) => (
         <section key={block.label} className="mt-4">
           <div className="flex items-center">
             <span className="bg-[#d6001c] px-2.5 py-[3px] text-[8px] font-bold tracking-wide text-white uppercase">
@@ -224,7 +226,9 @@ function ClassicTemplate({ data }: { data: ResumeData }) {
       {[
         { label: "Summary", body: data.summary },
         { label: "Objective", body: data.objective },
-      ].map((block) => (
+      ]
+        .filter((block) => Boolean(block.body?.trim()))
+        .map((block) => (
         <section key={block.label} className="mt-4">
           <h4 className="border-b-2 border-[#222] pb-1 text-[11px] font-bold">
             {block.label}
