@@ -1,4 +1,4 @@
-import { StampButton } from "@/components/StampButton";
+import { StampLink } from "@/components/StampButton";
 
 const included = [
   "Every bullet rewritten, in your voice",
@@ -50,7 +50,9 @@ export function Upsell() {
             <span className="marker">Cheaper than one missed interview.</span>
           </p>
 
-          <StampButton className="mt-8 w-full">Start My Rewrite</StampButton>
+          <StampLink to="/roast" className="mt-8 w-full">
+            Start My Rewrite
+          </StampLink>
 
           <p className="mt-5 text-center font-typewriter text-xs text-muted-foreground">
             48-hour turnaround &middot; refund if your score doesn&apos;t move

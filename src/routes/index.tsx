@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
 import { RoastCards } from "@/components/RoastCards";
@@ -29,18 +29,26 @@ function Index() {
     <div className="paper-texture relative min-h-screen">
       <header className="px-5 py-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <a
-            href="/"
+          <Link
+            to="/"
             className="font-stamp text-xl tracking-[0.2em] text-ink uppercase"
           >
             Callback
-          </a>
-          <a
-            href="#rewrite"
-            className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
-          >
-            Get the fix
-          </a>
+          </Link>
+          <div className="flex items-center gap-5">
+            <Link
+              to="/roast"
+              className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+            >
+              Grade my resume
+            </Link>
+            <a
+              href="#rewrite"
+              className="font-typewriter text-sm text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-redpen"
+            >
+              Get the fix
+            </a>
+          </div>
         </div>
       </header>
       <main>
