@@ -125,8 +125,6 @@
   position: relative;
   background-color: var(--paper);
   background-image:
-    radial-gradient(circle at 18% 12%, oklch(0.93 0.02 90 / 0.55) 0 38%, transparent 38%),
-    radial-gradient(circle at 82% 78%, oklch(0.93 0.025 250 / 0.35) 0 42%, transparent 42%),
     repeating-linear-gradient(
       0deg,
       oklch(0.2 0.05 265 / 0.028) 0 1px,
