@@ -277,6 +277,7 @@ function ClassicTemplate({ data }: { data: ResumeData }) {
         </div>
       </section>
 
+      {data.education.length > 0 && (
       <section className="mt-4">
         <h4 className="border-b-2 border-[#222] pb-1 text-[11px] font-bold">Education</h4>
         <div className="mt-2 space-y-1">
@@ -288,11 +289,14 @@ function ClassicTemplate({ data }: { data: ResumeData }) {
           ))}
         </div>
       </section>
+      )}
 
+      {data.skills.length > 0 && (
       <section className="mt-4">
         <h4 className="border-b-2 border-[#222] pb-1 text-[11px] font-bold">Skills</h4>
         <p className="mt-2 text-[9px] leading-relaxed">{data.skills.join(" \u2022 ")}</p>
       </section>
+      )}
     </div>
   );
 }
