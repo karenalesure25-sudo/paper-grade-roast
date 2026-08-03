@@ -18,7 +18,7 @@ const RoastInput = z
       .optional(),
   })
   .refine((v) => Boolean(v.text?.length) || Boolean(v.file), {
-    message: "Paste your resume text or attach a PDF.",
+    message: "Upload a PDF or DOCX file to get it graded.",
   });
 
 export type RoastResult = {
