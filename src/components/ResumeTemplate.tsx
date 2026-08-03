@@ -162,8 +162,13 @@ function TimelineTemplate({ data, photo }: { data: ResumeData; photo: string | n
         </aside>
 
         <div className="min-w-0 flex-1">
-          <h4 className="text-[11px] font-bold uppercase">Objective</h4>
-          <p className="mt-1 text-[9px] leading-relaxed">{data.objective}</p>
+          {data.objective?.trim() && (
+            <>
+              <h4 className="text-[11px] font-bold uppercase">Objective</h4>
+              <p className="mt-1 text-[9px] leading-relaxed">{data.objective}</p>
+            </>
+          )}
+
 
           <h4 className="mt-4 text-[11px] font-bold uppercase">Work Experience</h4>
           <div className="mt-2 space-y-4">
