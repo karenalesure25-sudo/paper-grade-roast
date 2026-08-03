@@ -16,7 +16,7 @@ export const Route = createFileRoute("/roast")({
       {
         name: "description",
         content:
-          "Paste your resume or upload a PDF and get an instant letter grade, a short roast, and the red-pen notes that matter. Free.",
+          "Upload your resume as a PDF or DOCX and get an instant letter grade, a short roast, and the red-pen notes that matter. Free.",
       },
       { property: "og:title", content: "Grade My Resume — Callback" },
       {
@@ -30,7 +30,6 @@ export const Route = createFileRoute("/roast")({
 
 function RoastPage() {
   const grade = useServerFn(roastResume);
-  const [text, setText] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +44,8 @@ function RoastPage() {
     const input = form.elements.namedItem("resumeFile") as HTMLInputElement | null;
     const file = input?.files?.[0] ?? null;
 
-    if (!file && text.trim().length < 40) {
-      setError("Paste at least a few lines of your resume, or attach a PDF.");
+    if (!file) {
+      setError("Upload a PDF or DOCX file to get it graded.");
       return;
     }
 
@@ -54,25 +53,22 @@ function RoastPage() {
     setError(null);
 
     try {
-      const payload = file
-        ? await (async () => {
-            const prepared = await prepareUpload(file);
-            return prepared.kind === "pdf"
-              ? {
-                  file: {
-                    filename: prepared.filename,
-                    mimeType: prepared.mimeType,
-                    dataBase64: prepared.dataBase64,
-                  },
-                }
-              : { text: prepared.text };
-          })()
-        : { text: text.trim() };
+      const prepared = await prepareUpload(file);
+      const payload =
+        prepared.kind === "pdf"
+          ? {
+              file: {
+                filename: prepared.filename,
+                mimeType: prepared.mimeType,
+                dataBase64: prepared.dataBase64,
+              },
+            }
+          : { text: prepared.text };
 
       const result = await grade({ data: payload });
       const stored = saveRoast({
         ...result,
-        label: file ? file.name : result.label,
+        label: file.name,
       });
       setCurrent(stored);
       setHistory(readRoasts().filter((r) => r.id !== stored.id));
@@ -113,46 +109,29 @@ function RoastPage() {
             Grade my resume
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Paste the text or attach a PDF. Nothing you submit is stored on our end
-            &mdash; your roast lives in this browser tab and disappears when you close it.
+            Upload a PDF or DOCX. Nothing you submit is stored on our end &mdash; your
+            roast lives in this browser tab and disappears when you close it.
           </p>
 
           <form onSubmit={submit} className="mt-10 bg-card p-6 shadow-paper sm:p-8">
-            <label
-              htmlFor="resumeText"
-              className="font-typewriter text-sm tracking-widest text-ink uppercase"
-            >
-              Paste your resume
-            </label>
-            <textarea
-              id="resumeText"
-              name="resumeText"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              rows={10}
-              maxLength={24000}
-              placeholder="Experience, bullets, summary — all of it. The uglier the better."
-              className="ruled-lines mt-3 w-full resize-y border border-border bg-transparent p-4 font-typewriter text-[0.95rem] leading-[1.9rem] text-ink outline-none placeholder:text-muted-foreground/70 focus:border-redpen"
-            />
-
-            <div className="mt-6 flex flex-col gap-3 border-t border-dashed border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
-              <div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex-1">
                 <label
                   htmlFor="resumeFile"
                   className="font-typewriter text-sm tracking-widest text-ink uppercase"
                 >
-                  Or attach a file
+                  Upload your resume
                 </label>
                 <input
                   id="resumeFile"
                   name="resumeFile"
                   type="file"
-                  accept=".pdf,.docx,.txt,.md,application/pdf"
+                  accept=".pdf,.docx,application/pdf"
                   onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
                   className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-redpen hover:file:text-redpen"
                 />
                 <p className="mt-2 font-typewriter text-xs text-muted-foreground">
-                  {fileName ? `Attached: ${fileName}` : "PDF, DOCX, or TXT \u00b7 up to 5MB"}
+                  {fileName ? `Attached: ${fileName}` : "PDF or DOCX \u00b7 up to 5MB"}
                 </p>
               </div>
               <StampButton type="submit" disabled={pending} className="shrink-0">

@@ -40,15 +40,9 @@ export async function prepareUpload(file: File): Promise<PreparedUpload> {
       arrayBuffer: await file.arrayBuffer(),
     });
     const text = value.trim();
-    if (!text) throw new Error("That document came back empty. Try pasting the text.");
+    if (!text) throw new Error("That DOCX came back empty. Try a different export.");
     return { kind: "text", filename: file.name, text };
   }
 
-  if (file.type.startsWith("text/") || name.endsWith(".txt") || name.endsWith(".md")) {
-    const text = (await file.text()).trim();
-    if (!text) throw new Error("That file came back empty. Try pasting the text.");
-    return { kind: "text", filename: file.name, text };
-  }
-
-  throw new Error("Upload a PDF, DOCX, or TXT — or paste the text instead.");
+  throw new Error("Upload a PDF or DOCX file.");
 }
