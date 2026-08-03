@@ -43,7 +43,7 @@ export function ResumeDeliverable({
         <ResumeTemplate
           template={order.template}
           data={order.result.resume}
-          photo={null}
+          photo={photo}
         />
       </div>
 
