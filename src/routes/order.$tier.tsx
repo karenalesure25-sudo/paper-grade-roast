@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { StampButton } from "@/components/StampButton";
 import { SiteFooter } from "@/components/SiteFooter";
 import { TemplatePicker } from "@/components/TemplatePicker";
+import { PhotoCropper } from "@/components/PhotoCropper";
 import { ResumeDeliverable } from "@/components/ResumeDeliverable";
 import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
@@ -55,6 +56,8 @@ function OrderPage() {
   const [jobText, setJobText] = useState("");
   const [photo, setPhoto] = useState<string | null>(null);
   const [template, setTemplate] = useState<TemplateId>("sidebar");
+  /** intake+checkout -> layout (+photo) -> delivered résumé */
+  const [phase, setPhase] = useState<"intake" | "layout" | "done">("intake");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<StoredOrder | null>(null);
@@ -63,20 +66,13 @@ function OrderPage() {
   const needsResume = tier.intake === "resume" || tier.intake === "resume+job";
   const templateUsesPhoto =
     RESUME_TEMPLATES.find((t) => t.id === template)?.usesPhoto ?? false;
+  const jobStep = tier.intake === "resume+job";
+  const checkoutStep = jobStep ? 3 : 2;
+  const layoutStep = checkoutStep + 1;
 
-  function readSelfie(selected: File | null) {
-    if (!selected) {
-      setPhoto(null);
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => setPhoto(typeof reader.result === "string" ? reader.result : null);
-    reader.readAsDataURL(selected);
-  }
-
-  async function pay(event: React.FormEvent<HTMLFormElement>) {
+  /** Placeholder checkout. Payment first, then layout + photo, then the AI run. */
+  function pay(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (pending) return;
 
     if (needsResume && !file) {
       setError("Upload your résumé as a PDF or DOCX first.");
@@ -86,8 +82,19 @@ function OrderPage() {
       setError("Tell us a bit more about your background, or upload your notes.");
       return;
     }
-    if (tier.intake === "resume+job" && !jobUrl.trim()) {
+    if (jobStep && !jobUrl.trim()) {
       setError("Paste the link to the job you want this tailored to.");
+      return;
+    }
+
+    setError(null);
+    setPhase("layout");
+  }
+
+  async function build() {
+    if (pending) return;
+    if (templateUsesPhoto && !photo) {
+      setError("Upload a photo and confirm its placement for this layout.");
       return;
     }
 
@@ -121,7 +128,7 @@ function OrderPage() {
         payload = { ...payload, text: background.trim() };
       }
 
-      if (tier.intake === "resume+job") {
+      if (jobStep) {
         payload = {
           ...payload,
           jobUrl: jobUrl.trim(),
@@ -131,6 +138,7 @@ function OrderPage() {
 
       const result = await run({ data: payload });
       setOrder(saveOrder({ tier: tier.id, template, paid: true, result }));
+      setPhase("done");
     } catch (cause) {
       console.error(cause);
       setError(
@@ -179,23 +187,25 @@ function OrderPage() {
             {tier.tagline}
           </p>
 
-          <nav className="mt-6 flex flex-wrap gap-3">
-            {TIERS.filter((other) => other.id !== tier.id).map((other) => (
-              <Link
-                key={other.id}
-                to="/order/$tier"
-                params={{ tier: other.id }}
-                className="font-typewriter text-xs text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-redpen"
-              >
-                Switch to {other.name} (${other.price})
-              </Link>
-            ))}
-          </nav>
+          {phase === "intake" && (
+            <nav className="mt-6 flex flex-wrap gap-3">
+              {TIERS.filter((other) => other.id !== tier.id).map((other) => (
+                <Link
+                  key={other.id}
+                  to="/order/$tier"
+                  params={{ tier: other.id }}
+                  className="font-typewriter text-xs text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-redpen"
+                >
+                  Switch to {other.name} (${other.price})
+                </Link>
+              ))}
+            </nav>
+          )}
 
-          {order ? (
+          {phase === "done" && order ? (
             <section className="mt-14 space-y-8">
               <div>
-                <SectionLabel step={4}>Your résumé is ready</SectionLabel>
+                <SectionLabel step={layoutStep + 1}>Your résumé is ready</SectionLabel>
                 <p className="mt-3 font-typewriter text-sm text-muted-foreground">
                   Built from {order.result.sourceLabel} &middot;{" "}
                   {RESUME_TEMPLATES.find((t) => t.id === order.template)?.name}
@@ -206,7 +216,7 @@ function OrderPage() {
 
               {order.tier === "bundle" && (
                 <div className="border-2 border-redpen bg-card p-6 shadow-paper">
-                  <SectionLabel step={5}>The application</SectionLabel>
+                  <SectionLabel step={layoutStep + 2}>The application</SectionLabel>
                   <p className="mt-3 font-typewriter text-sm leading-relaxed text-ink">
                     Tailored to{" "}
                     <span className="marker break-all">{order.result.jobUrl}</span>
@@ -233,6 +243,51 @@ function OrderPage() {
                   )}
                 </div>
               )}
+            </section>
+          ) : phase === "layout" ? (
+            <section className="mt-12 space-y-8">
+              <div>
+                <SectionLabel step={layoutStep}>Pick your layout</SectionLabel>
+                <p className="mt-3 max-w-2xl font-typewriter text-sm text-muted-foreground">
+                  Payment received &mdash; all three layouts are unlocked. Two use a
+                  photo; the plain sheet is text only.
+                </p>
+              </div>
+
+              <TemplatePicker value={template} onChange={setTemplate} unlocked={true} />
+
+              {templateUsesPhoto ? (
+                <div>
+                  <SectionLabel step={layoutStep + 1}>Your photo</SectionLabel>
+                  <div className="mt-5">
+                    <PhotoCropper
+                      round={template === "sidebar"}
+                      value={photo}
+                      onConfirm={setPhoto}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <p className="font-hand text-2xl leading-tight text-redpen">
+                  Plain sheet &mdash; no photo needed. Straight to the writing.
+                </p>
+              )}
+
+              <div className="bg-card p-6 shadow-paper sm:p-8">
+                <StampButton type="button" onClick={build} disabled={pending}>
+                  {pending ? "Writing..." : "Build My Résumé"}
+                </StampButton>
+                <p className="mt-5 font-typewriter text-xs leading-relaxed text-muted-foreground">
+                  {templateUsesPhoto
+                    ? "Your layout and photo are locked in before the writing starts."
+                    : "Your layout is locked in before the writing starts."}
+                </p>
+                {error && (
+                  <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
+                    {error}
+                  </p>
+                )}
+              </div>
             </section>
           ) : (
             <form onSubmit={pay} className="mt-12 space-y-12">
@@ -288,7 +343,7 @@ function OrderPage() {
                 </div>
               </section>
 
-              {tier.intake === "resume+job" && (
+              {jobStep && (
                 <section>
                   <SectionLabel step={2}>The job you want</SectionLabel>
                   <div className="mt-5 bg-card p-6 shadow-paper sm:p-8">
@@ -326,51 +381,7 @@ function OrderPage() {
               )}
 
               <section>
-                <SectionLabel step={tier.intake === "resume+job" ? 3 : 2}>
-                  Pick your layout
-                </SectionLabel>
-                <p className="mt-3 max-w-2xl font-typewriter text-sm text-muted-foreground">
-                  These are samples filled with fake details and a blank photo slot. They
-                  stay blurred until your purchase goes through.
-                </p>
-                <div className="mt-6">
-                  <TemplatePicker value={template} onChange={setTemplate} unlocked={false} />
-                </div>
-
-                {templateUsesPhoto && (
-                  <div className="mt-8 bg-card p-6 shadow-paper sm:p-8">
-                    <label
-                      htmlFor="selfie"
-                      className="font-typewriter text-sm tracking-widest text-ink uppercase"
-                    >
-                      Upload a selfie for this layout
-                    </label>
-                    <div className="mt-3 flex items-center gap-5">
-                      <div className="size-16 shrink-0 overflow-hidden rounded-full border-2 border-redpen bg-[#e6e4df]">
-                        {photo && (
-                          <img src={photo} alt="" className="h-full w-full object-cover" />
-                        )}
-                      </div>
-                      <input
-                        id="selfie"
-                        name="selfie"
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) => readSelfie(event.target.files?.[0] ?? null)}
-                        className="block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-redpen hover:file:text-redpen"
-                      />
-                    </div>
-                    <p className="mt-3 font-typewriter text-xs text-muted-foreground">
-                      Head and shoulders, plain background. Stays in this browser tab.
-                    </p>
-                  </div>
-                )}
-              </section>
-
-              <section>
-                <SectionLabel step={tier.intake === "resume+job" ? 4 : 3}>
-                  Checkout
-                </SectionLabel>
+                <SectionLabel step={checkoutStep}>Checkout</SectionLabel>
                 <div className="mt-5 bg-card p-6 shadow-paper sm:p-8">
                   <div className="flex flex-wrap items-end justify-between gap-6">
                     <div>
@@ -379,13 +390,11 @@ function OrderPage() {
                       </p>
                       <p className="mt-2 font-stamp text-4xl text-ink">${tier.price}</p>
                     </div>
-                    <StampButton type="submit" disabled={pending}>
-                      {pending ? "Working..." : `Pay $${tier.price}`}
-                    </StampButton>
+                    <StampButton type="submit">{`Pay $${tier.price}`}</StampButton>
                   </div>
                   <p className="mt-5 border-t border-dashed border-border pt-4 font-typewriter text-xs leading-relaxed text-redpen">
-                    Placeholder checkout &mdash; no card is charged yet. Pressing this
-                    unlocks your layout and runs the {tier.name.toLowerCase()} for real.
+                    Placeholder checkout &mdash; no card is charged yet. Next you pick
+                    your layout, add a photo if it needs one, and then we write it.
                   </p>
                   {error && (
                     <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
