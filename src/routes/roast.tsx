@@ -4,6 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { StampButton } from "@/components/StampButton";
 import { GradedPaperCard } from "@/components/GradedPaperCard";
+import { TemplatePicker } from "@/components/TemplatePicker";
+import { PricingTiers } from "@/components/PricingTiers";
+import type { TemplateId } from "@/lib/resume-templates";
 import { SiteFooter } from "@/components/SiteFooter";
 import { roastResume } from "@/lib/roast.functions";
 import { prepareUpload } from "@/lib/prepare-upload";
@@ -35,6 +38,7 @@ function RoastPage() {
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<StoredRoast | null>(null);
   const [history, setHistory] = useState<StoredRoast[]>([]);
+  const [preview, setPreview] = useState<TemplateId>("sidebar");
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
