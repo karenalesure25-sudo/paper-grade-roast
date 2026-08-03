@@ -16,7 +16,7 @@ export const Route = createFileRoute("/roast")({
       {
         name: "description",
         content:
-          "Paste your resume or upload a PDF and get an instant letter grade, a short roast, and the red-pen notes that matter. Free.",
+          "Upload your resume as a PDF or DOCX and get an instant letter grade, a short roast, and the red-pen notes that matter. Free.",
       },
       { property: "og:title", content: "Grade My Resume — Callback" },
       {
