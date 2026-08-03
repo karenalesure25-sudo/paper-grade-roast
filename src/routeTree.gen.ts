@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoastRouteImport } from './routes/roast'
+import { Route as OrderTierRouteImport } from './routes/order.$tier'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -22,31 +23,40 @@ const RoastRoute = RoastRouteImport.update({
   path: '/roast',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrderTierRoute = OrderTierRouteImport.update({
+  id: '/order/$tier',
+  path: '/order/$tier',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/roast': typeof RoastRoute
+  '/order/$tier': typeof OrderTierRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/roast': typeof RoastRoute
+  '/order/$tier': typeof OrderTierRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/roast': typeof RoastRoute
+  '/order/$tier': typeof OrderTierRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/roast'
+  fullPaths: '/' | '/roast' | '/order/$tier'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/roast'
-  id: '__root__' | '/' | '/roast'
+  to: '/' | '/roast' | '/order/$tier'
+  id: '__root__' | '/' | '/roast' | '/order/$tier'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   RoastRoute: typeof RoastRoute
+  OrderTierRoute: typeof OrderTierRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +75,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoastRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/order/$tier': {
+      id: '/order/$tier'
+      path: '/order/$tier'
+      fullPath: '/order/$tier'
+      preLoaderRoute: typeof OrderTierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   RoastRoute: RoastRoute,
+  OrderTierRoute: OrderTierRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

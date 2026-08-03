@@ -4,6 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { StampButton } from "@/components/StampButton";
 import { GradedPaperCard } from "@/components/GradedPaperCard";
+import { TemplatePicker } from "@/components/TemplatePicker";
+import { PricingTiers } from "@/components/PricingTiers";
+import type { TemplateId } from "@/lib/resume-templates";
 import { SiteFooter } from "@/components/SiteFooter";
 import { roastResume } from "@/lib/roast.functions";
 import { prepareUpload } from "@/lib/prepare-upload";
@@ -35,6 +38,7 @@ function RoastPage() {
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<StoredRoast | null>(null);
   const [history, setHistory] = useState<StoredRoast[]>([]);
+  const [preview, setPreview] = useState<TemplateId>("sidebar");
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -145,14 +149,38 @@ function RoastPage() {
           </form>
 
           {current && (
-            <section className="mt-14">
-              <h2 className="font-stamp text-2xl text-ink sm:text-3xl">Your grade</h2>
-              <div className="mt-3 h-px w-20 bg-redpen" />
-              <div className="mt-8">
-                <GradedPaperCard roast={current} />
-              </div>
-            </section>
+            <>
+              <section className="mt-14">
+                <h2 className="font-stamp text-2xl text-ink sm:text-3xl">Your grade</h2>
+                <div className="mt-3 h-px w-20 bg-redpen" />
+                <div className="mt-8">
+                  <GradedPaperCard roast={current} />
+                </div>
+              </section>
+
+              <section className="mt-16">
+                <h2 className="font-stamp text-2xl text-ink sm:text-3xl">
+                  Now pick the paper it lands on
+                </h2>
+                <div className="mt-3 h-px w-20 bg-redpen" />
+                <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                  Three layouts, shown here as samples with fake details and a blank photo
+                  slot. They unblur the moment you buy a fix.
+                </p>
+                <div className="mt-8">
+                  <TemplatePicker
+                    value={preview}
+                    onChange={setPreview}
+                    unlocked={false}
+                  />
+                </div>
+                <div className="mt-12">
+                  <PricingTiers />
+                </div>
+              </section>
+            </>
           )}
+
 
           {history.length > 0 && (
             <section className="mt-16">
