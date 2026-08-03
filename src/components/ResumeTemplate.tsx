@@ -156,6 +156,8 @@ function TimelineTemplate({ data, photo }: { data: ResumeData; photo: string | n
           ))}
           <h4 className="mt-4 text-[10px] font-bold uppercase">Summary</h4>
           <p className="mt-1 text-[8px] leading-relaxed">{data.summary}</p>
+          {data.skills.length > 0 && (
+          <>
           <h4 className="mt-4 text-[10px] font-bold uppercase">Skills</h4>
           <ul className="mt-1 space-y-[2px]">
             {data.skills.slice(0, 6).map((skill) => (
@@ -164,6 +166,8 @@ function TimelineTemplate({ data, photo }: { data: ResumeData; photo: string | n
               </li>
             ))}
           </ul>
+          </>
+          )}
         </aside>
 
         <div className="min-w-0 flex-1">
@@ -199,7 +203,9 @@ function TimelineTemplate({ data, photo }: { data: ResumeData; photo: string | n
             ))}
           </div>
 
+          {data.education.length > 0 && (
           <h4 className="mt-4 text-[11px] font-bold uppercase">Education</h4>
+          )}
           <div className="mt-2 space-y-2">
             {data.education.map((item) => (
               <div key={item.school} className="flex gap-3">
