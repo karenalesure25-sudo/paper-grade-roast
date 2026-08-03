@@ -26,7 +26,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   return (
-    <div className="paper-texture min-h-screen">
+    <div className="paper-texture relative min-h-screen">
       <header className="px-5 py-6">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
           <a
