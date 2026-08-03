@@ -25,7 +25,7 @@ export const Route = createFileRoute("/roast")({
       },
     ],
   }),
-  component: RoastPage;
+  component: RoastPage,
 });
 
 function RoastPage() {
