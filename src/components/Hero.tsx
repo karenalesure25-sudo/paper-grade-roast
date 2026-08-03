@@ -1,4 +1,4 @@
-import { StampButton } from "@/components/StampButton";
+import { StampLink } from "@/components/StampButton";
 import { GradeStamp } from "@/components/GradeStamp";
 
 export function Hero() {
@@ -19,7 +19,7 @@ export function Hero() {
           </p>
 
           <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
-            <StampButton>Grade My Resume</StampButton>
+            <StampLink to="/roast">Grade My Resume</StampLink>
             <p className="font-typewriter text-sm text-muted-foreground">
               No signup. 30 seconds.
             </p>
