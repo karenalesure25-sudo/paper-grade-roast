@@ -28,27 +28,13 @@ function Index() {
   return (
     <div className="paper-texture relative min-h-screen">
       <header className="px-5 py-6">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
+        <div className="mx-auto flex max-w-6xl items-center justify-center">
           <Link
             to="/"
             className="font-stamp text-xl tracking-[0.2em] text-ink uppercase"
           >
             Callback
           </Link>
-          <div className="flex items-center gap-5">
-            <Link
-              to="/roast"
-              className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
-            >
-              Grade my resume
-            </Link>
-            <a
-              href="#rewrite"
-              className="font-typewriter text-sm text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-redpen"
-            >
-              Get the fix
-            </a>
-          </div>
         </div>
       </header>
       <main>
