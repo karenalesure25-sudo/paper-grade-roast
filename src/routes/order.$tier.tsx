@@ -95,7 +95,14 @@ function OrderPage() {
     setError(null);
 
     try {
-      let payload: Parameters<typeof run>[0]["data"] = { tier: tier.id };
+      type Payload = {
+        tier: typeof tier.id;
+        text?: string;
+        file?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
+        jobUrl?: string;
+        jobText?: string;
+      };
+      let payload: Payload = { tier: tier.id };
 
       if (file) {
         const prepared = await prepareUpload(file);
