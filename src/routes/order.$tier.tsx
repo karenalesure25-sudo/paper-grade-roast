@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { StampButton } from "@/components/StampButton";
 import { SiteFooter } from "@/components/SiteFooter";
 import { TemplatePicker } from "@/components/TemplatePicker";
+import { PhotoCropper } from "@/components/PhotoCropper";
 import { ResumeDeliverable } from "@/components/ResumeDeliverable";
 import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
