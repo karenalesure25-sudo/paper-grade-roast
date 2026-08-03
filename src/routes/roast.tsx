@@ -30,7 +30,6 @@ export const Route = createFileRoute("/roast")({
 
 function RoastPage() {
   const grade = useServerFn(roastResume);
-  const [text, setText] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +44,8 @@ function RoastPage() {
     const input = form.elements.namedItem("resumeFile") as HTMLInputElement | null;
     const file = input?.files?.[0] ?? null;
 
-    if (!file && text.trim().length < 40) {
-      setError("Paste at least a few lines of your resume, or attach a PDF.");
+    if (!file) {
+      setError("Upload a PDF or DOCX file to get it graded.");
       return;
     }
 
@@ -54,25 +53,22 @@ function RoastPage() {
     setError(null);
 
     try {
-      const payload = file
-        ? await (async () => {
-            const prepared = await prepareUpload(file);
-            return prepared.kind === "pdf"
-              ? {
-                  file: {
-                    filename: prepared.filename,
-                    mimeType: prepared.mimeType,
-                    dataBase64: prepared.dataBase64,
-                  },
-                }
-              : { text: prepared.text };
-          })()
-        : { text: text.trim() };
+      const prepared = await prepareUpload(file);
+      const payload =
+        prepared.kind === "pdf"
+          ? {
+              file: {
+                filename: prepared.filename,
+                mimeType: prepared.mimeType,
+                dataBase64: prepared.dataBase64,
+              },
+            }
+          : { text: prepared.text };
 
       const result = await grade({ data: payload });
       const stored = saveRoast({
         ...result,
-        label: file ? file.name : result.label,
+        label: file.name,
       });
       setCurrent(stored);
       setHistory(readRoasts().filter((r) => r.id !== stored.id));
