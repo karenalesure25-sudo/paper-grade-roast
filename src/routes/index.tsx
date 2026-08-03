@@ -1,24 +1,55 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Hero } from "@/components/Hero";
+import { HowItWorks } from "@/components/HowItWorks";
+import { RoastCards } from "@/components/RoastCards";
+import { Upsell } from "@/components/Upsell";
+import { SiteFooter } from "@/components/SiteFooter";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Callback — Your Resume, Graded and Roasted" },
+      {
+        name: "description",
+        content:
+          "Upload your resume and get a letter grade, a roast, and the fix. Free grading, paid rewrites with ATS scoring.",
+      },
+      { property: "og:title", content: "Callback — Your resume just got graded." },
+      {
+        property: "og:description",
+        content: "Upload it. Get roasted. Get better. Free.",
+      },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="paper-texture relative min-h-screen">
+      <header className="px-5 py-6">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <a
+            href="/"
+            className="font-stamp text-xl tracking-[0.2em] text-ink uppercase"
+          >
+            Callback
+          </a>
+          <a
+            href="#rewrite"
+            className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+          >
+            Get the fix
+          </a>
+        </div>
+      </header>
+      <main>
+        <Hero />
+        <HowItWorks />
+        <RoastCards />
+        <Upsell />
+      </main>
+      <SiteFooter />
     </div>
   );
 }
