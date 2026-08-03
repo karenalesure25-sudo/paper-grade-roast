@@ -149,19 +149,19 @@
 
 /* Highlighter marker swipe behind text */
 @utility marker {
-  position: relative;
-  display: inline-block;
-  isolation: isolate;
+  display: inline;
   color: var(--board);
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 12% -0.3em 8% -0.3em;
-    background: var(--highlighter);
-    transform: skewX(-8deg) rotate(-0.6deg);
-    z-index: -1;
-    border-radius: 0.15em;
-  }
+  background-image: linear-gradient(
+    to right,
+    color-mix(in oklab, var(--highlighter) 92%, transparent),
+    var(--highlighter) 8%,
+    var(--highlighter) 94%,
+    color-mix(in oklab, var(--highlighter) 88%, transparent)
+  );
+  padding: 0.06em 0.32em;
+  border-radius: 0.12em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
 }
 
 /* Red pen underline scribble */
