@@ -78,7 +78,7 @@ function coerceResume(raw: unknown): ResumeData {
     .filter((item) => item.school || item.credential);
 
   const resume: ResumeData = {
-    name: str(obj["name"], 100),
+    name: str(obj["name"], 100) || "Your Name Here",
     title: str(obj["title"], 100),
     location: str(obj["location"], 100),
     email: str(obj["email"], 120),
