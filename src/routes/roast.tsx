@@ -117,7 +117,7 @@ function RoastPage() {
             roast lives in this browser tab and disappears when you close it.
           </p>
 
-          <form onSubmit={submit} className="mt-10 bg-card p-6 shadow-paper sm:p-8">
+          <form onSubmit={submit} className="mt-10 border border-border bg-card p-6 shadow-paper sm:p-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex-1">
                 <label
@@ -132,7 +132,7 @@ function RoastPage() {
                   type="file"
                   accept=".pdf,.docx,application/pdf"
                   onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
-                  className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
+                  className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
                 />
                 <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
                   {fileName ? `Attached: ${fileName}` : "PDF or DOCX \u00b7 up to 5MB"}

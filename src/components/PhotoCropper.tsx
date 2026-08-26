@@ -87,7 +87,7 @@ export function PhotoCropper({
   }
 
   return (
-    <div className="bg-card p-6 shadow-paper sm:p-8">
+    <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
       <label
         htmlFor="photo"
         className="font-typewriter text-sm tracking-widest text-ink uppercase"
@@ -100,7 +100,7 @@ export function PhotoCropper({
         type="file"
         accept="image/jpeg,image/png"
         onChange={(event) => pick(event.target.files?.[0] ?? null)}
-        className="mt-3 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
+        className="mt-3 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
       />
 
       {error && (

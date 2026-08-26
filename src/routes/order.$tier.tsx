@@ -399,7 +399,7 @@ function OrderPage() {
                 </dl>
               </div>
 
-              <div className="bg-card p-6 shadow-paper sm:p-8">
+              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
                 <SectionLabel step={checkoutStep}>Checkout</SectionLabel>
                 <div className="mt-5 flex flex-wrap items-end justify-between gap-6">
                   <div>
@@ -466,7 +466,7 @@ function OrderPage() {
                 </p>
               )}
 
-              <div className="bg-card p-6 shadow-paper sm:p-8">
+              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
                 <StampButton type="button" onClick={build} disabled={pending}>
                   {pending ? "Writing..." : "Build My Résumé"}
                 </StampButton>
@@ -491,7 +491,7 @@ function OrderPage() {
                     : "Upload your résumé"}
                 </SectionLabel>
 
-                <div className="mt-5 bg-card p-6 shadow-paper sm:p-8">
+                <div className="mt-5 border border-border bg-card p-6 shadow-paper sm:p-8">
                   {tier.intake === "background" ? (
                     <>
                       <label
@@ -528,7 +528,7 @@ function OrderPage() {
                     type="file"
                     accept=".pdf,.docx,application/pdf"
                     onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                    className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
+                    className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
                   />
                   <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
                     {file ? `Attached: ${file.name}` : "PDF or DOCX \u00b7 up to 5MB"}
@@ -562,7 +562,7 @@ function OrderPage() {
               {jobStep && (
                 <section>
                   <SectionLabel step={2}>The job you want</SectionLabel>
-                  <div className="mt-5 bg-card p-6 shadow-paper sm:p-8">
+                  <div className="mt-5 border border-border bg-card p-6 shadow-paper sm:p-8">
                     <label
                       htmlFor="jobUrl"
                       className="font-typewriter text-sm tracking-widest text-ink uppercase"
@@ -605,7 +605,7 @@ function OrderPage() {
                       type="file"
                       accept=".pdf,.docx,application/pdf"
                       onChange={(event) => setJobFile(event.target.files?.[0] ?? null)}
-                      className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
+                      className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
                     />
                     <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
                       {jobFile
@@ -620,7 +620,7 @@ function OrderPage() {
                 <SectionLabel step={jobStep ? reviewStep : checkoutStep}>
                   {jobStep ? "Review the job posting" : "Checkout"}
                 </SectionLabel>
-                <div className="mt-5 bg-card p-6 shadow-paper sm:p-8">
+                <div className="mt-5 border border-border bg-card p-6 shadow-paper sm:p-8">
                   <div className="flex flex-wrap items-end justify-between gap-6">
                     <div>
                       <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
