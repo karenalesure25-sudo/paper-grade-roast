@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { BrandLink } from "@/components/BrandMark";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -77,6 +77,9 @@ function OrderPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<StoredOrder | null>(null);
+  const resumeInputRef = useRef<HTMLInputElement>(null);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  const jobFileInputRef = useRef<HTMLInputElement>(null);
 
   const needsResume = tier.intake === "resume" || tier.intake === "resume+job";
   const templateUsesPhoto =
@@ -90,27 +93,33 @@ function OrderPage() {
   /** Placeholder checkout. Payment first, then layout + photo, then the AI run. */
   function pay(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const selectedFile = file ?? resumeInputRef.current?.files?.[0] ?? null;
+    const selectedJobFile = jobFile ?? jobFileInputRef.current?.files?.[0] ?? null;
+    const selectedEmail = (email || emailInputRef.current?.value || "").trim();
 
-    if (needsResume && !file) {
+    if (needsResume && !selectedFile) {
       setError("Upload your résumé as a PDF or DOCX first.");
       return;
     }
-    if (tier.intake === "background" && !file && background.trim().length < 40) {
+    if (tier.intake === "background" && !selectedFile && background.trim().length < 40) {
       setError("Tell us a bit more about your background, or upload your notes.");
       return;
     }
-    if (jobStep && !jobUrl.trim() && jobText.trim().length < 40 && !jobFile) {
+    if (jobStep && !jobUrl.trim() && jobText.trim().length < 40 && !selectedJobFile) {
       setError(
         "Add the job you want this tailored to — paste the link, paste the posting, or upload it.",
       );
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(selectedEmail)) {
       setError("Add the email address we should send your order confirmation to.");
       return;
     }
 
     setError(null);
+    setFile(selectedFile);
+    setJobFile(selectedJobFile);
+    setEmail(selectedEmail);
     setPhase(jobStep ? "confirm" : "layout");
   }
 
@@ -136,11 +145,14 @@ function OrderPage() {
         jobText?: string;
         jobFile?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
       };
-      let payload: Payload = { tier: tier.id, email: email.trim(), template };
+      const selectedEmail = (email || emailInputRef.current?.value || "").trim();
+      let payload: Payload = { tier: tier.id, email: selectedEmail, template };
+      const selectedFile = file ?? resumeInputRef.current?.files?.[0] ?? null;
+      const selectedJobFile = jobFile ?? jobFileInputRef.current?.files?.[0] ?? null;
 
 
-      if (file) {
-        const prepared = await prepareUpload(file);
+      if (selectedFile) {
+        const prepared = await prepareUpload(selectedFile);
         payload =
           prepared.kind === "pdf"
             ? {
@@ -160,8 +172,8 @@ function OrderPage() {
         let extraJobText = jobText.trim();
         let preparedJobFile: Payload["jobFile"];
 
-        if (jobFile) {
-          const preparedJob = await prepareUpload(jobFile);
+        if (selectedJobFile) {
+          const preparedJob = await prepareUpload(selectedJobFile);
           if (preparedJob.kind === "pdf") {
             preparedJobFile = {
               filename: preparedJob.filename,
@@ -597,6 +609,7 @@ function OrderPage() {
                   )}
 
                   <input
+                    ref={resumeInputRef}
                     id="resumeFile"
                     name="resumeFile"
                     type="file"
@@ -615,6 +628,7 @@ function OrderPage() {
                     Where should we send it?
                   </label>
                   <input
+                    ref={emailInputRef}
                     id="email"
                     name="email"
                     type="email"
@@ -674,6 +688,7 @@ function OrderPage() {
                       Or upload the posting (PDF or DOCX)
                     </label>
                     <input
+                      ref={jobFileInputRef}
                       id="jobFile"
                       name="jobFile"
                       type="file"
