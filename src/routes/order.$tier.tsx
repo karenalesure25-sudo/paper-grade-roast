@@ -53,6 +53,7 @@ function OrderPage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [background, setBackground] = useState("");
+  const [email, setEmail] = useState("");
   const [jobUrl, setJobUrl] = useState("");
   const [jobText, setJobText] = useState("");
   const [jobFile, setJobFile] = useState<File | null>(null);
@@ -93,10 +94,15 @@ function OrderPage() {
       );
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+      setError("Add the email address we should send your order confirmation to.");
+      return;
+    }
 
     setError(null);
     setPhase(jobStep ? "confirm" : "layout");
   }
+
 
   async function build() {
     if (pending) return;
@@ -111,13 +117,16 @@ function OrderPage() {
     try {
       type Payload = {
         tier: typeof tier.id;
+        email: string;
+        template: TemplateId;
         text?: string;
         file?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
         jobUrl?: string;
         jobText?: string;
         jobFile?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
       };
-      let payload: Payload = { tier: tier.id };
+      let payload: Payload = { tier: tier.id, email: email.trim(), template };
+
 
       if (file) {
         const prepared = await prepareUpload(file);
@@ -243,6 +252,48 @@ function OrderPage() {
 
               <ResumeDeliverable order={order} photo={photo} />
 
+              <div className="border-2 border-dashed border-redpen bg-card p-6 shadow-paper">
+                <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                  Order confirmation
+                </p>
+                <p className="mt-3 font-typewriter text-sm leading-relaxed text-ink">
+                  {order.result.email ? (
+                    <>
+                      Sent to <span className="marker">{order.result.email}</span> with
+                      your download links.
+                    </>
+                  ) : (
+                    "Your download links are below."
+                  )}
+                </p>
+                <div className="mt-5 flex flex-wrap gap-5">
+                  {order.result.resumeUrl && (
+                    <a
+                      href={order.result.resumeUrl}
+                      className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+                    >
+                      Download my résumé
+                    </a>
+                  )}
+                  {order.result.coverLetterUrl && (
+                    <a
+                      href={order.result.coverLetterUrl}
+                      className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+                    >
+                      Download my cover letter
+                    </a>
+                  )}
+                </div>
+                {order.result.downloadsExpireAt && (
+                  <p className="mt-4 font-typewriter text-xs text-muted-foreground">
+                    These links work until{" "}
+                    {new Date(order.result.downloadsExpireAt).toLocaleDateString()} — 7
+                    days — then your files are deleted for good.
+                  </p>
+                )}
+              </div>
+
+
               {order.tier === "bundle" && order.result.atsReport && (
                 <AtsReportCard
                   report={order.result.atsReport}
@@ -301,6 +352,14 @@ function OrderPage() {
                     </dt>
                     <dd className="mt-2 font-typewriter text-sm break-all text-ink">
                       {file ? file.name : "Written from your notes"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                      Confirmation email
+                    </dt>
+                    <dd className="mt-2 font-typewriter text-sm break-all text-ink">
+                      <span className="marker">{email.trim()}</span>
                     </dd>
                   </div>
                   <div>
@@ -474,8 +533,31 @@ function OrderPage() {
                   <p className="mt-2 font-typewriter text-xs text-muted-foreground">
                     {file ? `Attached: ${file.name}` : "PDF or DOCX \u00b7 up to 5MB"}
                   </p>
+
+                  <label
+                    htmlFor="email"
+                    className="mt-8 block font-typewriter text-sm tracking-widest text-ink uppercase"
+                  >
+                    Where should we send it?
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    className="mt-3 w-full border border-border bg-paper p-3 font-typewriter text-sm text-ink outline-none focus:border-redpen"
+                  />
+                  <p className="mt-2 font-typewriter text-xs text-muted-foreground">
+                    Your order confirmation and download links go here. Links expire
+                    after 7 days.
+                  </p>
                 </div>
               </section>
+
 
               {jobStep && (
                 <section>

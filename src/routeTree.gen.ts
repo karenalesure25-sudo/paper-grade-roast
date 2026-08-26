@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as RoastRouteImport } from './routes/roast'
 import { Route as OrderTierRouteImport } from './routes/order.$tier'
+import { Route as ApiPublicDownloadTokenRouteImport } from './routes/api/public/download.$token'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +29,45 @@ const OrderTierRoute = OrderTierRouteImport.update({
   path: '/order/$tier',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicDownloadTokenRoute = ApiPublicDownloadTokenRouteImport.update({
+  id: '/api/public/download/$token',
+  path: '/api/public/download/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
+  '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
+  '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
+  '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/roast' | '/order/$tier'
+  fullPaths: '/' | '/roast' | '/order/$tier' | '/api/public/download/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/roast' | '/order/$tier'
-  id: '__root__' | '/' | '/roast' | '/order/$tier'
+  to: '/' | '/roast' | '/order/$tier' | '/api/public/download/$token'
+  id:
+    '__root__' | '/' | '/roast' | '/order/$tier' | '/api/public/download/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   RoastRoute: typeof RoastRoute
   OrderTierRoute: typeof OrderTierRoute
+  ApiPublicDownloadTokenRoute: typeof ApiPublicDownloadTokenRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +93,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderTierRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/download/$token': {
+      id: '/api/public/download/$token'
+      path: '/api/public/download/$token'
+      fullPath: '/api/public/download/$token'
+      preLoaderRoute: typeof ApiPublicDownloadTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +107,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   RoastRoute: RoastRoute,
   OrderTierRoute: OrderTierRoute,
+  ApiPublicDownloadTokenRoute: ApiPublicDownloadTokenRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

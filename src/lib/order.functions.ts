@@ -16,6 +16,13 @@ const FileInput = z.object({
 const OrderInput = z
   .object({
     tier: z.enum(["revamp", "scratch", "bundle"]),
+    email: z
+      .string()
+      .trim()
+      .min(1, { message: "Add the email address we should send your order to." })
+      .max(255)
+      .email({ message: "That email address doesn't look right." }),
+    template: z.string().trim().min(1).max(40),
     text: z.string().trim().max(MAX_TEXT_CHARS).optional(),
     file: FileInput.optional(),
     jobUrl: z.string().trim().max(500).optional(),
@@ -46,9 +53,17 @@ export type OrderResult = {
   coverLetter?: string;
   /** Bundle tier only: ATS scoring against the supplied job posting. */
   atsReport?: AtsReport;
+  /** Where the confirmation email went. */
+  email?: string;
+  /** Expiring download links, also emailed to the buyer. */
+  resumeUrl?: string;
+  coverLetterUrl?: string;
+  /** ISO date the download links stop working. */
+  downloadsExpireAt?: string;
 };
 
 export type { AtsReport };
+
 
 export const buildResume = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => OrderInput.parse(input))
@@ -100,13 +115,32 @@ export const buildResume = createServerFn({ method: "POST" })
         ? (data.jobUrl ?? data.jobFile?.filename ?? "the role you sent us")
         : undefined;
 
+    const sourceLabel = data.file?.filename ?? "your notes";
+
+    const { deliverOrder } = await import("./order-delivery.server");
+    const delivery = await deliverOrder({
+      email: data.email,
+      tier: data.tier,
+      template: data.template,
+      sourceLabel,
+      ...(jobLabel ? { jobLabel } : {}),
+      resume: written.resume,
+      ...(written.coverLetter ? { coverLetter: written.coverLetter } : {}),
+      ...(written.atsReport ? { atsReport: written.atsReport } : {}),
+    });
+
     return {
       tier: data.tier,
       resume: written.resume,
-      sourceLabel: data.file?.filename ?? "your notes",
+      sourceLabel,
+      email: data.email,
       ...(data.jobUrl ? { jobUrl: data.jobUrl } : {}),
       ...(jobLabel ? { jobLabel } : {}),
       ...(written.coverLetter ? { coverLetter: written.coverLetter } : {}),
       ...(written.atsReport ? { atsReport: written.atsReport } : {}),
+      ...(delivery.resumeUrl ? { resumeUrl: delivery.resumeUrl } : {}),
+      ...(delivery.coverLetterUrl ? { coverLetterUrl: delivery.coverLetterUrl } : {}),
+      ...(delivery.expiresAt ? { downloadsExpireAt: delivery.expiresAt } : {}),
     };
   });
+
