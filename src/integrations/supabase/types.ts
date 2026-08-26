@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      orders: {
+        Row: {
+          ats_report: Json | null
+          cover_letter: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          job_label: string | null
+          letter_token: string
+          resume: Json
+          resume_token: string
+          source_label: string | null
+          template: string
+          tier: string
+        }
+        Insert: {
+          ats_report?: Json | null
+          cover_letter?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          job_label?: string | null
+          letter_token?: string
+          resume: Json
+          resume_token?: string
+          source_label?: string | null
+          template: string
+          tier: string
+        }
+        Update: {
+          ats_report?: Json | null
+          cover_letter?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          job_label?: string | null
+          letter_token?: string
+          resume?: Json
+          resume_token?: string
+          source_label?: string | null
+          template?: string
+          tier?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
