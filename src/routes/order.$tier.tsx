@@ -28,10 +28,10 @@ export const Route = createFileRoute("/order/$tier")({
   },
   head: ({ params }) => {
     const tier = getTier(params.tier);
-    const title = tier ? `${tier.name} — Callback` : "Order — Callback";
+    const title = tier ? `${tier.name} — Kay’s Career Solutions` : "Order — Kay’s Career Solutions";
     const description = tier
       ? `${tier.tagline} $${tier.price}, one-time.`
-      : "Pick your Callback résumé package.";
+      : "Pick your Kay’s Career Solutions résumé package.";
     return {
       meta: [
         { title },
@@ -220,7 +220,7 @@ function OrderPage() {
     const link = document.createElement("a");
     link.href = url;
     link.rel = "noopener";
-    link.download = `${(resume?.name || "callback").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "callback"}-cover-letter.html`;
+    link.download = `${(resume?.name || "kcs").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "kcs"}-cover-letter.html`;
     document.body.appendChild(link);
     link.click();
     window.setTimeout(() => {

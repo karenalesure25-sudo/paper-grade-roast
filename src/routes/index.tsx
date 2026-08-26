@@ -8,13 +8,13 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Callback — Your Resume, Graded and Roasted" },
+      { title: "Kay's Career Solutions — Polish. Optimize. Elevate." },
       {
         name: "description",
         content:
           "Upload your resume and get a letter grade, a roast, and the fix. Free grading, paid rewrites with ATS scoring.",
       },
-      { property: "og:title", content: "Callback — Your resume just got graded." },
+      { property: "og:title", content: "Kay’s Career Solutions — Land your dream job." },
       {
         property: "og:description",
         content: "Upload it. Get roasted. Get better. Free.",

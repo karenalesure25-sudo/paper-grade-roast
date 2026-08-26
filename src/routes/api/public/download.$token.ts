@@ -15,7 +15,7 @@ export const Route = createFileRoute("/api/public/download/$token")({
 
         if (found.kind === "expired") {
           return new Response(
-            "This download link has expired. Callback keeps delivered files for 7 days only.",
+            "This download link has expired. Kay’s Career Solutions keeps delivered files for 7 days only.",
             { status: 410, headers: { "Content-Type": "text/plain; charset=utf-8" } },
           );
         }
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/api/public/download/$token")({
           });
         }
 
-        const slug = slugify(found.name, "callback");
+        const slug = slugify(found.name, "kcs");
 
         if (found.kind === "resume") {
           return new Response(renderResumeDocument(found.resume, found.template), {
