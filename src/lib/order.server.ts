@@ -127,11 +127,16 @@ function extractJson(text: string): unknown {
   }
 }
 
-/** Calls Lovable AI and returns structured résumé content. Server-only. */
+export type WrittenOrder = { resume: ResumeData; coverLetter?: string };
+
+/**
+ * Calls Lovable AI and returns structured résumé content. The bundle tier also
+ * returns a tailored cover letter. Server-only.
+ */
 export async function writeResume(
   kind: OrderKind,
   content: ContentBlock[],
-): Promise<ResumeData> {
+): Promise<WrittenOrder> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI is not configured for this project.");
 
