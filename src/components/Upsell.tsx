@@ -23,9 +23,9 @@ export function Upsell() {
         </div>
 
         <p className="mt-8 text-center font-sans text-[0.85rem] text-muted-foreground">
-          48-hour turnaround &middot; three templates to choose from &middot; refund if
-          your score doesn&apos;t move
+          48-hour turnaround &middot; {RESUME_TEMPLATES.length} templates to choose from
         </p>
+
       </div>
     </section>
   );
