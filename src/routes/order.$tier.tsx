@@ -275,6 +275,101 @@ function OrderPage() {
                 </div>
               )}
             </section>
+          ) : phase === "confirm" ? (
+            <section className="mt-12 space-y-8">
+              <div>
+                <SectionLabel step={reviewStep}>Confirm the job posting</SectionLabel>
+                <p className="mt-3 max-w-2xl font-typewriter text-sm text-muted-foreground">
+                  Read this back before we charge you &mdash; the tailoring and the
+                  cover letter are written from exactly what&rsquo;s here.
+                </p>
+              </div>
+
+              <div className="border-2 border-redpen bg-card p-6 shadow-paper sm:p-8">
+                <dl className="space-y-6">
+                  <div>
+                    <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                      Your résumé
+                    </dt>
+                    <dd className="mt-2 font-typewriter text-sm break-all text-ink">
+                      {file ? file.name : "Written from your notes"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                      Job link
+                    </dt>
+                    <dd className="mt-2 font-typewriter text-sm break-all text-ink">
+                      {jobUrl.trim() ? (
+                        <span className="marker">{jobUrl.trim()}</span>
+                      ) : (
+                        <span className="text-muted-foreground">Not provided</span>
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                      Posting text
+                    </dt>
+                    <dd className="mt-2 max-h-64 overflow-y-auto border border-border bg-paper p-4 font-typewriter text-sm leading-relaxed whitespace-pre-wrap text-ink">
+                      {jobText.trim() || (
+                        <span className="text-muted-foreground">Not provided</span>
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                      Uploaded posting
+                    </dt>
+                    <dd className="mt-2 font-typewriter text-sm break-all text-ink">
+                      {jobFile ? (
+                        jobFile.name
+                      ) : (
+                        <span className="text-muted-foreground">No file attached</span>
+                      )}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
+
+              <div className="bg-card p-6 shadow-paper sm:p-8">
+                <SectionLabel step={checkoutStep}>Checkout</SectionLabel>
+                <div className="mt-5 flex flex-wrap items-end justify-between gap-6">
+                  <div>
+                    <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                      {tier.name}
+                    </p>
+                    <p className="mt-2 font-stamp text-4xl text-ink">${tier.price}</p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setError(null);
+                        setPhase("intake");
+                      }}
+                      className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+                    >
+                      Edit the job details
+                    </button>
+                    <StampButton
+                      type="button"
+                      onClick={() => {
+                        setError(null);
+                        setPhase("layout");
+                      }}
+                    >
+                      {`Confirm & Pay $${tier.price}`}
+                    </StampButton>
+                  </div>
+                </div>
+                <p className="mt-5 border-t border-dashed border-border pt-4 font-typewriter text-xs leading-relaxed text-redpen">
+                  Placeholder checkout &mdash; no card is charged yet. Next you pick your
+                  layout, add a photo if it needs one, and then we write the tailored
+                  résumé plus the cover letter.
+                </p>
+              </div>
+            </section>
           ) : phase === "layout" ? (
             <section className="mt-12 space-y-8">
               <div>
