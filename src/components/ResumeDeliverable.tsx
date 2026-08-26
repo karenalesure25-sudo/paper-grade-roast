@@ -54,7 +54,7 @@ export function ResumeDeliverable({
         <button
           type="button"
           onClick={() => window.print()}
-          className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+          className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
         >
           Print / save as PDF
         </button>

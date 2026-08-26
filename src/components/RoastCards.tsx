@@ -35,7 +35,7 @@ export function RoastCards() {
     <section className="border-y border-border/70 bg-paper-shade/50 px-5 py-20 sm:py-28">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-xl">
-          <p className="font-typewriter text-xs tracking-[0.28em] text-redpen uppercase">
+          <p className="font-typewriter text-xs tracking-[0.28em] text-ink-soft uppercase">
             From the grading pile
           </p>
           <h2 className="mt-3 font-stamp text-3xl leading-tight text-ink sm:text-4xl">
@@ -54,7 +54,7 @@ export function RoastCards() {
                   <p className="font-typewriter text-[0.7rem] tracking-widest text-muted-foreground uppercase">
                     Submission {String(i + 1).padStart(2, "0")}
                   </p>
-                  <p className="mt-1 truncate font-typewriter text-sm text-ink">
+                  <p className="mt-1 truncate font-sans text-[0.95rem] text-ink">
                     {r.name}
                   </p>
                 </div>
@@ -62,7 +62,7 @@ export function RoastCards() {
               </div>
 
               <div className="ruled-lines mt-6 space-y-1 pb-2">
-                <p className="font-typewriter text-[0.95rem] leading-[1.9rem] text-ink">
+                <p className="font-sans text-[0.95rem] leading-[1.9rem] text-ink">
                   {r.critique}
                 </p>
               </div>

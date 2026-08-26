@@ -13,7 +13,7 @@ export function PricingTiers() {
           <div
             key={tier.id}
             className={cn(
-              "relative flex flex-col bg-card p-7 shadow-paper-lift",
+              "relative flex flex-col border border-border bg-card p-7 shadow-paper-lift",
               index === 0 && "lg:-rotate-[0.7deg]",
               index === 2 && "lg:rotate-[0.7deg]",
             )}
@@ -21,11 +21,11 @@ export function PricingTiers() {
             <div
               className={cn(
                 "absolute inset-x-0 top-0 h-1.5",
-                featured ? "bg-redpen" : "bg-ink",
+                featured ? "bg-ink" : "bg-ink-soft/60",
               )}
             />
             {featured && (
-              <span className="absolute -top-3 right-5 bg-redpen px-2 py-1 font-stamp text-[0.6rem] tracking-[0.18em] text-primary-foreground uppercase">
+              <span className="absolute -top-3 right-5 border border-border bg-paper-shade px-2 py-1 font-stamp text-[0.6rem] tracking-[0.18em] text-ink uppercase">
                 Best value
               </span>
             )}
@@ -37,11 +37,11 @@ export function PricingTiers() {
               <span className="font-stamp text-5xl leading-none text-ink">
                 ${tier.price}
               </span>
-              <span className="pb-1 font-typewriter text-xs text-muted-foreground">
+              <span className="pb-1 font-sans text-[0.85rem] text-muted-foreground">
                 one-time
               </span>
             </div>
-            <p className="mt-4 font-typewriter text-sm leading-relaxed text-ink">
+            <p className="mt-4 font-sans text-[0.95rem] leading-relaxed text-ink">
               {tier.tagline}
             </p>
 

@@ -40,7 +40,7 @@ export const Route = createFileRoute("/order/$tier")({
 function SectionLabel({ step, children }: { step: number; children: React.ReactNode }) {
   return (
     <div className="flex items-baseline gap-3">
-      <span className="font-stamp text-sm text-redpen">{String(step).padStart(2, "0")}</span>
+      <span className="font-stamp text-sm text-ink-soft">{String(step).padStart(2, "0")}</span>
       <h2 className="font-stamp text-xl text-ink sm:text-2xl">{children}</h2>
     </div>
   );
@@ -206,7 +206,7 @@ function OrderPage() {
           </Link>
           <Link
             to="/"
-            className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+            className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
           >
             Back to the front page
           </Link>
@@ -215,7 +215,7 @@ function OrderPage() {
 
       <main className="px-5 pb-20">
         <div className="mx-auto max-w-5xl">
-          <p className="font-typewriter text-xs tracking-[0.3em] text-redpen uppercase">
+          <p className="font-typewriter text-xs tracking-[0.3em] text-ink-soft uppercase">
             ${tier.price} &middot; {tier.name}
           </p>
           <h1 className="mt-4 font-stamp text-[2.1rem] leading-[1.1] text-ink sm:text-5xl">
@@ -232,7 +232,7 @@ function OrderPage() {
                   key={other.id}
                   to="/order/$tier"
                   params={{ tier: other.id }}
-                  className="font-typewriter text-xs text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-redpen"
+                  className="font-sans text-[0.85rem] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-ink"
                 >
                   Switch to {other.name} (${other.price})
                 </Link>
@@ -244,7 +244,7 @@ function OrderPage() {
             <section className="mt-14 space-y-8">
               <div>
                 <SectionLabel step={layoutStep + 1}>Your résumé is ready</SectionLabel>
-                <p className="mt-3 font-typewriter text-sm text-muted-foreground">
+                <p className="mt-3 font-sans text-[0.95rem] text-muted-foreground">
                   Built from {order.result.sourceLabel} &middot;{" "}
                   {RESUME_TEMPLATES.find((t) => t.id === order.template)?.name}
                 </p>
@@ -252,11 +252,11 @@ function OrderPage() {
 
               <ResumeDeliverable order={order} photo={photo} />
 
-              <div className="border-2 border-dashed border-redpen bg-card p-6 shadow-paper">
+              <div className="border border-border bg-card p-6 shadow-paper">
                 <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
                   Order confirmation
                 </p>
-                <p className="mt-3 font-typewriter text-sm leading-relaxed text-ink">
+                <p className="mt-3 font-sans text-[0.95rem] leading-relaxed text-ink">
                   {order.result.email ? (
                     <>
                       Sent to <span className="marker">{order.result.email}</span> with
@@ -270,7 +270,7 @@ function OrderPage() {
                   {order.result.resumeUrl && (
                     <a
                       href={order.result.resumeUrl}
-                      className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+                      className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
                     >
                       Download my résumé
                     </a>
@@ -278,14 +278,14 @@ function OrderPage() {
                   {order.result.coverLetterUrl && (
                     <a
                       href={order.result.coverLetterUrl}
-                      className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+                      className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
                     >
                       Download my cover letter
                     </a>
                   )}
                 </div>
                 {order.result.downloadsExpireAt && (
-                  <p className="mt-4 font-typewriter text-xs text-muted-foreground">
+                  <p className="mt-4 font-sans text-[0.85rem] text-muted-foreground">
                     These links work until{" "}
                     {new Date(order.result.downloadsExpireAt).toLocaleDateString()} — 7
                     days — then your files are deleted for good.
@@ -302,9 +302,9 @@ function OrderPage() {
               )}
 
               {order.tier === "bundle" && (
-                <div className="border-2 border-redpen bg-card p-6 shadow-paper">
+                <div className="border border-border bg-card p-6 shadow-paper">
                   <SectionLabel step={layoutStep + 2}>Your cover letter</SectionLabel>
-                  <p className="mt-3 font-typewriter text-sm leading-relaxed text-ink">
+                  <p className="mt-3 font-sans text-[0.95rem] leading-relaxed text-ink">
                     ATS-optimized and tailored to{" "}
                     <span className="marker break-all">
                       {order.result.jobUrl ?? order.result.jobLabel}
@@ -312,8 +312,8 @@ function OrderPage() {
                   </p>
                   {order.result.coverLetter ? (
                     <>
-                      <div className="mt-5 max-h-[26rem] overflow-y-auto border border-border bg-paper p-5">
-                        <p className="font-typewriter text-sm leading-relaxed whitespace-pre-wrap text-ink">
+                      <div className="mt-5 max-h-[26rem] overflow-y-auto border border-border bg-paper-shade p-5">
+                        <p className="font-sans text-[0.95rem] leading-relaxed whitespace-pre-wrap text-ink">
                           {order.result.coverLetter}
                         </p>
                       </div>
@@ -338,19 +338,19 @@ function OrderPage() {
             <section className="mt-12 space-y-8">
               <div>
                 <SectionLabel step={reviewStep}>Confirm the job posting</SectionLabel>
-                <p className="mt-3 max-w-2xl font-typewriter text-sm text-muted-foreground">
+                <p className="mt-3 max-w-2xl font-sans text-[0.95rem] text-muted-foreground">
                   Read this back before we charge you &mdash; the tailoring and the
                   cover letter are written from exactly what&rsquo;s here.
                 </p>
               </div>
 
-              <div className="border-2 border-redpen bg-card p-6 shadow-paper sm:p-8">
+              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
                 <dl className="space-y-6">
                   <div>
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
                       Your résumé
                     </dt>
-                    <dd className="mt-2 font-typewriter text-sm break-all text-ink">
+                    <dd className="mt-2 font-sans text-[0.95rem] break-all text-ink">
                       {file ? file.name : "Written from your notes"}
                     </dd>
                   </div>
@@ -358,7 +358,7 @@ function OrderPage() {
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
                       Confirmation email
                     </dt>
-                    <dd className="mt-2 font-typewriter text-sm break-all text-ink">
+                    <dd className="mt-2 font-sans text-[0.95rem] break-all text-ink">
                       <span className="marker">{email.trim()}</span>
                     </dd>
                   </div>
@@ -366,7 +366,7 @@ function OrderPage() {
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
                       Job link
                     </dt>
-                    <dd className="mt-2 font-typewriter text-sm break-all text-ink">
+                    <dd className="mt-2 font-sans text-[0.95rem] break-all text-ink">
                       {jobUrl.trim() ? (
                         <span className="marker">{jobUrl.trim()}</span>
                       ) : (
@@ -378,7 +378,7 @@ function OrderPage() {
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
                       Posting text
                     </dt>
-                    <dd className="mt-2 max-h-64 overflow-y-auto border border-border bg-paper p-4 font-typewriter text-sm leading-relaxed whitespace-pre-wrap text-ink">
+                    <dd className="mt-2 max-h-64 overflow-y-auto border border-border bg-paper-shade p-4 font-sans text-[0.95rem] leading-relaxed whitespace-pre-wrap text-ink">
                       {jobText.trim() || (
                         <span className="text-muted-foreground">Not provided</span>
                       )}
@@ -388,7 +388,7 @@ function OrderPage() {
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
                       Uploaded posting
                     </dt>
-                    <dd className="mt-2 font-typewriter text-sm break-all text-ink">
+                    <dd className="mt-2 font-sans text-[0.95rem] break-all text-ink">
                       {jobFile ? (
                         jobFile.name
                       ) : (
@@ -399,7 +399,7 @@ function OrderPage() {
                 </dl>
               </div>
 
-              <div className="bg-card p-6 shadow-paper sm:p-8">
+              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
                 <SectionLabel step={checkoutStep}>Checkout</SectionLabel>
                 <div className="mt-5 flex flex-wrap items-end justify-between gap-6">
                   <div>
@@ -415,7 +415,7 @@ function OrderPage() {
                         setError(null);
                         setPhase("intake");
                       }}
-                      className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+                      className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
                     >
                       Edit the job details
                     </button>
@@ -430,7 +430,7 @@ function OrderPage() {
                     </StampButton>
                   </div>
                 </div>
-                <p className="mt-5 border-t border-dashed border-border pt-4 font-typewriter text-xs leading-relaxed text-redpen">
+                <p className="mt-5 border-t border-dashed border-border pt-4 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
                   Placeholder checkout &mdash; no card is charged yet. Next you pick your
                   layout, add a photo if it needs one, and then we write the tailored
                   résumé plus the cover letter.
@@ -441,7 +441,7 @@ function OrderPage() {
             <section className="mt-12 space-y-8">
               <div>
                 <SectionLabel step={layoutStep}>Pick your layout</SectionLabel>
-                <p className="mt-3 max-w-2xl font-typewriter text-sm text-muted-foreground">
+                <p className="mt-3 max-w-2xl font-sans text-[0.95rem] text-muted-foreground">
                   Payment received &mdash; every layout is unlocked. Two use a photo;
                   the rest are text only.
                 </p>
@@ -466,11 +466,11 @@ function OrderPage() {
                 </p>
               )}
 
-              <div className="bg-card p-6 shadow-paper sm:p-8">
+              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
                 <StampButton type="button" onClick={build} disabled={pending}>
                   {pending ? "Writing..." : "Build My Résumé"}
                 </StampButton>
-                <p className="mt-5 font-typewriter text-xs leading-relaxed text-muted-foreground">
+                <p className="mt-5 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
                   {templateUsesPhoto
                     ? "Your layout and photo are locked in before the writing starts."
                     : "Your layout is locked in before the writing starts."}
@@ -491,7 +491,7 @@ function OrderPage() {
                     : "Upload your résumé"}
                 </SectionLabel>
 
-                <div className="mt-5 bg-card p-6 shadow-paper sm:p-8">
+                <div className="mt-5 border border-border bg-card p-6 shadow-paper sm:p-8">
                   {tier.intake === "background" ? (
                     <>
                       <label
@@ -507,9 +507,9 @@ function OrderPage() {
                         value={background}
                         onChange={(event) => setBackground(event.target.value)}
                         placeholder="Fresenius Medical Care, patient care tech, 2024 to now. Verify patient ID, record vitals, HIPAA..."
-                        className="mt-3 w-full border border-border bg-paper p-3 font-typewriter text-sm text-ink outline-none focus:border-redpen"
+                        className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
                       />
-                      <p className="mt-4 font-typewriter text-xs text-muted-foreground">
+                      <p className="mt-4 font-sans text-[0.85rem] text-muted-foreground">
                         Or upload your notes as a PDF or DOCX instead:
                       </p>
                     </>
@@ -528,9 +528,9 @@ function OrderPage() {
                     type="file"
                     accept=".pdf,.docx,application/pdf"
                     onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                    className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-redpen hover:file:text-redpen"
+                    className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
                   />
-                  <p className="mt-2 font-typewriter text-xs text-muted-foreground">
+                  <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
                     {file ? `Attached: ${file.name}` : "PDF or DOCX \u00b7 up to 5MB"}
                   </p>
 
@@ -549,9 +549,9 @@ function OrderPage() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="you@example.com"
-                    className="mt-3 w-full border border-border bg-paper p-3 font-typewriter text-sm text-ink outline-none focus:border-redpen"
+                    className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
                   />
-                  <p className="mt-2 font-typewriter text-xs text-muted-foreground">
+                  <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
                     Your order confirmation and download links go here. Links expire
                     after 7 days.
                   </p>
@@ -562,7 +562,7 @@ function OrderPage() {
               {jobStep && (
                 <section>
                   <SectionLabel step={2}>The job you want</SectionLabel>
-                  <div className="mt-5 bg-card p-6 shadow-paper sm:p-8">
+                  <div className="mt-5 border border-border bg-card p-6 shadow-paper sm:p-8">
                     <label
                       htmlFor="jobUrl"
                       className="font-typewriter text-sm tracking-widest text-ink uppercase"
@@ -576,7 +576,7 @@ function OrderPage() {
                       value={jobUrl}
                       onChange={(event) => setJobUrl(event.target.value)}
                       placeholder="https://boards.example.com/jobs/1234"
-                      className="mt-3 w-full border border-border bg-paper p-3 font-typewriter text-sm text-ink outline-none focus:border-redpen"
+                      className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
                     />
                     <label
                       htmlFor="jobText"
@@ -591,7 +591,7 @@ function OrderPage() {
                       value={jobText}
                       onChange={(event) => setJobText(event.target.value)}
                       placeholder="Title, company, responsibilities, required skills..."
-                      className="mt-3 w-full border border-border bg-paper p-3 font-typewriter text-sm text-ink outline-none focus:border-redpen"
+                      className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
                     />
                     <label
                       htmlFor="jobFile"
@@ -605,9 +605,9 @@ function OrderPage() {
                       type="file"
                       accept=".pdf,.docx,application/pdf"
                       onChange={(event) => setJobFile(event.target.files?.[0] ?? null)}
-                      className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-redpen hover:file:text-redpen"
+                      className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
                     />
-                    <p className="mt-2 font-typewriter text-xs text-muted-foreground">
+                    <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
                       {jobFile
                         ? `Attached: ${jobFile.name}`
                         : "A link, pasted text, or a file \u2014 any one is enough."}
@@ -620,7 +620,7 @@ function OrderPage() {
                 <SectionLabel step={jobStep ? reviewStep : checkoutStep}>
                   {jobStep ? "Review the job posting" : "Checkout"}
                 </SectionLabel>
-                <div className="mt-5 bg-card p-6 shadow-paper sm:p-8">
+                <div className="mt-5 border border-border bg-card p-6 shadow-paper sm:p-8">
                   <div className="flex flex-wrap items-end justify-between gap-6">
                     <div>
                       <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
@@ -632,7 +632,7 @@ function OrderPage() {
                       {jobStep ? "Review Job Details" : `Pay $${tier.price}`}
                     </StampButton>
                   </div>
-                  <p className="mt-5 border-t border-dashed border-border pt-4 font-typewriter text-xs leading-relaxed text-redpen">
+                  <p className="mt-5 border-t border-dashed border-border pt-4 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
                     {jobStep
                       ? "Nothing is charged yet \u2014 you confirm the job posting on the next screen before checkout finalizes."
                       : "Placeholder checkout \u2014 no card is charged yet. Next you pick your layout, add a photo if it needs one, and then we write it."}

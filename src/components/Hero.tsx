@@ -6,7 +6,7 @@ export function Hero() {
     <section className="relative overflow-hidden px-5 pt-14 pb-20 sm:pt-20 sm:pb-28">
       <div className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:gap-16">
         <div>
-          <p className="font-typewriter text-xs tracking-[0.3em] text-redpen uppercase">
+          <p className="font-typewriter text-xs tracking-[0.3em] text-ink-soft uppercase">
             Resume grading, red pen included
           </p>
           <h1 className="mt-6 font-stamp text-[2.6rem] leading-[1.08] text-ink sm:text-6xl lg:text-[4.25rem]">
@@ -20,7 +20,7 @@ export function Hero() {
 
           <div className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5">
             <StampLink to="/roast">Grade My Resume</StampLink>
-            <p className="font-typewriter text-sm text-muted-foreground">
+            <p className="font-sans text-[0.95rem] text-muted-foreground">
               No signup. 30 seconds.
             </p>
           </div>
@@ -36,20 +36,20 @@ export function Hero() {
                 <p className="font-typewriter text-[0.7rem] tracking-[0.22em] text-muted-foreground uppercase">
                   Name
                 </p>
-                <p className="mt-1 font-typewriter text-lg text-ink">A. Candidate</p>
+                <p className="mt-1 font-sans text-lg text-ink">A. Candidate</p>
               </div>
               <GradeStamp grade="C+" delay={500} />
             </div>
 
             <div className="ruled-lines mt-7">
-              <p className="font-typewriter text-[0.95rem] leading-[1.9rem] text-ink">
+              <p className="font-sans text-[0.95rem] leading-[1.9rem] text-ink">
                 Passionate, results-driven professional with a proven track record
                 of leveraging synergies to help drive impactful outcomes across
                 cross-functional teams.
               </p>
             </div>
 
-            <p className="mt-6 max-w-[16rem] font-hand text-2xl leading-tight text-redpen -rotate-2">
+            <p className="mt-6 max-w-[16rem] font-hand text-2xl leading-tight text-ink-soft -rotate-2">
               Nine words in and I still don&apos;t know what you do.
             </p>
           </div>

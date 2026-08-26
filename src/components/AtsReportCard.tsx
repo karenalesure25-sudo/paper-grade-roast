@@ -15,14 +15,14 @@ export function AtsReportCard({
   jobLabel?: string | undefined;
 }) {
   return (
-    <div className="border-2 border-redpen bg-card p-6 shadow-paper sm:p-8">
+    <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="font-typewriter text-xl tracking-tight text-ink">
+          <h3 className="font-sans text-xl tracking-tight text-ink">
             ATS optimization report
           </h3>
           {jobLabel ? (
-            <p className="mt-2 font-typewriter text-sm text-muted-foreground">
+            <p className="mt-2 font-sans text-[0.95rem] text-muted-foreground">
               Scored against <span className="marker break-all">{jobLabel}</span>
             </p>
           ) : null}
@@ -32,18 +32,18 @@ export function AtsReportCard({
           className="shrink-0 rotate-[-4deg] border-4 border-redpen px-6 py-3 text-center"
           aria-label={`Estimated ATS score ${report.score} out of 100`}
         >
-          <div className="font-typewriter text-4xl leading-none text-redpen">
+          <div className="font-sans text-4xl leading-none text-redpen">
             {report.score}
             <span className="text-lg">/100</span>
           </div>
-          <div className="mt-1 font-typewriter text-[0.65rem] tracking-[0.2em] uppercase text-redpen">
+          <div className="mt-1 font-typewriter text-[0.65rem] tracking-[0.2em] uppercase text-ink-soft">
             {scoreVerdict(report.score)}
           </div>
         </div>
       </div>
 
       {report.verdict ? (
-        <p className="mt-6 font-typewriter text-sm leading-relaxed text-ink">
+        <p className="mt-6 font-sans text-[0.95rem] leading-relaxed text-ink">
           {report.verdict}
         </p>
       ) : null}
@@ -57,13 +57,13 @@ export function AtsReportCard({
             {report.factors.map((factor) => (
               <li
                 key={factor.label}
-                className="border-l-2 border-redpen/60 pl-4"
+                className="border-l-2 border-ink-soft/40 pl-4"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <span className="font-typewriter text-sm text-ink">
+                  <span className="font-sans text-[0.95rem] text-ink">
                     {factor.label}
                   </span>
-                  <span className="font-typewriter text-sm text-redpen">
+                  <span className="font-sans text-[0.95rem] text-ink-soft">
                     {factor.points > 0 ? `+${factor.points}` : factor.points}
                   </span>
                 </div>
@@ -87,7 +87,7 @@ export function AtsReportCard({
             {report.matched.map((item) => (
               <li
                 key={item.keyword}
-                className="border border-border bg-paper px-3 py-1.5 font-sans text-xs text-ink"
+                className="border border-border bg-paper-shade px-3 py-1.5 font-sans text-[0.85rem] text-ink"
                 title={item.where}
               >
                 <span className="highlighter">{item.keyword}</span>

@@ -60,21 +60,22 @@
 :root {
   --radius: 0.25rem;
 
-  /* chalkboard surfaces */
-  --board: oklch(0.185 0.004 260);
-  --paper: oklch(0.205 0.005 260);
-  --paper-shade: oklch(0.262 0.007 260);
+  /* three layered surface tones */
+  --board: #0a0a0a; /* page */
+  --paper: #0a0a0a; /* page */
+  --paper-shade: #1c1c1c; /* nested: inputs, chips, sub-panels */
   /* chalk ink */
-  --ink: oklch(0.949 0.006 90);
-  --ink-soft: oklch(0.755 0.008 90);
-  --redpen: oklch(0.598 0.222 26.5);
-  --redpen-deep: oklch(0.475 0.19 26.5);
+  --ink: #e8e8e8;
+  --ink-soft: #8a8a8a;
+  --redpen: #e0342f;
+  --redpen-deep: #a8231f;
   --highlighter: oklch(0.885 0.176 92);
-  --rule: oklch(0.34 0.008 260);
+  --rule: #2a2a2a;
 
   --background: var(--paper);
   --foreground: var(--ink);
-  --card: oklch(0.238 0.006 260);
+  --card: #141414; /* cards / sections */
+
   --card-foreground: var(--ink);
   --popover: var(--card);
   --popover-foreground: var(--ink);
@@ -88,8 +89,8 @@
   --accent-foreground: var(--board);
   --destructive: var(--redpen);
   --destructive-foreground: oklch(0.985 0.008 90);
-  --border: oklch(0.33 0.007 260);
-  --input: oklch(0.36 0.008 260);
+  --border: #2a2a2a;
+  --input: #2a2a2a;
   --ring: var(--redpen);
 }
 
@@ -208,6 +209,14 @@
     15% 99.8%,
     0 98.4%
   );
+}
+
+/* Locked premium preview: soft red halo behind the blurred sample */
+@utility locked-glow {
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--redpen) 32%, transparent),
+    0 0 28px -6px color-mix(in oklab, var(--redpen) 34%, transparent),
+    0 24px 60px -28px rgb(0 0 0 / 0.85);
 }
 
 @layer base {

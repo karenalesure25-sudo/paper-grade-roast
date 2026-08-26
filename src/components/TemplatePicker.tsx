@@ -30,8 +30,8 @@ export function TemplatePicker({
           >
             <div
               className={`relative overflow-hidden border-2 bg-white shadow-paper ${
-                selected ? "border-redpen" : "border-border"
-              }`}
+                unlocked ? "" : "locked-glow"
+              } ${selected ? "border-ink" : "border-border"}`}
             >
               <div className="pointer-events-none h-[290px] origin-top overflow-hidden">
                 <div className={unlocked ? "" : "[mask-image:linear-gradient(#000,#000)]"}>
@@ -45,11 +45,11 @@ export function TemplatePicker({
                     aria-hidden="true"
                     className="absolute inset-x-0 top-[78px] bottom-0 backdrop-blur-[5px]"
                   />
-                  <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 bg-paper/85 px-4 py-4 text-center">
-                    <span className="font-stamp text-[0.7rem] tracking-[0.2em] text-redpen uppercase">
+                  <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 bg-card/90 px-4 py-4 text-center">
+                    <span className="font-stamp text-[0.7rem] tracking-[0.2em] text-ink-soft uppercase">
                       Sample &middot; locked
                     </span>
-                    <span className="font-typewriter text-[0.7rem] text-muted-foreground">
+                    <span className="font-sans text-[0.7rem] text-muted-foreground">
                       Unlocks with your purchase
                     </span>
                   </div>
@@ -57,7 +57,7 @@ export function TemplatePicker({
               )}
 
               {selected && (
-                <span className="absolute top-2 right-2 bg-redpen px-2 py-1 font-stamp text-[0.6rem] tracking-widest text-primary-foreground uppercase">
+                <span className="absolute top-2 right-2 border border-border bg-paper-shade px-2 py-1 font-stamp text-[0.6rem] tracking-widest text-ink uppercase">
                   Chosen
                 </span>
               )}
@@ -66,10 +66,10 @@ export function TemplatePicker({
             <p className="mt-3 font-stamp text-sm tracking-wide text-ink uppercase">
               {template.name}
             </p>
-            <p className="mt-1 font-typewriter text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-1 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
               {template.blurb}
             </p>
-            <p className="mt-1 font-typewriter text-[0.7rem] text-redpen">
+            <p className="mt-1 font-sans text-[0.7rem] text-redpen">
               {template.usesPhoto ? "Uses your selfie" : "No photo"}
             </p>
           </button>

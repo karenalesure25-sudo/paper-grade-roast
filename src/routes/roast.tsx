@@ -97,7 +97,7 @@ function RoastPage() {
           </Link>
           <Link
             to="/"
-            className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+            className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
           >
             Back to the front page
           </Link>
@@ -106,7 +106,7 @@ function RoastPage() {
 
       <main className="px-5 pb-20">
         <div className="mx-auto max-w-4xl">
-          <p className="font-typewriter text-xs tracking-[0.3em] text-redpen uppercase">
+          <p className="font-typewriter text-xs tracking-[0.3em] text-ink-soft uppercase">
             Hand it in
           </p>
           <h1 className="mt-4 font-stamp text-[2.2rem] leading-[1.1] text-ink sm:text-5xl">
@@ -117,7 +117,7 @@ function RoastPage() {
             roast lives in this browser tab and disappears when you close it.
           </p>
 
-          <form onSubmit={submit} className="mt-10 bg-card p-6 shadow-paper sm:p-8">
+          <form onSubmit={submit} className="mt-10 border border-border bg-card p-6 shadow-paper sm:p-8">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex-1">
                 <label
@@ -132,9 +132,9 @@ function RoastPage() {
                   type="file"
                   accept=".pdf,.docx,application/pdf"
                   onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
-                  className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-redpen hover:file:text-redpen"
+                  className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
                 />
-                <p className="mt-2 font-typewriter text-xs text-muted-foreground">
+                <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
                   {fileName ? `Attached: ${fileName}` : "PDF or DOCX \u00b7 up to 5MB"}
                 </p>
               </div>
@@ -152,7 +152,7 @@ function RoastPage() {
             <>
               <section className="mt-14">
                 <h2 className="font-stamp text-2xl text-ink sm:text-3xl">Your grade</h2>
-                <div className="mt-3 h-px w-20 bg-redpen" />
+                <div className="mt-3 h-px w-20 bg-ink-soft/60" />
                 <div className="mt-8">
                   <GradedPaperCard roast={current} />
                 </div>
@@ -162,7 +162,7 @@ function RoastPage() {
                 <h2 className="font-stamp text-2xl text-ink sm:text-3xl">
                   Now pick the paper it lands on
                 </h2>
-                <div className="mt-3 h-px w-20 bg-redpen" />
+                <div className="mt-3 h-px w-20 bg-ink-soft/60" />
                 <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
                   Three layouts, shown here as samples with fake details and a blank photo
                   slot. They unblur the moment you buy a fix.
@@ -193,7 +193,7 @@ function RoastPage() {
                     setHistory([]);
                     setCurrent(null);
                   }}
-                  className="font-typewriter text-sm text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-redpen"
+                  className="font-sans text-[0.95rem] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-ink"
                 >
                   Clear this session
                 </button>
@@ -202,15 +202,15 @@ function RoastPage() {
                 {history.map((entry) => (
                   <li
                     key={entry.id}
-                    className="flex items-center gap-4 border border-border bg-card/70 px-4 py-3"
+                    className="flex items-center gap-4 border border-border bg-paper-shade px-4 py-3"
                   >
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full border-2 border-redpen font-stamp text-lg text-redpen">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full border border-border font-stamp text-lg text-ink-soft">
                       {entry.grade}
                     </span>
                     <button
                       type="button"
                       onClick={() => setCurrent(entry)}
-                      className="min-w-0 flex-1 text-left font-typewriter text-sm text-ink transition-colors hover:text-redpen"
+                      className="min-w-0 flex-1 text-left font-sans text-[0.95rem] text-ink transition-colors hover:text-ink"
                     >
                       <span className="block truncate">{entry.label}</span>
                       <span className="block truncate text-xs text-muted-foreground">
