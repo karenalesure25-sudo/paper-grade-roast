@@ -11,7 +11,11 @@ import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
 import { saveOrder, type StoredOrder } from "@/lib/order-session";
-import { RESUME_TEMPLATES, type TemplateId } from "@/lib/resume-templates";
+import {
+  PHOTO_LAYOUT_COUNT,
+  RESUME_TEMPLATES,
+  type TemplateId,
+} from "@/lib/resume-templates";
 
 export const Route = createFileRoute("/order/$tier")({
   beforeLoad: ({ params }) => {
@@ -442,8 +446,8 @@ function OrderPage() {
               <div>
                 <SectionLabel step={layoutStep}>Pick your layout</SectionLabel>
                 <p className="mt-3 max-w-2xl font-sans text-[0.95rem] text-muted-foreground">
-                  Payment received &mdash; every layout is unlocked. Two use a photo;
-                  the rest are text only.
+                  Payment received &mdash; all {RESUME_TEMPLATES.length} layouts are
+                  unlocked. {PHOTO_LAYOUT_COUNT} use a photo; the rest are text only.
                 </p>
               </div>
 

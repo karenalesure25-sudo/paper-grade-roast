@@ -6,7 +6,7 @@ import { StampButton } from "@/components/StampButton";
 import { GradedPaperCard } from "@/components/GradedPaperCard";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { PricingTiers } from "@/components/PricingTiers";
-import type { TemplateId } from "@/lib/resume-templates";
+import { RESUME_TEMPLATES, type TemplateId } from "@/lib/resume-templates";
 import { SiteFooter } from "@/components/SiteFooter";
 import { roastResume } from "@/lib/roast.functions";
 import { prepareUpload } from "@/lib/prepare-upload";
@@ -164,8 +164,8 @@ function RoastPage() {
                 </h2>
                 <div className="mt-3 h-px w-20 bg-ink-soft/60" />
                 <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-                  Three layouts, shown here as samples with fake details and a blank photo
-                  slot. They unblur the moment you buy a fix.
+                  {RESUME_TEMPLATES.length} layouts, shown here as samples with fake details
+                  and a blank photo slot. They unblur the moment you buy a fix.
                 </p>
                 <div className="mt-8">
                   <TemplatePicker
