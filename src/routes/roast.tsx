@@ -6,7 +6,7 @@ import { StampButton } from "@/components/StampButton";
 import { GradedPaperCard } from "@/components/GradedPaperCard";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { PricingTiers } from "@/components/PricingTiers";
-import type { TemplateId } from "@/lib/resume-templates";
+import { RESUME_TEMPLATES, type TemplateId } from "@/lib/resume-templates";
 import { SiteFooter } from "@/components/SiteFooter";
 import { roastResume } from "@/lib/roast.functions";
 import { prepareUpload } from "@/lib/prepare-upload";
