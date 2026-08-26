@@ -129,7 +129,7 @@ export function PhotoCropper({
                 dragging.current = null;
               }}
               style={{ width: FRAME, height: FRAME }}
-              className={`relative touch-none overflow-hidden border-2 border-redpen bg-[#e6e4df] ${
+              className={`relative touch-none overflow-hidden border border-border bg-[#e6e4df] ${
                 round ? "rounded-full" : ""
               }`}
             >

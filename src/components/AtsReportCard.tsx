@@ -63,7 +63,7 @@ export function AtsReportCard({
                   <span className="font-sans text-[0.95rem] text-ink">
                     {factor.label}
                   </span>
-                  <span className="font-sans text-[0.95rem] text-redpen">
+                  <span className="font-sans text-[0.95rem] text-ink-soft">
                     {factor.points > 0 ? `+${factor.points}` : factor.points}
                   </span>
                 </div>
@@ -87,7 +87,7 @@ export function AtsReportCard({
             {report.matched.map((item) => (
               <li
                 key={item.keyword}
-                className="border border-border bg-paper-shade px-3 py-1.5 font-sans text-xs text-ink"
+                className="border border-border bg-paper-shade px-3 py-1.5 font-sans text-[0.85rem] text-ink"
                 title={item.where}
               >
                 <span className="highlighter">{item.keyword}</span>

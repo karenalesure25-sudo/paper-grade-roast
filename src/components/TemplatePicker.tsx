@@ -46,7 +46,7 @@ export function TemplatePicker({
                     className="absolute inset-x-0 top-[78px] bottom-0 backdrop-blur-[5px]"
                   />
                   <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 bg-card/90 px-4 py-4 text-center">
-                    <span className="font-stamp text-[0.7rem] tracking-[0.2em] text-redpen uppercase">
+                    <span className="font-stamp text-[0.7rem] tracking-[0.2em] text-ink-soft uppercase">
                       Sample &middot; locked
                     </span>
                     <span className="font-sans text-[0.7rem] text-muted-foreground">

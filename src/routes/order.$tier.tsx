@@ -430,7 +430,7 @@ function OrderPage() {
                     </StampButton>
                   </div>
                 </div>
-                <p className="mt-5 border-t border-dashed border-border pt-4 font-sans text-[0.85rem] leading-relaxed text-redpen">
+                <p className="mt-5 border-t border-dashed border-border pt-4 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
                   Placeholder checkout &mdash; no card is charged yet. Next you pick your
                   layout, add a photo if it needs one, and then we write the tailored
                   résumé plus the cover letter.
@@ -632,7 +632,7 @@ function OrderPage() {
                       {jobStep ? "Review Job Details" : `Pay $${tier.price}`}
                     </StampButton>
                   </div>
-                  <p className="mt-5 border-t border-dashed border-border pt-4 font-sans text-[0.85rem] leading-relaxed text-redpen">
+                  <p className="mt-5 border-t border-dashed border-border pt-4 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
                     {jobStep
                       ? "Nothing is charged yet \u2014 you confirm the job posting on the next screen before checkout finalizes."
                       : "Placeholder checkout \u2014 no card is charged yet. Next you pick your layout, add a photo if it needs one, and then we write it."}
