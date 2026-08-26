@@ -527,7 +527,9 @@ function OrderPage() {
               )}
 
               <section>
-                <SectionLabel step={checkoutStep}>Checkout</SectionLabel>
+                <SectionLabel step={jobStep ? reviewStep : checkoutStep}>
+                  {jobStep ? "Review the job posting" : "Checkout"}
+                </SectionLabel>
                 <div className="mt-5 bg-card p-6 shadow-paper sm:p-8">
                   <div className="flex flex-wrap items-end justify-between gap-6">
                     <div>
@@ -536,11 +538,14 @@ function OrderPage() {
                       </p>
                       <p className="mt-2 font-stamp text-4xl text-ink">${tier.price}</p>
                     </div>
-                    <StampButton type="submit">{`Pay $${tier.price}`}</StampButton>
+                    <StampButton type="submit">
+                      {jobStep ? "Review Job Details" : `Pay $${tier.price}`}
+                    </StampButton>
                   </div>
                   <p className="mt-5 border-t border-dashed border-border pt-4 font-typewriter text-xs leading-relaxed text-redpen">
-                    Placeholder checkout &mdash; no card is charged yet. Next you pick
-                    your layout, add a photo if it needs one, and then we write it.
+                    {jobStep
+                      ? "Nothing is charged yet \u2014 you confirm the job posting on the next screen before checkout finalizes."
+                      : "Placeholder checkout \u2014 no card is charged yet. Next you pick your layout, add a photo if it needs one, and then we write it."}
                   </p>
                   {error && (
                     <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
