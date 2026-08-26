@@ -442,8 +442,8 @@ function OrderPage() {
               <div>
                 <SectionLabel step={layoutStep}>Pick your layout</SectionLabel>
                 <p className="mt-3 max-w-2xl font-sans text-[0.95rem] text-muted-foreground">
-                  Payment received &mdash; every layout is unlocked. Two use a photo;
-                  the rest are text only.
+                  Payment received &mdash; all {RESUME_TEMPLATES.length} layouts are
+                  unlocked. {PHOTO_LAYOUT_COUNT} use a photo; the rest are text only.
                 </p>
               </div>
 

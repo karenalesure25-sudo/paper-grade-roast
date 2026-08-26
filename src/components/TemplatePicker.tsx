@@ -2,7 +2,7 @@ import { RESUME_TEMPLATES, SAMPLE_RESUME, type TemplateId } from "@/lib/resume-t
 import { ResumeTemplate } from "@/components/ResumeTemplate";
 
 /**
- * Three sample layouts. Before purchase the sample is shown with fake résumé
+ * Sample layouts, driven by RESUME_TEMPLATES. Before purchase the sample is shown with fake résumé
  * data and a blank photo slot, and everything below the header is blurred out.
  */
 export function TemplatePicker({
