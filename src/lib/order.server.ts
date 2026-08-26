@@ -5,13 +5,21 @@ const MODEL = "google/gemini-3.6-flash";
 
 const SHAPE = `{"name":"","title":"","location":"","email":"","phone":"","summary":"","objective":"","experience":[{"company":"","role":"","location":"","dates":"","bullets":[""]}],"education":[{"school":"","credential":"","dates":""}],"skills":[""]}`;
 
-const BASE_RULES = `You are the résumé writer behind "Kay’s Career Solutions". You produce clean, ATS-safe,
-recruiter-ready résumé content. Never invent employers, job titles, dates, schools,
-credentials, or metrics that are not supported by the input. If a number is not given,
-write a strong bullet without inventing one. Keep bullets to one line each, start with a
-strong verb, and cut buzzwords ("synergy", "hard worker", "detail oriented" as a claim).
-Aim for 3-5 bullets per recent role and 2-3 for older ones. Skills: 6-10 concrete items.
-If contact details are missing from the input, leave those fields as empty strings.
+const BASE_RULES = `You are the senior résumé strategist behind "Kay’s Career Solutions". You produce polished,
+ATS-safe, recruiter-ready résumé content that sounds professional and current. Never invent employers,
+job titles, dates, schools, credentials, certifications, tools, licenses, or metrics that are not supported
+by the input. If a number is not given, write a strong achievement/responsibility bullet without inventing one.
+
+Rewrite standard for paid orders:
+- Do not copy the original summary, objective, skills phrasing, or bullet sentences unless it is a proper noun,
+  credential, employer name, job title, date, location, email, or phone number.
+- Preserve the buyer's facts, but transform weak/plain wording into stronger professional language.
+- Every experience bullet must be freshly rewritten with a strong action verb, clearer scope, and business value.
+- Remove filler and buzzwords ("synergy", "hard worker", "detail oriented" as a claim).
+- Use concise, confident verbiage a hiring manager would expect; no jokes, no roast language, no placeholders.
+- Keep bullets to one line each where possible. Aim for 3-5 bullets per recent role and 2-3 for older ones.
+- Skills: 6-10 concrete, job-relevant items.
+- If contact details are missing from the input, leave those fields as empty strings.
 
 Reply with ONLY a JSON object, no markdown fence, in this exact shape:
 ${SHAPE}`;
@@ -47,19 +55,22 @@ Every explanation must reference the actual posting and résumé, no generic fil
 export const PROMPTS = {
   revamp: `${BASE_RULES}
 
-Task: rewrite and polish the résumé you are given. Keep every real fact, but rewrite
-every line so it reads sharper and quantifies impact where the input supports it.`,
+Task: perform a full professional résumé revamp. Keep every real fact, but rewrite the document so it no
+longer reads like the original. Replace passive/basic wording with polished professional verbiage, sharpen
+the summary/objective, reorganize skills, and rewrite every bullet for stronger impact. Do not return copied
+sentences from the uploaded résumé.`,
   scratch: `${BASE_RULES}
 
 Task: the input is raw background notes, not a résumé. Write a complete résumé from it.
 Infer a sensible target job title from the experience described.`,
   bundle: `${BUNDLE_RULES}
 
-Task: rewrite the résumé, optimize it for Applicant Tracking Systems, AND tailor it to
-the job or role supplied. Mirror the posting's exact language, titles, and priorities in
-the title, summary, objective, and bullets, without fabricating experience. Order skills
-so the posting's required skills come first and use the posting's own keywords verbatim
-where they honestly apply. Then write the matching cover letter.`,
+Task: perform a full professional résumé revamp, optimize it for Applicant Tracking Systems, AND tailor it
+to the job or role supplied. Use the provided job posting text/link/file as the target. Mirror the posting's
+exact language, role priorities, required skills, and keywords in the title, summary, objective, skills, and
+bullets only where the buyer's background honestly supports them. Reorder and rewrite content so the most
+relevant experience appears strongest for that exact role. Do not return copied résumé sentences. Then write
+the matching cover letter.`,
 } as const;
 
 export type OrderKind = keyof typeof PROMPTS;
@@ -141,6 +152,101 @@ function extractJson(text: string): unknown {
     const end = trimmed.lastIndexOf("}");
     if (start === -1 || end <= start) throw new Error("The writer did not return JSON.");
     return JSON.parse(trimmed.slice(start, end + 1));
+  }
+}
+
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'")
+    .replace(/&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+}
+
+function hostnameIsBlocked(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  if (
+    host === "localhost" ||
+    host.endsWith(".localhost") ||
+    host.endsWith(".local") ||
+    host === "0.0.0.0"
+  ) {
+    return true;
+  }
+
+  const parts = host.split(".").map((part) => Number(part));
+  if (parts.length === 4 && parts.every((part) => Number.isInteger(part) && part >= 0 && part <= 255)) {
+    const [first = 0, second = 0] = parts;
+    return (
+      first === 10 ||
+      first === 127 ||
+      (first === 172 && second >= 16 && second <= 31) ||
+      (first === 192 && second === 168) ||
+      (first === 169 && second === 254)
+    );
+  }
+
+  return host.includes(":");
+}
+
+function htmlToReadableText(html: string): string {
+  return decodeHtmlEntities(
+    html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<svg[\s\S]*?<\/svg>/gi, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+  );
+}
+
+/** Reads public job-posting pages so link-only $60 orders can be truly tailored. */
+export async function fetchJobPostingText(jobUrl: string): Promise<string | undefined> {
+  let url: URL;
+  try {
+    url = new URL(jobUrl);
+  } catch {
+    return undefined;
+  }
+
+  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password) {
+    return undefined;
+  }
+  if (hostnameIsBlocked(url.hostname)) return undefined;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  try {
+    const response = await fetch(url, {
+      headers: {
+        accept: "text/html,application/xhtml+xml,text/plain;q=0.9,application/json;q=0.8",
+        "user-agent": "KayCareerSolutionsBot/1.0",
+      },
+      signal: controller.signal,
+    });
+    if (!response.ok) return undefined;
+
+    const contentType = response.headers.get("content-type") ?? "";
+    if (
+      contentType &&
+      !contentType.includes("text/html") &&
+      !contentType.includes("text/plain") &&
+      !contentType.includes("application/json")
+    ) {
+      return undefined;
+    }
+
+    const raw = (await response.text()).slice(0, 200_000);
+    const readable = contentType.includes("text/html") ? htmlToReadableText(raw) : raw.replace(/\s+/g, " ").trim();
+    return readable.length >= 120 ? readable.slice(0, 12_000) : undefined;
+  } catch {
+    return undefined;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

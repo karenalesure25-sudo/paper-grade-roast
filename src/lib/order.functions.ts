@@ -1,47 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
-import { writeResume, type AtsReport, type ContentBlock } from "./order.server";
+import { OrderInput } from "./order-input";
+import { fetchJobPostingText, writeResume, type AtsReport, type ContentBlock } from "./order.server";
 import type { ResumeData } from "./resume-templates";
-
-const MAX_TEXT_CHARS = 24000;
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
-const MAX_BASE64 = Math.ceil((MAX_FILE_BYTES * 4) / 3) + 1024;
-
-const FileInput = z.object({
-  filename: z.string().trim().max(200),
-  mimeType: z.literal("application/pdf"),
-  dataBase64: z.string().max(MAX_BASE64),
-});
-
-const OrderInput = z
-  .object({
-    tier: z.enum(["revamp", "scratch", "bundle"]),
-    email: z
-      .string()
-      .trim()
-      .min(1, { message: "Add the email address we should send your order to." })
-      .max(255)
-      .email({ message: "That email address doesn't look right." }),
-    template: z.string().trim().min(1).max(40),
-    text: z.string().trim().max(MAX_TEXT_CHARS).optional(),
-    file: FileInput.optional(),
-    jobUrl: z.string().trim().max(500).optional(),
-    jobText: z.string().trim().max(MAX_TEXT_CHARS).optional(),
-    jobFile: FileInput.optional(),
-  })
-  .refine((v) => Boolean(v.text?.length) || Boolean(v.file), {
-    message: "Add your résumé or your background details first.",
-  })
-  .refine(
-    (v) =>
-      v.tier !== "bundle" ||
-      Boolean(v.jobUrl?.length) ||
-      Boolean(v.jobText?.length) ||
-      Boolean(v.jobFile),
-    {
-      message: "Add the job posting: paste a link, paste the text, or upload the file.",
-    },
-  );
 
 export type OrderResult = {
   tier: "revamp" | "scratch" | "bundle";
@@ -71,20 +31,27 @@ export const buildResume = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => OrderInput.parse(input))
   .handler(async ({ data }): Promise<OrderResult> => {
     const content: ContentBlock[] = [];
+    const fetchedJobText =
+      data.tier === "bundle" && data.jobUrl ? await fetchJobPostingText(data.jobUrl) : undefined;
 
     const instruction =
       data.tier === "scratch"
         ? "Write a résumé from these background notes."
         : data.tier === "bundle"
           ? [
-              "Rewrite the attached résumé, optimize it for ATS, and tailor it to the job below. Then write the matching cover letter.",
+              "Rewrite the attached résumé in polished professional language, optimize it for ATS, and tailor it to the job below. Then write the matching cover letter.",
               data.jobUrl ? `Job posting URL: ${data.jobUrl}` : "",
+              fetchedJobText ? `Fetched job posting details from that URL:\n${fetchedJobText}` : "",
               data.jobText ? `Job / role details:\n${data.jobText}` : "",
               data.jobFile ? "The job posting is also attached as a file." : "",
             ]
               .filter(Boolean)
               .join("\n")
-          : "Rewrite and polish the attached résumé.";
+          : [
+              "Perform a full professional résumé revamp from the attached résumé.",
+              "Rewrite the summary, objective, skills, and every bullet in stronger professional language.",
+              "Do not lightly polish or copy the original wording back; preserve only factual details such as names, dates, employers, schools, credentials, contact details, and real tools/skills.",
+            ].join("\n");
 
     content.push({ type: "text", text: instruction });
 
