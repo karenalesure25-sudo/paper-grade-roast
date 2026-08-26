@@ -393,7 +393,7 @@ function OrderPage() {
                       htmlFor="jobText"
                       className="mt-6 block font-typewriter text-sm tracking-widest text-ink uppercase"
                     >
-                      Paste the posting text (optional, but it tailors harder)
+                      Or paste the posting / role description
                     </label>
                     <textarea
                       id="jobText"
@@ -401,8 +401,28 @@ function OrderPage() {
                       rows={5}
                       value={jobText}
                       onChange={(event) => setJobText(event.target.value)}
+                      placeholder="Title, company, responsibilities, required skills..."
                       className="mt-3 w-full border border-border bg-paper p-3 font-typewriter text-sm text-ink outline-none focus:border-redpen"
                     />
+                    <label
+                      htmlFor="jobFile"
+                      className="mt-6 block font-typewriter text-sm tracking-widest text-ink uppercase"
+                    >
+                      Or upload the posting (PDF or DOCX)
+                    </label>
+                    <input
+                      id="jobFile"
+                      name="jobFile"
+                      type="file"
+                      accept=".pdf,.docx,application/pdf"
+                      onChange={(event) => setJobFile(event.target.files?.[0] ?? null)}
+                      className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-redpen hover:file:text-redpen"
+                    />
+                    <p className="mt-2 font-typewriter text-xs text-muted-foreground">
+                      {jobFile
+                        ? `Attached: ${jobFile.name}`
+                        : "A link, pasted text, or a file \u2014 any one is enough."}
+                    </p>
                   </div>
                 </section>
               )}
