@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { BrandLink } from "@/components/BrandMark";
 import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
 import { RoastCards } from "@/components/RoastCards";
@@ -29,12 +30,7 @@ function Index() {
     <div className="paper-texture relative min-h-screen">
       <header className="px-5 py-6">
         <div className="mx-auto flex max-w-6xl items-center justify-center">
-          <Link
-            to="/"
-            className="font-stamp text-xl tracking-[0.2em] text-ink uppercase"
-          >
-            Callback
-          </Link>
+          <BrandLink size="md" />
         </div>
       </header>
       <main>
