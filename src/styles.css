@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Callback design system — "chalkboard grading" aesthetic.
+ * Kay's Career Solutions — black, gold and crimson luxury aesthetic.
  * charcoal board / chalk ink / red pen / highlighter yellow
  */
 
@@ -83,7 +83,7 @@
   --gold-light: #f6dd8b;
   --gold-deep: #9b7420;
   --highlighter: oklch(0.885 0.176 92);
-  --rule: #35291029;
+  --rule: #2f2716;
 
   --background: var(--paper);
   --foreground: var(--ink);
@@ -102,9 +102,9 @@
   --accent-foreground: var(--board);
   --destructive: var(--redpen);
   --destructive-foreground: oklch(0.985 0.008 90);
-  --border: #2a2a2a;
+  --border: #3a2f14;
   --input: #2a2a2a;
-  --ring: var(--redpen);
+  --ring: var(--gold);
 }
 
 @keyframes stamp-in {
@@ -248,4 +248,49 @@
     background: var(--highlighter);
     color: var(--board);
   }
+}
+
+/* Gold foil text */
+@utility gold-foil {
+  background-image: linear-gradient(
+    170deg,
+    #fff3c4 0%,
+    var(--gold-light) 22%,
+    var(--gold) 48%,
+    var(--gold-deep) 66%,
+    var(--gold-light) 88%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Thin gold hairline frame */
+@utility gold-frame {
+  border: 1px solid color-mix(in oklab, var(--gold) 55%, transparent);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, var(--gold) 12%, transparent),
+    0 22px 50px -28px color-mix(in oklab, var(--gold) 45%, transparent);
+}
+
+/* Crimson-to-black ribbon band */
+@utility ribbon {
+  background-image: linear-gradient(
+    100deg,
+    var(--crimson-deep) 0%,
+    var(--crimson) 45%,
+    var(--crimson-deep) 100%
+  );
+}
+
+@utility gold-rule {
+  height: 1px;
+  background-image: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in oklab, var(--gold) 75%, transparent) 20%,
+    var(--gold-light) 50%,
+    color-mix(in oklab, var(--gold) 75%, transparent) 80%,
+    transparent
+  );
 }
