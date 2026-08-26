@@ -171,5 +171,14 @@ export async function writeResume(
   const text = json.choices?.[0]?.message?.content;
   if (!text) throw new Error("The writer came back empty. Try again.");
 
-  return coerceResume(extractJson(text));
+  const parsed = extractJson(text);
+
+  if (kind === "bundle") {
+    const obj = (parsed ?? {}) as Record<string, unknown>;
+    const resume = coerceResume(obj["resume"] ?? parsed);
+    const coverLetter = str(obj["coverLetter"], 6000);
+    return coverLetter ? { resume, coverLetter } : { resume };
+  }
+
+  return { resume: coerceResume(parsed) };
 }
