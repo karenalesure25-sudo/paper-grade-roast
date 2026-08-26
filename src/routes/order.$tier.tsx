@@ -189,17 +189,32 @@ function OrderPage() {
     }
   }
 
-  /** Bundle tier: hand the buyer their cover letter as a plain text file. */
+  /** Bundle tier: hand the buyer their cover letter as a styled, printable page. */
   function downloadCoverLetter() {
     const letter = order?.result.coverLetter;
     if (!letter) return;
-    const url = URL.createObjectURL(new Blob([letter], { type: "text/plain" }));
+    const resume = order?.result.resume;
+    const html = renderCoverLetterHtml(letter, letterStyle, {
+      name: resume?.name,
+      title: resume?.title,
+      email: resume?.email,
+      phone: resume?.phone,
+      location: resume?.location,
+      ...(order?.result.jobLabel ? { jobLabel: order.result.jobLabel } : {}),
+    });
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = "callback-cover-letter.txt";
+    link.rel = "noopener";
+    link.download = `${(resume?.name || "callback").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "callback"}-cover-letter.html`;
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => {
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, 2000);
   }
+
 
   return (
     <div className="paper-texture relative min-h-screen">
