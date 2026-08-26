@@ -9,7 +9,7 @@ import { ResumeDeliverable } from "@/components/ResumeDeliverable";
 import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
-import { saveOrder, updateOrder, type StoredOrder } from "@/lib/order-session";
+import { saveOrder, type StoredOrder } from "@/lib/order-session";
 import { RESUME_TEMPLATES, type TemplateId } from "@/lib/resume-templates";
 
 export const Route = createFileRoute("/order/$tier")({
