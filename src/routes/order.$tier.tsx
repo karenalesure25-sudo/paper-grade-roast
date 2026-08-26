@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { PhotoCropper } from "@/components/PhotoCropper";
 import { ResumeDeliverable } from "@/components/ResumeDeliverable";
+import { AtsReportCard } from "@/components/AtsReportCard";
 import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
