@@ -100,7 +100,7 @@ export function PhotoCropper({
         type="file"
         accept="image/jpeg,image/png"
         onChange={(event) => pick(event.target.files?.[0] ?? null)}
-        className="mt-3 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-redpen hover:file:text-redpen"
+        className="mt-3 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
       />
 
       {error && (
@@ -164,7 +164,7 @@ export function PhotoCropper({
           </div>
 
           <div className="flex-1">
-            <p className="font-typewriter text-xs leading-relaxed text-muted-foreground">
+            <p className="font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
               Drag the photo to reposition it, zoom until your head and shoulders fill
               the frame, then confirm placement. This photo is used only on your résumé
               and never leaves this browser session.

@@ -22,7 +22,7 @@ export function Upsell() {
           <PricingTiers />
         </div>
 
-        <p className="mt-8 text-center font-typewriter text-xs text-muted-foreground">
+        <p className="mt-8 text-center font-sans text-[0.85rem] text-muted-foreground">
           48-hour turnaround &middot; three templates to choose from &middot; refund if
           your score doesn&apos;t move
         </p>

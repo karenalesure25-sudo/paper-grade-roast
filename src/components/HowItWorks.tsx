@@ -38,7 +38,7 @@ export function HowItWorks() {
                 {s.n}
               </span>
               <div>
-                <h3 className="font-typewriter text-xl font-bold text-ink sm:text-2xl">
+                <h3 className="font-sans text-xl font-bold text-ink sm:text-2xl">
                   {s.title}
                 </h3>
                 <p className="mt-2 max-w-md text-[0.975rem] leading-relaxed text-muted-foreground">

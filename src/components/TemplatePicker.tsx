@@ -49,7 +49,7 @@ export function TemplatePicker({
                     <span className="font-stamp text-[0.7rem] tracking-[0.2em] text-redpen uppercase">
                       Sample &middot; locked
                     </span>
-                    <span className="font-typewriter text-[0.7rem] text-muted-foreground">
+                    <span className="font-sans text-[0.7rem] text-muted-foreground">
                       Unlocks with your purchase
                     </span>
                   </div>
@@ -66,10 +66,10 @@ export function TemplatePicker({
             <p className="mt-3 font-stamp text-sm tracking-wide text-ink uppercase">
               {template.name}
             </p>
-            <p className="mt-1 font-typewriter text-xs leading-relaxed text-muted-foreground">
+            <p className="mt-1 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
               {template.blurb}
             </p>
-            <p className="mt-1 font-typewriter text-[0.7rem] text-redpen">
+            <p className="mt-1 font-sans text-[0.7rem] text-redpen">
               {template.usesPhoto ? "Uses your selfie" : "No photo"}
             </p>
           </button>

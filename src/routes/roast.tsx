@@ -97,7 +97,7 @@ function RoastPage() {
           </Link>
           <Link
             to="/"
-            className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+            className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
           >
             Back to the front page
           </Link>
@@ -106,7 +106,7 @@ function RoastPage() {
 
       <main className="px-5 pb-20">
         <div className="mx-auto max-w-4xl">
-          <p className="font-typewriter text-xs tracking-[0.3em] text-redpen uppercase">
+          <p className="font-typewriter text-xs tracking-[0.3em] text-ink-soft uppercase">
             Hand it in
           </p>
           <h1 className="mt-4 font-stamp text-[2.2rem] leading-[1.1] text-ink sm:text-5xl">
@@ -132,9 +132,9 @@ function RoastPage() {
                   type="file"
                   accept=".pdf,.docx,application/pdf"
                   onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
-                  className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-redpen hover:file:text-redpen"
+                  className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
                 />
-                <p className="mt-2 font-typewriter text-xs text-muted-foreground">
+                <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
                   {fileName ? `Attached: ${fileName}` : "PDF or DOCX \u00b7 up to 5MB"}
                 </p>
               </div>
@@ -193,7 +193,7 @@ function RoastPage() {
                     setHistory([]);
                     setCurrent(null);
                   }}
-                  className="font-typewriter text-sm text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-redpen"
+                  className="font-sans text-[0.95rem] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-ink"
                 >
                   Clear this session
                 </button>
@@ -210,7 +210,7 @@ function RoastPage() {
                     <button
                       type="button"
                       onClick={() => setCurrent(entry)}
-                      className="min-w-0 flex-1 text-left font-typewriter text-sm text-ink transition-colors hover:text-redpen"
+                      className="min-w-0 flex-1 text-left font-sans text-[0.95rem] text-ink transition-colors hover:text-ink"
                     >
                       <span className="block truncate">{entry.label}</span>
                       <span className="block truncate text-xs text-muted-foreground">

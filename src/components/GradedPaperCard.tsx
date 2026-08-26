@@ -61,7 +61,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
             <p className="font-typewriter text-[0.7rem] tracking-[0.22em] text-muted-foreground uppercase">
               Graded submission
             </p>
-            <p className="mt-1 truncate font-typewriter text-base text-ink sm:text-lg">
+            <p className="mt-1 truncate font-sans text-base text-ink sm:text-lg">
               {roast.label}
             </p>
           </div>
@@ -69,7 +69,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
         </div>
 
         <div className="ruled-lines mt-7">
-          <p className="font-typewriter text-[0.95rem] leading-[1.9rem] text-ink sm:text-base">
+          <p className="font-sans text-[0.95rem] leading-[1.9rem] text-ink sm:text-base">
             {roast.roast}
           </p>
         </div>
@@ -87,10 +87,10 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
 
         {roast.tip && (
           <div className="mt-8 border-l-2 border-redpen bg-paper-shade/40 px-5 py-4">
-            <p className="font-typewriter text-[0.68rem] tracking-[0.22em] text-redpen uppercase">
+            <p className="font-typewriter text-[0.68rem] tracking-[0.22em] text-ink-soft uppercase">
               The one fix
             </p>
-            <p className="mt-2 font-typewriter text-[0.95rem] leading-[1.7rem] text-ink">
+            <p className="mt-2 font-sans text-[0.95rem] leading-[1.7rem] text-ink">
               {roast.tip}
             </p>
           </div>
@@ -105,7 +105,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
         <StampButton onClick={share} disabled={status === "working"}>
           {status === "working" ? "Stamping..." : "Share this roast"}
         </StampButton>
-        <p className="font-typewriter text-sm text-muted-foreground">
+        <p className="font-sans text-[0.95rem] text-muted-foreground">
           {status === "error"
             ? "Couldn't build the image. Try again."
             : status === "shared"

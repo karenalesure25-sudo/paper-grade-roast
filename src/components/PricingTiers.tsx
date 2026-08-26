@@ -37,11 +37,11 @@ export function PricingTiers() {
               <span className="font-stamp text-5xl leading-none text-ink">
                 ${tier.price}
               </span>
-              <span className="pb-1 font-typewriter text-xs text-muted-foreground">
+              <span className="pb-1 font-sans text-[0.85rem] text-muted-foreground">
                 one-time
               </span>
             </div>
-            <p className="mt-4 font-typewriter text-sm leading-relaxed text-ink">
+            <p className="mt-4 font-sans text-[0.95rem] leading-relaxed text-ink">
               {tier.tagline}
             </p>
 
