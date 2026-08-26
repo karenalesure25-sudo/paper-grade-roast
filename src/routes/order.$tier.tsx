@@ -94,7 +94,7 @@ function OrderPage() {
     }
 
     setError(null);
-    setPhase("layout");
+    setPhase(jobStep ? "confirm" : "layout");
   }
 
   async function build() {
