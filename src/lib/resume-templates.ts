@@ -25,7 +25,14 @@ export type ResumeData = {
   skills: string[];
 };
 
-export type TemplateId = "sidebar" | "timeline" | "classic";
+export type TemplateId =
+  | "sidebar"
+  | "timeline"
+  | "classic"
+  | "timeline-forest"
+  | "timeline-charcoal"
+  | "sidebar-teal"
+  | "navy-gold";
 
 export type ResumeTemplateMeta = {
   id: TemplateId;
@@ -52,6 +59,30 @@ export const RESUME_TEMPLATES: ResumeTemplateMeta[] = [
     id: "classic",
     name: "The Plain Sheet",
     blurb: "No photo, no columns. The safest thing to put through an ATS.",
+    usesPhoto: false,
+  },
+  {
+    id: "timeline-forest",
+    name: "Timeline Forest & Copper",
+    blurb: "Forest green header band, copper accents, competency band, dated timeline.",
+    usesPhoto: false,
+  },
+  {
+    id: "timeline-charcoal",
+    name: "Timeline Charcoal & Blue",
+    blurb: "Same dated timeline layout in charcoal with steel-blue accents.",
+    usesPhoto: false,
+  },
+  {
+    id: "sidebar-teal",
+    name: "Sidebar Teal",
+    blurb: "Full-height teal sidebar for contact, skills and school; white main column.",
+    usesPhoto: false,
+  },
+  {
+    id: "navy-gold",
+    name: "Navy & Gold",
+    blurb: "Centered navy header, gold rules under each heading, two-column competencies.",
     usesPhoto: false,
   },
 ];
