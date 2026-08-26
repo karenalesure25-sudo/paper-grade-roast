@@ -62,7 +62,6 @@ function OrderPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<StoredOrder | null>(null);
-  const [queueing, setQueueing] = useState(false);
 
   const needsResume = tier.intake === "resume" || tier.intake === "resume+job";
   const templateUsesPhoto =
