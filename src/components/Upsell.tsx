@@ -1,4 +1,6 @@
 import { PricingTiers } from "@/components/PricingTiers";
+import { RESUME_TEMPLATES } from "@/lib/resume-templates";
+
 
 export function Upsell() {
   return (
