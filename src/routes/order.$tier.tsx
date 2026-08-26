@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { TemplatePicker } from "@/components/TemplatePicker";
 import { PhotoCropper } from "@/components/PhotoCropper";
 import { ResumeDeliverable } from "@/components/ResumeDeliverable";
+import { AtsReportCard } from "@/components/AtsReportCard";
 import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
@@ -241,6 +242,13 @@ function OrderPage() {
               </div>
 
               <ResumeDeliverable order={order} photo={photo} />
+
+              {order.tier === "bundle" && order.result.atsReport && (
+                <AtsReportCard
+                  report={order.result.atsReport}
+                  jobLabel={order.result.jobUrl ?? order.result.jobLabel}
+                />
+              )}
 
               {order.tier === "bundle" && (
                 <div className="border-2 border-redpen bg-card p-6 shadow-paper">
