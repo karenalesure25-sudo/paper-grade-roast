@@ -525,8 +525,31 @@ function OrderPage() {
                   <p className="mt-2 font-typewriter text-xs text-muted-foreground">
                     {file ? `Attached: ${file.name}` : "PDF or DOCX \u00b7 up to 5MB"}
                   </p>
+
+                  <label
+                    htmlFor="email"
+                    className="mt-8 block font-typewriter text-sm tracking-widest text-ink uppercase"
+                  >
+                    Where should we send it?
+                  </label>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="you@example.com"
+                    className="mt-3 w-full border border-border bg-paper p-3 font-typewriter text-sm text-ink outline-none focus:border-redpen"
+                  />
+                  <p className="mt-2 font-typewriter text-xs text-muted-foreground">
+                    Your order confirmation and download links go here. Links expire
+                    after 7 days.
+                  </p>
                 </div>
               </section>
+
 
               {jobStep && (
                 <section>
