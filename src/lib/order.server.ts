@@ -144,7 +144,65 @@ function extractJson(text: string): unknown {
   }
 }
 
-export type WrittenOrder = { resume: ResumeData; coverLetter?: string };
+export type AtsReport = {
+  score: number;
+  verdict: string;
+  matched: Array<{ keyword: string; where: string }>;
+  missing: Array<{ keyword: string; why: string }>;
+  factors: Array<{ label: string; points: number; detail: string }>;
+};
+
+function coerceAtsReport(raw: unknown): AtsReport | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const obj = raw as Record<string, unknown>;
+
+  const rawScore = Number(obj["score"]);
+  const score = Number.isFinite(rawScore)
+    ? Math.max(0, Math.min(100, Math.round(rawScore)))
+    : 0;
+
+  const list = (key: string) => (Array.isArray(obj[key]) ? (obj[key] as unknown[]) : []);
+
+  const matched = list("matched")
+    .slice(0, 14)
+    .map((entry) => {
+      const item = (entry ?? {}) as Record<string, unknown>;
+      return { keyword: str(item["keyword"], 80), where: str(item["where"], 160) };
+    })
+    .filter((item) => item.keyword);
+
+  const missing = list("missing")
+    .slice(0, 8)
+    .map((entry) => {
+      const item = (entry ?? {}) as Record<string, unknown>;
+      return { keyword: str(item["keyword"], 80), why: str(item["why"], 240) };
+    })
+    .filter((item) => item.keyword);
+
+  const factors = list("factors")
+    .slice(0, 6)
+    .map((entry) => {
+      const item = (entry ?? {}) as Record<string, unknown>;
+      const points = Number(item["points"]);
+      return {
+        label: str(item["label"], 80),
+        points: Number.isFinite(points) ? Math.round(points) : 0,
+        detail: str(item["detail"], 300),
+      };
+    })
+    .filter((item) => item.label);
+
+  const verdict = str(obj["verdict"], 600);
+  if (!verdict && matched.length === 0 && factors.length === 0) return undefined;
+
+  return { score, verdict, matched, missing, factors };
+}
+
+export type WrittenOrder = {
+  resume: ResumeData;
+  coverLetter?: string;
+  atsReport?: AtsReport;
+};
 
 /**
  * Calls Lovable AI and returns structured résumé content. The bundle tier also
