@@ -57,8 +57,10 @@ function OrderPage() {
   const [jobFile, setJobFile] = useState<File | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [template, setTemplate] = useState<TemplateId>("sidebar");
-  /** intake+checkout -> layout (+photo) -> delivered résumé */
-  const [phase, setPhase] = useState<"intake" | "layout" | "done">("intake");
+  /** intake -> (job review, $60 only) -> checkout -> layout (+photo) -> delivered résumé */
+  const [phase, setPhase] = useState<"intake" | "confirm" | "layout" | "done">(
+    "intake",
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<StoredOrder | null>(null);
