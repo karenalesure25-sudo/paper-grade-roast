@@ -1,11 +1,12 @@
 import { StampLink } from "@/components/StampButton";
+import { Briefcase, Rocket, TrendingUp, Trophy } from "lucide-react";
 import { GradeStamp } from "@/components/GradeStamp";
 
 const badges = [
-  { label: "Get Noticed", icon: "\u{1F4BC}" },
-  { label: "Stand Out", icon: "\u{1F680}" },
-  { label: "Get Interviews", icon: "\u{1F4C8}" },
-  { label: "Achieve Your Goals", icon: "\u{1F3C6}" },
+  { label: "Get Noticed", Icon: Briefcase },
+  { label: "Stand Out", Icon: Rocket },
+  { label: "Get Interviews", Icon: TrendingUp },
+  { label: "Achieve Your Goals", Icon: Trophy },
 ];
 
 export function Hero() {
@@ -49,11 +50,8 @@ export function Hero() {
           <ul className="mt-11 grid grid-cols-2 gap-4 sm:grid-cols-4">
             {badges.map((b) => (
               <li key={b.label} className="flex flex-col items-center gap-2 text-center">
-                <span
-                  aria-hidden
-                  className="flex h-12 w-12 items-center justify-center rounded-full border border-gold/50 bg-card text-lg"
-                >
-                  {b.icon}
+                <span className="flex h-12 w-12 items-center justify-center rounded-full border border-gold/50 bg-card">
+                  <b.Icon className="h-5 w-5 text-gold" strokeWidth={1.5} aria-hidden />
                 </span>
                 <span className="font-sans text-[0.65rem] font-semibold tracking-[0.14em] text-ink-soft uppercase">
                   {b.label}
