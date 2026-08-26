@@ -308,15 +308,15 @@ type BandTheme = {
 };
 
 const FOREST_THEME: BandTheme = {
-  band: "#1c332e",
-  accent: "#c07f4f",
-  accentSoft: "#f2e7dd",
+  band: "#183d35",
+  accent: "#b96f3e",
+  accentSoft: "#f2e3d8",
 };
 
 const CHARCOAL_THEME: BandTheme = {
-  band: "#1f2632",
-  accent: "#4a7ebb",
-  accentSoft: "#dfeaf6",
+  band: "#242424",
+  accent: "#4d7fa8",
+  accentSoft: "#e4eef6",
 };
 
 function BandTimelineTemplate({
@@ -327,8 +327,8 @@ function BandTimelineTemplate({
   theme: BandTheme;
 }) {
   return (
-    <div className="bg-white text-[#222]">
-      <div className="px-6 py-5" style={{ backgroundColor: theme.band }}>
+    <div className="min-h-[560px] bg-white px-5 py-5 text-[#222]">
+      <div className="px-5 py-5" style={{ backgroundColor: theme.band }}>
         <h3 className="text-[17px] font-bold tracking-wide text-white uppercase">
           {data.name}
         </h3>
@@ -349,7 +349,7 @@ function BandTimelineTemplate({
       ]
         .filter((block) => Boolean(block.body?.trim()))
         .map((block) => (
-          <section key={block.label} className="mt-4 px-6">
+          <section key={block.label} className="mt-4 px-1">
             <div className="flex items-center gap-2">
               <span
                 className="h-[14px] w-[4px]"
@@ -365,7 +365,7 @@ function BandTimelineTemplate({
 
       {data.skills.length > 0 && (
         <>
-          <section className="mt-4 px-6">
+          <section className="mt-4 px-1">
             <div className="flex items-center gap-2">
               <span
                 className="h-[14px] w-[4px]"
@@ -377,7 +377,7 @@ function BandTimelineTemplate({
             </div>
           </section>
           <p
-            className="mt-2 px-6 py-3 text-center text-[9px] text-white"
+            className="mt-2 px-4 py-3 text-center text-[8px] text-white"
             style={{ backgroundColor: theme.band }}
           >
             {data.skills.join("  \u2022  ")}
@@ -385,7 +385,7 @@ function BandTimelineTemplate({
         </>
       )}
 
-      <section className="mt-4 px-6 pb-6">
+      <section className="mt-4 px-1 pb-1">
         <div className="flex items-center gap-2">
           <span className="h-[14px] w-[4px]" style={{ backgroundColor: theme.accent }} />
           <h4 className="text-[11px] font-bold tracking-wide uppercase">
@@ -396,10 +396,10 @@ function BandTimelineTemplate({
           {data.experience.map((job) => (
             <div
               key={`${job.company}-${job.dates}`}
-              className="flex border border-[#e2e0dc]"
+              className="flex gap-3"
             >
               <div
-                className="w-[86px] shrink-0 p-2"
+                className="w-[86px] shrink-0 p-2.5"
                 style={{ backgroundColor: theme.accentSoft }}
               >
                 <p className="text-[8px] font-bold" style={{ color: theme.accent }}>

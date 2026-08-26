@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/public/download/$token")({
         const slug = slugify(found.name, "callback");
 
         if (found.kind === "resume") {
-          return new Response(renderResumeDocument(found.resume), {
+          return new Response(renderResumeDocument(found.resume, found.template), {
             headers: {
               "Content-Type": "text/html; charset=utf-8",
               "Content-Disposition": `attachment; filename="${slug}-resume.html"`,
