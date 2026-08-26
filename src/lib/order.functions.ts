@@ -115,13 +115,32 @@ export const buildResume = createServerFn({ method: "POST" })
         ? (data.jobUrl ?? data.jobFile?.filename ?? "the role you sent us")
         : undefined;
 
+    const sourceLabel = data.file?.filename ?? "your notes";
+
+    const { deliverOrder } = await import("./order-delivery.server");
+    const delivery = await deliverOrder({
+      email: data.email,
+      tier: data.tier,
+      template: data.template,
+      sourceLabel,
+      ...(jobLabel ? { jobLabel } : {}),
+      resume: written.resume,
+      ...(written.coverLetter ? { coverLetter: written.coverLetter } : {}),
+      ...(written.atsReport ? { atsReport: written.atsReport } : {}),
+    });
+
     return {
       tier: data.tier,
       resume: written.resume,
-      sourceLabel: data.file?.filename ?? "your notes",
+      sourceLabel,
+      email: data.email,
       ...(data.jobUrl ? { jobUrl: data.jobUrl } : {}),
       ...(jobLabel ? { jobLabel } : {}),
       ...(written.coverLetter ? { coverLetter: written.coverLetter } : {}),
       ...(written.atsReport ? { atsReport: written.atsReport } : {}),
+      ...(delivery.resumeUrl ? { resumeUrl: delivery.resumeUrl } : {}),
+      ...(delivery.coverLetterUrl ? { coverLetterUrl: delivery.coverLetterUrl } : {}),
+      ...(delivery.expiresAt ? { downloadsExpireAt: delivery.expiresAt } : {}),
     };
   });
+
