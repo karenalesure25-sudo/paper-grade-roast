@@ -240,30 +240,33 @@ function OrderPage() {
 
               {order.tier === "bundle" && (
                 <div className="border-2 border-redpen bg-card p-6 shadow-paper">
-                  <SectionLabel step={layoutStep + 2}>The application</SectionLabel>
+                  <SectionLabel step={layoutStep + 2}>Your cover letter</SectionLabel>
                   <p className="mt-3 font-typewriter text-sm leading-relaxed text-ink">
-                    Tailored to{" "}
-                    <span className="marker break-all">{order.result.jobUrl}</span>
+                    ATS-optimized and tailored to{" "}
+                    <span className="marker break-all">
+                      {order.result.jobUrl ?? order.result.jobLabel}
+                    </span>
                   </p>
-                  {order.submissionQueued ? (
-                    <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
-                      Queued. We submit this application for you and email you the
-                      confirmation.
-                    </p>
-                  ) : (
+                  {order.result.coverLetter ? (
                     <>
-                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                        Hand it off and our team submits this application on your behalf.
-                      </p>
+                      <div className="mt-5 max-h-[26rem] overflow-y-auto border border-border bg-paper p-5">
+                        <p className="font-typewriter text-sm leading-relaxed whitespace-pre-wrap text-ink">
+                          {order.result.coverLetter}
+                        </p>
+                      </div>
                       <StampButton
                         type="button"
-                        onClick={queueSubmission}
-                        disabled={queueing}
+                        onClick={downloadCoverLetter}
                         className="mt-6"
                       >
-                        Submit It For Me
+                        Download Cover Letter
                       </StampButton>
                     </>
+                  ) : (
+                    <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
+                      The cover letter didn&rsquo;t come through. Run it again and it
+                      will.
+                    </p>
                   )}
                 </div>
               )}
