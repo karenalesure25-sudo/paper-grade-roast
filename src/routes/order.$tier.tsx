@@ -171,12 +171,16 @@ function OrderPage() {
     }
   }
 
-  function queueSubmission() {
-    if (!order) return;
-    setQueueing(true);
-    const next = updateOrder(order.id, { submissionQueued: true });
-    setOrder(next ?? { ...order, submissionQueued: true });
-    setQueueing(false);
+  /** Bundle tier: hand the buyer their cover letter as a plain text file. */
+  function downloadCoverLetter() {
+    const letter = order?.result.coverLetter;
+    if (!letter) return;
+    const url = URL.createObjectURL(new Blob([letter], { type: "text/plain" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "callback-cover-letter.txt";
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
