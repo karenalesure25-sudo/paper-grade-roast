@@ -74,10 +74,16 @@
   /* chalk ink */
   --ink: #e8e8e8;
   --ink-soft: #8a8a8a;
-  --redpen: #e0342f;
-  --redpen-deep: #a8231f;
+  --redpen: #c1121f;
+  --redpen-deep: #7d0a13;
+  --crimson: #c1121f;
+  --crimson-deep: #7d0a13;
+  /* gold */
+  --gold: #d4af37;
+  --gold-light: #f6dd8b;
+  --gold-deep: #9b7420;
   --highlighter: oklch(0.885 0.176 92);
-  --rule: #2a2a2a;
+  --rule: #35291029;
 
   --background: var(--paper);
   --foreground: var(--ink);
