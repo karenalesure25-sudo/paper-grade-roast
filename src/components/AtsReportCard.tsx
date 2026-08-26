@@ -12,7 +12,7 @@ export function AtsReportCard({
   jobLabel,
 }: {
   report: AtsReport;
-  jobLabel?: string;
+  jobLabel?: string | undefined;
 }) {
   return (
     <div className="border-2 border-redpen bg-card p-6 shadow-paper sm:p-8">
