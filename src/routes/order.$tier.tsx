@@ -199,6 +199,14 @@ function OrderPage() {
   function downloadCoverLetter() {
     const letter = order?.result.coverLetter;
     if (!letter) return;
+
+    // Prefer the server-signed link: mobile browsers handle a real HTTP
+    // attachment reliably, blob downloads often silently no-op there.
+    if (order?.result.coverLetterUrl) {
+      window.location.href = `${order.result.coverLetterUrl}?style=${letterStyle}`;
+      return;
+    }
+
     const resume = order?.result.resume;
     const html = renderCoverLetterHtml(letter, letterStyle, {
       name: resume?.name,
