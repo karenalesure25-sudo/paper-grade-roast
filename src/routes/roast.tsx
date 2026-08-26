@@ -202,7 +202,7 @@ function RoastPage() {
                 {history.map((entry) => (
                   <li
                     key={entry.id}
-                    className="flex items-center gap-4 border border-border bg-card/70 px-4 py-3"
+                    className="flex items-center gap-4 border border-border bg-paper-shade px-4 py-3"
                   >
                     <span className="grid size-10 shrink-0 place-items-center rounded-full border border-border font-stamp text-lg text-ink-soft">
                       {entry.grade}

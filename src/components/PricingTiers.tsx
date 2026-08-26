@@ -13,7 +13,7 @@ export function PricingTiers() {
           <div
             key={tier.id}
             className={cn(
-              "relative flex flex-col bg-card p-7 shadow-paper-lift",
+              "relative flex flex-col border border-border bg-card p-7 shadow-paper-lift",
               index === 0 && "lg:-rotate-[0.7deg]",
               index === 2 && "lg:rotate-[0.7deg]",
             )}
