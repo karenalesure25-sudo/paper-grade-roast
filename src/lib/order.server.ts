@@ -252,7 +252,12 @@ export async function writeResume(
     const obj = (parsed ?? {}) as Record<string, unknown>;
     const resume = coerceResume(obj["resume"] ?? parsed);
     const coverLetter = str(obj["coverLetter"], 6000);
-    return coverLetter ? { resume, coverLetter } : { resume };
+    const atsReport = coerceAtsReport(obj["atsReport"]);
+    return {
+      resume,
+      ...(coverLetter ? { coverLetter } : {}),
+      ...(atsReport ? { atsReport } : {}),
+    };
   }
 
   return { resume: coerceResume(parsed) };
