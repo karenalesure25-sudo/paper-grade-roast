@@ -61,7 +61,13 @@ export async function saveOrderRecord(input: SaveInput): Promise<SavedOrder> {
 
 export type DeliverableLookup =
   | { kind: "resume"; resume: ResumeData; name: string }
-  | { kind: "letter"; letter: string; name: string }
+  | {
+      kind: "letter";
+      letter: string;
+      name: string;
+      resume: ResumeData;
+      jobLabel?: string;
+    }
   | { kind: "expired" }
   | { kind: "missing" };
 
@@ -75,7 +81,7 @@ export async function findDeliverable(token: string): Promise<DeliverableLookup>
 
   const { data, error } = await supabaseAdmin
     .from("orders")
-    .select("resume, cover_letter, resume_token, letter_token, expires_at")
+    .select("resume, cover_letter, job_label, resume_token, letter_token, expires_at")
     .or(`resume_token.eq.${token},letter_token.eq.${token}`)
     .maybeSingle();
 
@@ -88,5 +94,11 @@ export async function findDeliverable(token: string): Promise<DeliverableLookup>
     return { kind: "resume", resume, name: resume?.name ?? "" };
   }
   if (!data.cover_letter) return { kind: "missing" };
-  return { kind: "letter", letter: data.cover_letter, name: resume?.name ?? "" };
+  return {
+    kind: "letter",
+    letter: data.cover_letter,
+    name: resume?.name ?? "",
+    resume,
+    ...(data.job_label ? { jobLabel: data.job_label } : {}),
+  };
 }

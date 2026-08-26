@@ -55,6 +55,8 @@ export type OrderResult = {
   atsReport?: AtsReport;
   /** Where the confirmation email went. */
   email?: string;
+  /** True only when the confirmation email actually went out. */
+  emailed?: boolean;
   /** Expiring download links, also emailed to the buyer. */
   resumeUrl?: string;
   coverLetterUrl?: string;
@@ -134,6 +136,7 @@ export const buildResume = createServerFn({ method: "POST" })
       resume: written.resume,
       sourceLabel,
       email: data.email,
+      emailed: delivery.emailed,
       ...(data.jobUrl ? { jobUrl: data.jobUrl } : {}),
       ...(jobLabel ? { jobLabel } : {}),
       ...(written.coverLetter ? { coverLetter: written.coverLetter } : {}),

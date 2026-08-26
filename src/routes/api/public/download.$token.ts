@@ -1,10 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { findDeliverable } from "@/lib/order-store.server";
-import {
-  renderCoverLetterDocument,
-  renderResumeDocument,
-  slugify,
-} from "@/lib/deliverable-doc";
+import { renderResumeDocument, slugify } from "@/lib/deliverable-doc";
+import { isCoverLetterStyle, renderCoverLetterHtml } from "@/lib/cover-letter-doc";
 
 /**
  * Public, unguessable download link emailed to the buyer.
@@ -13,7 +10,7 @@ import {
 export const Route = createFileRoute("/api/public/download/$token")({
   server: {
     handlers: {
-      GET: async ({ params }) => {
+      GET: async ({ params, request }) => {
         const found = await findDeliverable(params.token);
 
         if (found.kind === "expired") {
@@ -41,13 +38,26 @@ export const Route = createFileRoute("/api/public/download/$token")({
           });
         }
 
-        return new Response(renderCoverLetterDocument(found.letter), {
+        const styleParam = new URL(request.url).searchParams.get("style");
+        const style = isCoverLetterStyle(styleParam) ? styleParam : "ivory";
+
+        return new Response(
+          renderCoverLetterHtml(found.letter, style, {
+            name: found.resume?.name,
+            title: found.resume?.title,
+            email: found.resume?.email,
+            phone: found.resume?.phone,
+            location: found.resume?.location,
+            ...(found.jobLabel ? { jobLabel: found.jobLabel } : {}),
+          }),
+          {
           headers: {
-            "Content-Type": "text/plain; charset=utf-8",
-            "Content-Disposition": `attachment; filename="${slug}-cover-letter.txt"`,
+            "Content-Type": "text/html; charset=utf-8",
+            "Content-Disposition": `attachment; filename="${slug}-cover-letter.html"`,
             "Cache-Control": "no-store",
           },
-        });
+          },
+        );
       },
     },
   },

@@ -12,6 +12,11 @@ import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
 import { saveOrder, type StoredOrder } from "@/lib/order-session";
 import {
+  COVER_LETTER_STYLES,
+  renderCoverLetterHtml,
+  type CoverLetterStyle,
+} from "@/lib/cover-letter-doc";
+import {
   PHOTO_LAYOUT_COUNT,
   RESUME_TEMPLATES,
   type TemplateId,
@@ -63,6 +68,7 @@ function OrderPage() {
   const [jobFile, setJobFile] = useState<File | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [template, setTemplate] = useState<TemplateId>("sidebar");
+  const [letterStyle, setLetterStyle] = useState<CoverLetterStyle>("ivory");
   /** intake -> (job review, $60 only) -> checkout -> layout (+photo) -> delivered résumé */
   const [phase, setPhase] = useState<"intake" | "confirm" | "layout" | "done">(
     "intake",
@@ -189,17 +195,40 @@ function OrderPage() {
     }
   }
 
-  /** Bundle tier: hand the buyer their cover letter as a plain text file. */
+  /** Bundle tier: hand the buyer their cover letter as a styled, printable page. */
   function downloadCoverLetter() {
     const letter = order?.result.coverLetter;
     if (!letter) return;
-    const url = URL.createObjectURL(new Blob([letter], { type: "text/plain" }));
+
+    // Prefer the server-signed link: mobile browsers handle a real HTTP
+    // attachment reliably, blob downloads often silently no-op there.
+    if (order?.result.coverLetterUrl) {
+      window.location.href = `${order.result.coverLetterUrl}?style=${letterStyle}`;
+      return;
+    }
+
+    const resume = order?.result.resume;
+    const html = renderCoverLetterHtml(letter, letterStyle, {
+      name: resume?.name,
+      title: resume?.title,
+      email: resume?.email,
+      phone: resume?.phone,
+      location: resume?.location,
+      ...(order?.result.jobLabel ? { jobLabel: order.result.jobLabel } : {}),
+    });
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = "callback-cover-letter.txt";
+    link.rel = "noopener";
+    link.download = `${(resume?.name || "callback").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "") || "callback"}-cover-letter.html`;
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(url);
+    window.setTimeout(() => {
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, 2000);
   }
+
 
   return (
     <div className="paper-texture relative min-h-screen">
@@ -261,13 +290,16 @@ function OrderPage() {
                   Order confirmation
                 </p>
                 <p className="mt-3 font-sans text-[0.95rem] leading-relaxed text-ink">
-                  {order.result.email ? (
+                  {order.result.emailed && order.result.email ? (
                     <>
                       Sent to <span className="marker">{order.result.email}</span> with
                       your download links.
                     </>
                   ) : (
-                    "Your download links are below."
+                    <>
+                      Email delivery isn&rsquo;t switched on yet, so grab your files
+                      right here &mdash; the links below are yours for 7 days.
+                    </>
                   )}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-5">
@@ -281,7 +313,7 @@ function OrderPage() {
                   )}
                   {order.result.coverLetterUrl && (
                     <a
-                      href={order.result.coverLetterUrl}
+                      href={`${order.result.coverLetterUrl}?style=${letterStyle}`}
                       className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
                     >
                       Download my cover letter
@@ -320,6 +352,45 @@ function OrderPage() {
                         <p className="font-sans text-[0.95rem] leading-relaxed whitespace-pre-wrap text-ink">
                           {order.result.coverLetter}
                         </p>
+                      </div>
+                      <div className="mt-6">
+                        <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                          Pick a letterhead
+                        </p>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                          {COVER_LETTER_STYLES.map((option) => {
+                            const active = option.id === letterStyle;
+                            return (
+                              <button
+                                key={option.id}
+                                type="button"
+                                onClick={() => setLetterStyle(option.id)}
+                                aria-pressed={active}
+                                className={`border p-4 text-left transition-colors ${
+                                  active
+                                    ? "border-redpen bg-paper-shade"
+                                    : "border-border bg-card hover:border-ink-soft"
+                                }`}
+                              >
+                                <span className="flex gap-1.5">
+                                  {option.swatch.map((color) => (
+                                    <span
+                                      key={color}
+                                      className="h-4 w-4 rounded-full border border-border"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  ))}
+                                </span>
+                                <span className="mt-3 block font-sans text-[0.95rem] font-semibold text-ink">
+                                  {option.name}
+                                </span>
+                                <span className="mt-1 block font-sans text-[0.8rem] leading-snug text-muted-foreground">
+                                  {option.blurb}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                       <StampButton
                         type="button"
