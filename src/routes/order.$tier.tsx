@@ -242,6 +242,13 @@ function OrderPage() {
 
               <ResumeDeliverable order={order} photo={photo} />
 
+              {order.tier === "bundle" && order.result.atsReport && (
+                <AtsReportCard
+                  report={order.result.atsReport}
+                  jobLabel={order.result.jobUrl ?? order.result.jobLabel}
+                />
+              )}
+
               {order.tier === "bundle" && (
                 <div className="border-2 border-redpen bg-card p-6 shadow-paper">
                   <SectionLabel step={layoutStep + 2}>Your cover letter</SectionLabel>
