@@ -252,6 +252,48 @@ function OrderPage() {
 
               <ResumeDeliverable order={order} photo={photo} />
 
+              <div className="border-2 border-dashed border-redpen bg-card p-6 shadow-paper">
+                <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                  Order confirmation
+                </p>
+                <p className="mt-3 font-typewriter text-sm leading-relaxed text-ink">
+                  {order.result.email ? (
+                    <>
+                      Sent to <span className="marker">{order.result.email}</span> with
+                      your download links.
+                    </>
+                  ) : (
+                    "Your download links are below."
+                  )}
+                </p>
+                <div className="mt-5 flex flex-wrap gap-5">
+                  {order.result.resumeUrl && (
+                    <a
+                      href={order.result.resumeUrl}
+                      className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+                    >
+                      Download my résumé
+                    </a>
+                  )}
+                  {order.result.coverLetterUrl && (
+                    <a
+                      href={order.result.coverLetterUrl}
+                      className="font-typewriter text-sm text-ink underline decoration-redpen decoration-2 underline-offset-4 transition-colors hover:text-redpen"
+                    >
+                      Download my cover letter
+                    </a>
+                  )}
+                </div>
+                {order.result.downloadsExpireAt && (
+                  <p className="mt-4 font-typewriter text-xs text-muted-foreground">
+                    These links work until{" "}
+                    {new Date(order.result.downloadsExpireAt).toLocaleDateString()} — 7
+                    days — then your files are deleted for good.
+                  </p>
+                )}
+              </div>
+
+
               {order.tier === "bundle" && order.result.atsReport && (
                 <AtsReportCard
                   report={order.result.atsReport}
