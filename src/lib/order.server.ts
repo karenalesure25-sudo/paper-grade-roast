@@ -5,7 +5,7 @@ const MODEL = "google/gemini-3.6-flash";
 
 const SHAPE = `{"name":"","title":"","location":"","email":"","phone":"","summary":"","objective":"","experience":[{"company":"","role":"","location":"","dates":"","bullets":[""]}],"education":[{"school":"","credential":"","dates":""}],"skills":[""]}`;
 
-const BASE_RULES = `You are the résumé writer behind "Callback". You produce clean, ATS-safe,
+const BASE_RULES = `You are the résumé writer behind "Kay’s Career Solutions". You produce clean, ATS-safe,
 recruiter-ready résumé content. Never invent employers, job titles, dates, schools,
 credentials, or metrics that are not supported by the input. If a number is not given,
 write a strong bullet without inventing one. Keep bullets to one line each, start with a

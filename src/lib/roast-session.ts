@@ -4,7 +4,7 @@ import type { RoastResult } from "./roast.functions";
  * Roasts live in sessionStorage only — they disappear when the tab closes and
  * resume content is never persisted server-side. Accounts would replace this.
  */
-const KEY = "callback.roasts.v1";
+const KEY = "kcs.roasts.v1";
 
 export type StoredRoast = RoastResult & { id: string; createdAt: number };
 

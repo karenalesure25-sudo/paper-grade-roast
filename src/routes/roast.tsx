@@ -15,13 +15,13 @@ import { readRoasts, saveRoast, clearRoasts, type StoredRoast } from "@/lib/roas
 export const Route = createFileRoute("/roast")({
   head: () => ({
     meta: [
-      { title: "Grade My Resume — Callback" },
+      { title: "Grade My Resume — Kay’s Career Solutions" },
       {
         name: "description",
         content:
           "Upload your resume as a PDF or DOCX and get an instant letter grade, a short roast, and the red-pen notes that matter. Free.",
       },
-      { property: "og:title", content: "Grade My Resume — Callback" },
+      { property: "og:title", content: "Grade My Resume — Kay’s Career Solutions" },
       {
         property: "og:description",
         content: "Upload it. Get roasted. Get better. Free.",

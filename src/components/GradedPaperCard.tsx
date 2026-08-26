@@ -20,7 +20,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
         backgroundColor: "#faf9f6",
       });
       const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], `callback-grade-${roast.grade}.png`, {
+      const file = new File([blob], `kcs-grade-${roast.grade}.png`, {
         type: "image/png",
       });
 

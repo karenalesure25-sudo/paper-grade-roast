@@ -2,7 +2,7 @@ import type { OrderResult } from "./order.functions";
 import type { TemplateId } from "./resume-templates";
 import type { TierId } from "./products";
 
-const KEY = "callback.orders.v1";
+const KEY = "kcs.orders.v1";
 
 export type StoredOrder = {
   id: string;

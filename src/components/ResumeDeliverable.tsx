@@ -28,7 +28,7 @@ export function ResumeDeliverable({
       });
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = `callback-resume-${order.template}.png`;
+      link.download = `kcs-resume-${order.template}.png`;
       link.click();
       setStatus("idle");
     } catch (error) {
