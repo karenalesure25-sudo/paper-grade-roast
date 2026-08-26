@@ -117,13 +117,16 @@ function OrderPage() {
     try {
       type Payload = {
         tier: typeof tier.id;
+        email: string;
+        template: TemplateId;
         text?: string;
         file?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
         jobUrl?: string;
         jobText?: string;
         jobFile?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
       };
-      let payload: Payload = { tier: tier.id };
+      let payload: Payload = { tier: tier.id, email: email.trim(), template };
+
 
       if (file) {
         const prepared = await prepareUpload(file);
