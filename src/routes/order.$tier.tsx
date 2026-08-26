@@ -40,7 +40,7 @@ export const Route = createFileRoute("/order/$tier")({
 function SectionLabel({ step, children }: { step: number; children: React.ReactNode }) {
   return (
     <div className="flex items-baseline gap-3">
-      <span className="font-stamp text-sm text-redpen">{String(step).padStart(2, "0")}</span>
+      <span className="font-stamp text-sm text-ink-soft">{String(step).padStart(2, "0")}</span>
       <h2 className="font-stamp text-xl text-ink sm:text-2xl">{children}</h2>
     </div>
   );
@@ -252,7 +252,7 @@ function OrderPage() {
 
               <ResumeDeliverable order={order} photo={photo} />
 
-              <div className="border-2 border-dashed border-redpen bg-card p-6 shadow-paper">
+              <div className="border border-border bg-card p-6 shadow-paper">
                 <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
                   Order confirmation
                 </p>
@@ -302,7 +302,7 @@ function OrderPage() {
               )}
 
               {order.tier === "bundle" && (
-                <div className="border-2 border-redpen bg-card p-6 shadow-paper">
+                <div className="border border-border bg-card p-6 shadow-paper">
                   <SectionLabel step={layoutStep + 2}>Your cover letter</SectionLabel>
                   <p className="mt-3 font-sans text-[0.95rem] leading-relaxed text-ink">
                     ATS-optimized and tailored to{" "}
@@ -312,7 +312,7 @@ function OrderPage() {
                   </p>
                   {order.result.coverLetter ? (
                     <>
-                      <div className="mt-5 max-h-[26rem] overflow-y-auto border border-border bg-paper p-5">
+                      <div className="mt-5 max-h-[26rem] overflow-y-auto border border-border bg-paper-shade p-5">
                         <p className="font-sans text-[0.95rem] leading-relaxed whitespace-pre-wrap text-ink">
                           {order.result.coverLetter}
                         </p>
@@ -344,7 +344,7 @@ function OrderPage() {
                 </p>
               </div>
 
-              <div className="border-2 border-redpen bg-card p-6 shadow-paper sm:p-8">
+              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
                 <dl className="space-y-6">
                   <div>
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
@@ -378,7 +378,7 @@ function OrderPage() {
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
                       Posting text
                     </dt>
-                    <dd className="mt-2 max-h-64 overflow-y-auto border border-border bg-paper p-4 font-sans text-[0.95rem] leading-relaxed whitespace-pre-wrap text-ink">
+                    <dd className="mt-2 max-h-64 overflow-y-auto border border-border bg-paper-shade p-4 font-sans text-[0.95rem] leading-relaxed whitespace-pre-wrap text-ink">
                       {jobText.trim() || (
                         <span className="text-muted-foreground">Not provided</span>
                       )}
@@ -507,7 +507,7 @@ function OrderPage() {
                         value={background}
                         onChange={(event) => setBackground(event.target.value)}
                         placeholder="Fresenius Medical Care, patient care tech, 2024 to now. Verify patient ID, record vitals, HIPAA..."
-                        className="mt-3 w-full border border-border bg-paper p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
+                        className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
                       />
                       <p className="mt-4 font-sans text-[0.85rem] text-muted-foreground">
                         Or upload your notes as a PDF or DOCX instead:
@@ -549,7 +549,7 @@ function OrderPage() {
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="you@example.com"
-                    className="mt-3 w-full border border-border bg-paper p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
+                    className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
                   />
                   <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
                     Your order confirmation and download links go here. Links expire
@@ -576,7 +576,7 @@ function OrderPage() {
                       value={jobUrl}
                       onChange={(event) => setJobUrl(event.target.value)}
                       placeholder="https://boards.example.com/jobs/1234"
-                      className="mt-3 w-full border border-border bg-paper p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
+                      className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
                     />
                     <label
                       htmlFor="jobText"
@@ -591,7 +591,7 @@ function OrderPage() {
                       value={jobText}
                       onChange={(event) => setJobText(event.target.value)}
                       placeholder="Title, company, responsibilities, required skills..."
-                      className="mt-3 w-full border border-border bg-paper p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
+                      className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
                     />
                     <label
                       htmlFor="jobFile"

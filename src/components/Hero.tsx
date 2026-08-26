@@ -49,7 +49,7 @@ export function Hero() {
               </p>
             </div>
 
-            <p className="mt-6 max-w-[16rem] font-hand text-2xl leading-tight text-redpen -rotate-2">
+            <p className="mt-6 max-w-[16rem] font-hand text-2xl leading-tight text-ink-soft -rotate-2">
               Nine words in and I still don&apos;t know what you do.
             </p>
           </div>

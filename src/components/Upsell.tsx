@@ -8,7 +8,7 @@ export function Upsell() {
           <h2 className="font-stamp text-[2rem] leading-[1.15] text-ink sm:text-5xl">
             The roast was free.
             <br />
-            <span className="text-redpen">The fix isn&apos;t.</span>
+            <span className="text-ink">The fix isn&apos;t.</span>
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-muted-foreground">
             Knowing your résumé is a C- doesn&apos;t get you an interview. The fix

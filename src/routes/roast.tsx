@@ -152,7 +152,7 @@ function RoastPage() {
             <>
               <section className="mt-14">
                 <h2 className="font-stamp text-2xl text-ink sm:text-3xl">Your grade</h2>
-                <div className="mt-3 h-px w-20 bg-redpen" />
+                <div className="mt-3 h-px w-20 bg-ink-soft/60" />
                 <div className="mt-8">
                   <GradedPaperCard roast={current} />
                 </div>
@@ -162,7 +162,7 @@ function RoastPage() {
                 <h2 className="font-stamp text-2xl text-ink sm:text-3xl">
                   Now pick the paper it lands on
                 </h2>
-                <div className="mt-3 h-px w-20 bg-redpen" />
+                <div className="mt-3 h-px w-20 bg-ink-soft/60" />
                 <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
                   Three layouts, shown here as samples with fake details and a blank photo
                   slot. They unblur the moment you buy a fix.
@@ -204,7 +204,7 @@ function RoastPage() {
                     key={entry.id}
                     className="flex items-center gap-4 border border-border bg-card/70 px-4 py-3"
                   >
-                    <span className="grid size-10 shrink-0 place-items-center rounded-full border-2 border-redpen font-stamp text-lg text-redpen">
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full border border-border font-stamp text-lg text-ink-soft">
                       {entry.grade}
                     </span>
                     <button

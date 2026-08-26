@@ -26,7 +26,7 @@ export function HowItWorks() {
         <h2 className="font-stamp text-3xl leading-tight text-ink sm:text-4xl">
           How the grading works
         </h2>
-        <div className="mt-3 h-px w-24 bg-redpen" />
+        <div className="mt-3 h-px w-24 bg-ink-soft/60" />
 
         <ol className="mt-12 space-y-10 sm:mt-16 sm:space-y-14">
           {steps.map((s) => (
@@ -34,7 +34,7 @@ export function HowItWorks() {
               key={s.n}
               className="grid gap-x-8 gap-y-3 border-b border-dashed border-border pb-8 sm:grid-cols-[7rem_1fr_13rem] sm:items-baseline"
             >
-              <span className="font-stamp text-4xl text-redpen/80 sm:text-5xl">
+              <span className="font-stamp text-4xl text-ink-soft sm:text-5xl">
                 {s.n}
               </span>
               <div>
@@ -45,7 +45,7 @@ export function HowItWorks() {
                   {s.body}
                 </p>
               </div>
-              <p className="font-hand text-2xl leading-tight text-redpen sm:-rotate-3 sm:text-right">
+              <p className="font-hand text-2xl leading-tight text-ink-soft sm:-rotate-3 sm:text-right">
                 {s.note}
               </p>
             </li>

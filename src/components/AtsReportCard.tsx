@@ -15,7 +15,7 @@ export function AtsReportCard({
   jobLabel?: string | undefined;
 }) {
   return (
-    <div className="border-2 border-redpen bg-card p-6 shadow-paper sm:p-8">
+    <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="font-sans text-xl tracking-tight text-ink">
@@ -57,7 +57,7 @@ export function AtsReportCard({
             {report.factors.map((factor) => (
               <li
                 key={factor.label}
-                className="border-l-2 border-redpen/60 pl-4"
+                className="border-l-2 border-ink-soft/40 pl-4"
               >
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="font-sans text-[0.95rem] text-ink">
@@ -87,7 +87,7 @@ export function AtsReportCard({
             {report.matched.map((item) => (
               <li
                 key={item.keyword}
-                className="border border-border bg-paper px-3 py-1.5 font-sans text-xs text-ink"
+                className="border border-border bg-paper-shade px-3 py-1.5 font-sans text-xs text-ink"
                 title={item.where}
               >
                 <span className="highlighter">{item.keyword}</span>

@@ -21,11 +21,11 @@ export function PricingTiers() {
             <div
               className={cn(
                 "absolute inset-x-0 top-0 h-1.5",
-                featured ? "bg-redpen" : "bg-ink",
+                featured ? "bg-ink" : "bg-ink-soft/60",
               )}
             />
             {featured && (
-              <span className="absolute -top-3 right-5 bg-redpen px-2 py-1 font-stamp text-[0.6rem] tracking-[0.18em] text-primary-foreground uppercase">
+              <span className="absolute -top-3 right-5 border border-border bg-paper-shade px-2 py-1 font-stamp text-[0.6rem] tracking-[0.18em] text-ink uppercase">
                 Best value
               </span>
             )}
