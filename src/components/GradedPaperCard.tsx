@@ -85,6 +85,17 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
           ))}
         </ul>
 
+        {roast.tip && (
+          <div className="mt-8 border-l-2 border-redpen bg-paper-shade/40 px-5 py-4">
+            <p className="font-typewriter text-[0.68rem] tracking-[0.22em] text-redpen uppercase">
+              The one fix
+            </p>
+            <p className="mt-2 font-typewriter text-[0.95rem] leading-[1.7rem] text-ink">
+              {roast.tip}
+            </p>
+          </div>
+        )}
+
         <p className="mt-9 font-stamp text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase">
           Callback &middot; resume grading
         </p>
