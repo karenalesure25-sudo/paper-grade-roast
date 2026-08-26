@@ -16,6 +16,13 @@ const FileInput = z.object({
 const OrderInput = z
   .object({
     tier: z.enum(["revamp", "scratch", "bundle"]),
+    email: z
+      .string()
+      .trim()
+      .min(1, { message: "Add the email address we should send your order to." })
+      .max(255)
+      .email({ message: "That email address doesn't look right." }),
+    template: z.string().trim().min(1).max(40),
     text: z.string().trim().max(MAX_TEXT_CHARS).optional(),
     file: FileInput.optional(),
     jobUrl: z.string().trim().max(500).optional(),
@@ -46,9 +53,17 @@ export type OrderResult = {
   coverLetter?: string;
   /** Bundle tier only: ATS scoring against the supplied job posting. */
   atsReport?: AtsReport;
+  /** Where the confirmation email went. */
+  email?: string;
+  /** Expiring download links, also emailed to the buyer. */
+  resumeUrl?: string;
+  coverLetterUrl?: string;
+  /** ISO date the download links stop working. */
+  downloadsExpireAt?: string;
 };
 
 export type { AtsReport };
+
 
 export const buildResume = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => OrderInput.parse(input))
