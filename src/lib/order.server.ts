@@ -16,6 +16,17 @@ If contact details are missing from the input, leave those fields as empty strin
 Reply with ONLY a JSON object, no markdown fence, in this exact shape:
 ${SHAPE}`;
 
+const BUNDLE_RULES = BASE_RULES.replace(
+  `Reply with ONLY a JSON object, no markdown fence, in this exact shape:
+${SHAPE}`,
+  `Reply with ONLY a JSON object, no markdown fence, in this exact shape:
+{"resume":${SHAPE},"coverLetter":""}
+
+"coverLetter" is a complete, professional cover letter for that exact job: 3-4 short
+paragraphs, plain text with \\n\\n between paragraphs, no placeholders in brackets, no
+invented facts, addressed generically ("Dear Hiring Manager") if no name is given.`,
+);
+
 export const PROMPTS = {
   revamp: `${BASE_RULES}
 
@@ -25,11 +36,13 @@ every line so it reads sharper and quantifies impact where the input supports it
 
 Task: the input is raw background notes, not a résumé. Write a complete résumé from it.
 Infer a sensible target job title from the experience described.`,
-  bundle: `${BASE_RULES}
+  bundle: `${BUNDLE_RULES}
 
-Task: rewrite the résumé AND tailor it to the job posting supplied. Mirror the posting's
-language and priorities in the summary, objective, and bullets, without fabricating
-experience. Order skills so the posting's required skills come first.`,
+Task: rewrite the résumé, optimize it for Applicant Tracking Systems, AND tailor it to
+the job or role supplied. Mirror the posting's exact language, titles, and priorities in
+the title, summary, objective, and bullets, without fabricating experience. Order skills
+so the posting's required skills come first and use the posting's own keywords verbatim
+where they honestly apply. Then write the matching cover letter.`,
 } as const;
 
 export type OrderKind = keyof typeof PROMPTS;
@@ -114,11 +127,16 @@ function extractJson(text: string): unknown {
   }
 }
 
-/** Calls Lovable AI and returns structured résumé content. Server-only. */
+export type WrittenOrder = { resume: ResumeData; coverLetter?: string };
+
+/**
+ * Calls Lovable AI and returns structured résumé content. The bundle tier also
+ * returns a tailored cover letter. Server-only.
+ */
 export async function writeResume(
   kind: OrderKind,
   content: ContentBlock[],
-): Promise<ResumeData> {
+): Promise<WrittenOrder> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) throw new Error("AI is not configured for this project.");
 
@@ -153,5 +171,14 @@ export async function writeResume(
   const text = json.choices?.[0]?.message?.content;
   if (!text) throw new Error("The writer came back empty. Try again.");
 
-  return coerceResume(extractJson(text));
+  const parsed = extractJson(text);
+
+  if (kind === "bundle") {
+    const obj = (parsed ?? {}) as Record<string, unknown>;
+    const resume = coerceResume(obj["resume"] ?? parsed);
+    const coverLetter = str(obj["coverLetter"], 6000);
+    return coverLetter ? { resume, coverLetter } : { resume };
+  }
+
+  return { resume: coerceResume(parsed) };
 }

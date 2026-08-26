@@ -9,7 +9,7 @@ import { ResumeDeliverable } from "@/components/ResumeDeliverable";
 import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
-import { saveOrder, updateOrder, type StoredOrder } from "@/lib/order-session";
+import { saveOrder, type StoredOrder } from "@/lib/order-session";
 import { RESUME_TEMPLATES, type TemplateId } from "@/lib/resume-templates";
 
 export const Route = createFileRoute("/order/$tier")({
@@ -54,6 +54,7 @@ function OrderPage() {
   const [background, setBackground] = useState("");
   const [jobUrl, setJobUrl] = useState("");
   const [jobText, setJobText] = useState("");
+  const [jobFile, setJobFile] = useState<File | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [template, setTemplate] = useState<TemplateId>("sidebar");
   /** intake+checkout -> layout (+photo) -> delivered résumé */
@@ -61,7 +62,6 @@ function OrderPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<StoredOrder | null>(null);
-  const [queueing, setQueueing] = useState(false);
 
   const needsResume = tier.intake === "resume" || tier.intake === "resume+job";
   const templateUsesPhoto =
@@ -82,8 +82,10 @@ function OrderPage() {
       setError("Tell us a bit more about your background, or upload your notes.");
       return;
     }
-    if (jobStep && !jobUrl.trim()) {
-      setError("Paste the link to the job you want this tailored to.");
+    if (jobStep && !jobUrl.trim() && jobText.trim().length < 40 && !jobFile) {
+      setError(
+        "Add the job you want this tailored to — paste the link, paste the posting, or upload it.",
+      );
       return;
     }
 
@@ -108,6 +110,7 @@ function OrderPage() {
         file?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
         jobUrl?: string;
         jobText?: string;
+        jobFile?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
       };
       let payload: Payload = { tier: tier.id };
 
@@ -129,10 +132,27 @@ function OrderPage() {
       }
 
       if (jobStep) {
+        let extraJobText = jobText.trim();
+        let preparedJobFile: Payload["jobFile"];
+
+        if (jobFile) {
+          const preparedJob = await prepareUpload(jobFile);
+          if (preparedJob.kind === "pdf") {
+            preparedJobFile = {
+              filename: preparedJob.filename,
+              mimeType: preparedJob.mimeType,
+              dataBase64: preparedJob.dataBase64,
+            };
+          } else {
+            extraJobText = [extraJobText, preparedJob.text].filter(Boolean).join("\n\n");
+          }
+        }
+
         payload = {
           ...payload,
-          jobUrl: jobUrl.trim(),
-          ...(jobText.trim() ? { jobText: jobText.trim() } : {}),
+          ...(jobUrl.trim() ? { jobUrl: jobUrl.trim() } : {}),
+          ...(extraJobText ? { jobText: extraJobText } : {}),
+          ...(preparedJobFile ? { jobFile: preparedJobFile } : {}),
         };
       }
 
@@ -151,12 +171,16 @@ function OrderPage() {
     }
   }
 
-  function queueSubmission() {
-    if (!order) return;
-    setQueueing(true);
-    const next = updateOrder(order.id, { submissionQueued: true });
-    setOrder(next ?? { ...order, submissionQueued: true });
-    setQueueing(false);
+  /** Bundle tier: hand the buyer their cover letter as a plain text file. */
+  function downloadCoverLetter() {
+    const letter = order?.result.coverLetter;
+    if (!letter) return;
+    const url = URL.createObjectURL(new Blob([letter], { type: "text/plain" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "callback-cover-letter.txt";
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -216,30 +240,33 @@ function OrderPage() {
 
               {order.tier === "bundle" && (
                 <div className="border-2 border-redpen bg-card p-6 shadow-paper">
-                  <SectionLabel step={layoutStep + 2}>The application</SectionLabel>
+                  <SectionLabel step={layoutStep + 2}>Your cover letter</SectionLabel>
                   <p className="mt-3 font-typewriter text-sm leading-relaxed text-ink">
-                    Tailored to{" "}
-                    <span className="marker break-all">{order.result.jobUrl}</span>
+                    ATS-optimized and tailored to{" "}
+                    <span className="marker break-all">
+                      {order.result.jobUrl ?? order.result.jobLabel}
+                    </span>
                   </p>
-                  {order.submissionQueued ? (
-                    <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
-                      Queued. We submit this application for you and email you the
-                      confirmation.
-                    </p>
-                  ) : (
+                  {order.result.coverLetter ? (
                     <>
-                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                        Hand it off and our team submits this application on your behalf.
-                      </p>
+                      <div className="mt-5 max-h-[26rem] overflow-y-auto border border-border bg-paper p-5">
+                        <p className="font-typewriter text-sm leading-relaxed whitespace-pre-wrap text-ink">
+                          {order.result.coverLetter}
+                        </p>
+                      </div>
                       <StampButton
                         type="button"
-                        onClick={queueSubmission}
-                        disabled={queueing}
+                        onClick={downloadCoverLetter}
                         className="mt-6"
                       >
-                        Submit It For Me
+                        Download Cover Letter
                       </StampButton>
                     </>
+                  ) : (
+                    <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
+                      The cover letter didn&rsquo;t come through. Run it again and it
+                      will.
+                    </p>
                   )}
                 </div>
               )}
@@ -366,7 +393,7 @@ function OrderPage() {
                       htmlFor="jobText"
                       className="mt-6 block font-typewriter text-sm tracking-widest text-ink uppercase"
                     >
-                      Paste the posting text (optional, but it tailors harder)
+                      Or paste the posting / role description
                     </label>
                     <textarea
                       id="jobText"
@@ -374,8 +401,28 @@ function OrderPage() {
                       rows={5}
                       value={jobText}
                       onChange={(event) => setJobText(event.target.value)}
+                      placeholder="Title, company, responsibilities, required skills..."
                       className="mt-3 w-full border border-border bg-paper p-3 font-typewriter text-sm text-ink outline-none focus:border-redpen"
                     />
+                    <label
+                      htmlFor="jobFile"
+                      className="mt-6 block font-typewriter text-sm tracking-widest text-ink uppercase"
+                    >
+                      Or upload the posting (PDF or DOCX)
+                    </label>
+                    <input
+                      id="jobFile"
+                      name="jobFile"
+                      type="file"
+                      accept=".pdf,.docx,application/pdf"
+                      onChange={(event) => setJobFile(event.target.files?.[0] ?? null)}
+                      className="mt-2 block w-full font-typewriter text-sm text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-redpen hover:file:text-redpen"
+                    />
+                    <p className="mt-2 font-typewriter text-xs text-muted-foreground">
+                      {jobFile
+                        ? `Attached: ${jobFile.name}`
+                        : "A link, pasted text, or a file \u2014 any one is enough."}
+                    </p>
                   </div>
                 </section>
               )}

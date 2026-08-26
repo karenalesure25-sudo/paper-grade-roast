@@ -20,19 +20,30 @@ const OrderInput = z
     file: FileInput.optional(),
     jobUrl: z.string().trim().max(500).optional(),
     jobText: z.string().trim().max(MAX_TEXT_CHARS).optional(),
+    jobFile: FileInput.optional(),
   })
   .refine((v) => Boolean(v.text?.length) || Boolean(v.file), {
     message: "Add your résumé or your background details first.",
   })
-  .refine((v) => v.tier !== "bundle" || Boolean(v.jobUrl?.length), {
-    message: "Paste the link to the job you want this tailored to.",
-  });
+  .refine(
+    (v) =>
+      v.tier !== "bundle" ||
+      Boolean(v.jobUrl?.length) ||
+      Boolean(v.jobText?.length) ||
+      Boolean(v.jobFile),
+    {
+      message: "Add the job posting: paste a link, paste the text, or upload the file.",
+    },
+  );
 
 export type OrderResult = {
   tier: "revamp" | "scratch" | "bundle";
   resume: ResumeData;
   sourceLabel: string;
   jobUrl?: string;
+  jobLabel?: string;
+  /** Bundle tier only: the tailored cover letter for that job. */
+  coverLetter?: string;
 };
 
 export const buildResume = createServerFn({ method: "POST" })
@@ -44,9 +55,14 @@ export const buildResume = createServerFn({ method: "POST" })
       data.tier === "scratch"
         ? "Write a résumé from these background notes."
         : data.tier === "bundle"
-          ? `Rewrite the attached résumé and tailor it to this job posting.\nJob posting URL: ${data.jobUrl}\n${
-              data.jobText ? `Job posting details:\n${data.jobText}` : ""
-            }`
+          ? [
+              "Rewrite the attached résumé, optimize it for ATS, and tailor it to the job below. Then write the matching cover letter.",
+              data.jobUrl ? `Job posting URL: ${data.jobUrl}` : "",
+              data.jobText ? `Job / role details:\n${data.jobText}` : "",
+              data.jobFile ? "The job posting is also attached as a file." : "",
+            ]
+              .filter(Boolean)
+              .join("\n")
           : "Rewrite and polish the attached résumé.";
 
     content.push({ type: "text", text: instruction });
@@ -63,12 +79,29 @@ export const buildResume = createServerFn({ method: "POST" })
       content.push({ type: "text", text: data.text });
     }
 
-    const resume = await writeResume(data.tier, content);
+    if (data.jobFile) {
+      content.push({
+        type: "file",
+        file: {
+          filename: data.jobFile.filename,
+          file_data: `data:${data.jobFile.mimeType};base64,${data.jobFile.dataBase64}`,
+        },
+      });
+    }
+
+    const written = await writeResume(data.tier, content);
+
+    const jobLabel =
+      data.tier === "bundle"
+        ? (data.jobUrl ?? data.jobFile?.filename ?? "the role you sent us")
+        : undefined;
 
     return {
       tier: data.tier,
-      resume,
+      resume: written.resume,
       sourceLabel: data.file?.filename ?? "your notes",
       ...(data.jobUrl ? { jobUrl: data.jobUrl } : {}),
+      ...(jobLabel ? { jobLabel } : {}),
+      ...(written.coverLetter ? { coverLetter: written.coverLetter } : {}),
     };
   });
