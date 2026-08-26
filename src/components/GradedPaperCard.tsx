@@ -97,7 +97,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
         )}
 
         <p className="mt-9 font-stamp text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase">
-          Callback &middot; resume grading
+          Kay&rsquo;s Career Solutions &middot; resume grading
         </p>
       </div>
 

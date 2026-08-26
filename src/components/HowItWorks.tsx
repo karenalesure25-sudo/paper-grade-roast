@@ -23,10 +23,10 @@ export function HowItWorks() {
   return (
     <section id="how" className="px-5 py-20 sm:py-28">
       <div className="mx-auto max-w-5xl">
-        <h2 className="font-stamp text-3xl leading-tight text-ink sm:text-4xl">
+        <h2 className="font-display text-[1.7rem] leading-tight text-ink uppercase sm:text-4xl">
           How the grading works
         </h2>
-        <div className="mt-3 h-px w-24 bg-ink-soft/60" />
+        <div className="gold-rule mt-4 w-40" />
 
         <ol className="mt-12 space-y-10 sm:mt-16 sm:space-y-14">
           {steps.map((s) => (
@@ -34,7 +34,7 @@ export function HowItWorks() {
               key={s.n}
               className="grid gap-x-8 gap-y-3 border-b border-dashed border-border pb-8 sm:grid-cols-[7rem_1fr_13rem] sm:items-baseline"
             >
-              <span className="font-stamp text-4xl text-ink-soft sm:text-5xl">
+              <span className="gold-foil font-display text-4xl sm:text-5xl">
                 {s.n}
               </span>
               <div>

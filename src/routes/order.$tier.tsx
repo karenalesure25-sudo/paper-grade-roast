@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { BrandLink } from "@/components/BrandMark";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { StampButton } from "@/components/StampButton";
@@ -234,9 +235,7 @@ function OrderPage() {
     <div className="paper-texture relative min-h-screen">
       <header className="px-5 py-6">
         <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <Link to="/" className="font-stamp text-xl tracking-[0.2em] text-ink uppercase">
-            Callback
-          </Link>
+          <BrandLink size="sm" withTagline={false} />
           <Link
             to="/"
             className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
