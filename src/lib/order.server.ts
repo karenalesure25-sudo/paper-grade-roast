@@ -16,15 +16,32 @@ If contact details are missing from the input, leave those fields as empty strin
 Reply with ONLY a JSON object, no markdown fence, in this exact shape:
 ${SHAPE}`;
 
+const ATS_SHAPE = `{"score":0,"verdict":"","matched":[{"keyword":"","where":""}],"missing":[{"keyword":"","why":""}],"factors":[{"label":"","points":0,"detail":""}]}`;
+
 const BUNDLE_RULES = BASE_RULES.replace(
   `Reply with ONLY a JSON object, no markdown fence, in this exact shape:
 ${SHAPE}`,
   `Reply with ONLY a JSON object, no markdown fence, in this exact shape:
-{"resume":${SHAPE},"coverLetter":""}
+{"resume":${SHAPE},"coverLetter":"","atsReport":${ATS_SHAPE}}
 
 "coverLetter" is a complete, professional cover letter for that exact job: 3-4 short
 paragraphs, plain text with \\n\\n between paragraphs, no placeholders in brackets, no
-invented facts, addressed generically ("Dear Hiring Manager") if no name is given.`,
+invented facts, addressed generically ("Dear Hiring Manager") if no name is given.
+
+"atsReport" scores the résumé you just wrote against the supplied job posting:
+- "score": integer 0-100, an honest estimate of how well an ATS screen would rank it.
+  Base it only on evidence in the résumé and posting, never on optimism.
+- "verdict": 1-2 sentences explaining that number in plain language.
+- "matched": 6-12 keywords/skills from the posting that genuinely appear in the résumé.
+  "where" names the exact section or role the ATS would find it in (e.g. "Summary",
+  "Skills", "Operations Lead bullets").
+- "missing": 2-5 posting keywords the résumé does NOT honestly support. "why" says why
+  it is absent (not in the candidate's history, no evidence given, etc.). Never fabricate
+  the résumé to cover these; report them.
+- "factors": 3-5 scoring factors, each with "label", a signed integer "points"
+  contribution, and "detail" tying it to the posting (e.g. keyword coverage, title
+  alignment, quantified impact, formatting parseability).
+Every explanation must reference the actual posting and résumé, no generic filler.`,
 );
 
 export const PROMPTS = {
