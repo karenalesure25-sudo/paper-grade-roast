@@ -69,7 +69,9 @@ function OrderPage() {
   const templateUsesPhoto =
     RESUME_TEMPLATES.find((t) => t.id === template)?.usesPhoto ?? false;
   const jobStep = tier.intake === "resume+job";
-  const checkoutStep = jobStep ? 3 : 2;
+  /** $60 adds a job-posting review step before the charge is finalized. */
+  const reviewStep = jobStep ? 3 : 0;
+  const checkoutStep = jobStep ? 4 : 2;
   const layoutStep = checkoutStep + 1;
 
   /** Placeholder checkout. Payment first, then layout + photo, then the AI run. */
