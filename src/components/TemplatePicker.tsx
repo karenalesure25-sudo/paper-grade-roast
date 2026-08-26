@@ -30,8 +30,8 @@ export function TemplatePicker({
           >
             <div
               className={`relative overflow-hidden border-2 bg-white shadow-paper ${
-                selected ? "border-ink" : "border-border"
-              }`}
+                unlocked ? "" : "locked-glow"
+              } ${selected ? "border-ink" : "border-border"}`}
             >
               <div className="pointer-events-none h-[290px] origin-top overflow-hidden">
                 <div className={unlocked ? "" : "[mask-image:linear-gradient(#000,#000)]"}>
