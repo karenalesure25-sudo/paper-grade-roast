@@ -356,6 +356,14 @@ function OrderPage() {
                   </div>
                   <div>
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                      Confirmation email
+                    </dt>
+                    <dd className="mt-2 font-typewriter text-sm break-all text-ink">
+                      <span className="marker">{email.trim()}</span>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
                       Job link
                     </dt>
                     <dd className="mt-2 font-typewriter text-sm break-all text-ink">
