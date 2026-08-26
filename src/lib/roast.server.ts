@@ -114,6 +114,7 @@ export async function gradeResume(content: ContentBlock[]): Promise<RoastPayload
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content },
       ],
+      temperature: 1,
       response_format: { type: "json_object" },
     }),
   });
