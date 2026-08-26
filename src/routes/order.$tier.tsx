@@ -282,13 +282,16 @@ function OrderPage() {
                   Order confirmation
                 </p>
                 <p className="mt-3 font-sans text-[0.95rem] leading-relaxed text-ink">
-                  {order.result.email ? (
+                  {order.result.emailed && order.result.email ? (
                     <>
                       Sent to <span className="marker">{order.result.email}</span> with
                       your download links.
                     </>
                   ) : (
-                    "Your download links are below."
+                    <>
+                      Email delivery isn&rsquo;t switched on yet, so grab your files
+                      right here &mdash; the links below are yours for 7 days.
+                    </>
                   )}
                 </p>
                 <div className="mt-5 flex flex-wrap gap-5">
