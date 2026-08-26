@@ -25,6 +25,7 @@ export type RoastResult = {
   grade: string;
   roast: string;
   notes: string[];
+  tip: string;
   label: string;
 };
 
