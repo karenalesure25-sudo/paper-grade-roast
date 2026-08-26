@@ -24,7 +24,7 @@ export function renderResumeDocument(resume: ResumeData): string {
       <article class="entry">
         <h3>${esc(job.role ?? "")}</h3>
         <p class="meta">${esc([job.company, job.location].filter(Boolean).join(" — "))}${
-          job.period ? ` &middot; ${esc(job.period)}` : ""
+          job.dates ? ` &middot; ${esc(job.dates)}` : ""
         }</p>
         <ul>${(job.bullets ?? []).map((bullet) => `<li>${esc(bullet)}</li>`).join("")}</ul>
       </article>`,
@@ -36,7 +36,7 @@ export function renderResumeDocument(resume: ResumeData): string {
       (item) => `
       <article class="entry">
         <h3>${esc(item.credential ?? "")}</h3>
-        <p class="meta">${esc([item.school, item.period].filter(Boolean).join(" — "))}</p>
+        <p class="meta">${esc([item.school, item.dates].filter(Boolean).join(" — "))}</p>
       </article>`,
     )
     .join("");
