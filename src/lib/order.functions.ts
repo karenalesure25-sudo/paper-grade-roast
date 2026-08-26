@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { writeResume, type ContentBlock } from "./order.server";
+import { writeResume, type AtsReport, type ContentBlock } from "./order.server";
 import type { ResumeData } from "./resume-templates";
 
 const MAX_TEXT_CHARS = 24000;
@@ -44,7 +44,11 @@ export type OrderResult = {
   jobLabel?: string;
   /** Bundle tier only: the tailored cover letter for that job. */
   coverLetter?: string;
+  /** Bundle tier only: ATS scoring against the supplied job posting. */
+  atsReport?: AtsReport;
 };
+
+export type { AtsReport };
 
 export const buildResume = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => OrderInput.parse(input))
@@ -103,5 +107,6 @@ export const buildResume = createServerFn({ method: "POST" })
       ...(data.jobUrl ? { jobUrl: data.jobUrl } : {}),
       ...(jobLabel ? { jobLabel } : {}),
       ...(written.coverLetter ? { coverLetter: written.coverLetter } : {}),
+      ...(written.atsReport ? { atsReport: written.atsReport } : {}),
     };
   });
