@@ -110,6 +110,7 @@ function OrderPage() {
         file?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
         jobUrl?: string;
         jobText?: string;
+        jobFile?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
       };
       let payload: Payload = { tier: tier.id };
 
