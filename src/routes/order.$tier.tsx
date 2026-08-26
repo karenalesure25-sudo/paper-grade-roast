@@ -11,7 +11,11 @@ import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
 import { saveOrder, type StoredOrder } from "@/lib/order-session";
-import { RESUME_TEMPLATES, type TemplateId } from "@/lib/resume-templates";
+import {
+  PHOTO_LAYOUT_COUNT,
+  RESUME_TEMPLATES,
+  type TemplateId,
+} from "@/lib/resume-templates";
 
 export const Route = createFileRoute("/order/$tier")({
   beforeLoad: ({ params }) => {

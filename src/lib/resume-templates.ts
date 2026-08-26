@@ -87,6 +87,9 @@ export const RESUME_TEMPLATES: ResumeTemplateMeta[] = [
   },
 ];
 
+/** How many layouts prompt the buyer for a photo. */
+export const PHOTO_LAYOUT_COUNT = RESUME_TEMPLATES.filter((t) => t.usesPhoto).length;
+
 /** Fake résumé used for the locked before-purchase previews. */
 export const SAMPLE_RESUME: ResumeData = {
   name: "Jordan A. Rivera",
