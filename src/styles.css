@@ -46,6 +46,13 @@
   --color-paper-shade: var(--paper-shade);
   --color-rule: var(--rule);
   --color-board: var(--board);
+  --color-gold: var(--gold);
+  --color-gold-light: var(--gold-light);
+  --color-gold-deep: var(--gold-deep);
+  --color-crimson: var(--crimson);
+  --color-crimson-deep: var(--crimson-deep);
+  --font-script: "Great Vibes", "Caveat", cursive;
+  --font-display: "Archivo Black", "Inter", ui-sans-serif, sans-serif;
   --font-stamp: "Special Elite", "Courier Prime", ui-monospace, monospace;
   --font-typewriter: "Courier Prime", ui-monospace, monospace;
   --font-hand: "Caveat", "Special Elite", cursive;
