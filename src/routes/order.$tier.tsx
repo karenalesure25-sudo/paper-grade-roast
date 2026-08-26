@@ -82,8 +82,10 @@ function OrderPage() {
       setError("Tell us a bit more about your background, or upload your notes.");
       return;
     }
-    if (jobStep && !jobUrl.trim()) {
-      setError("Paste the link to the job you want this tailored to.");
+    if (jobStep && !jobUrl.trim() && jobText.trim().length < 40 && !jobFile) {
+      setError(
+        "Add the job you want this tailored to — paste the link, paste the posting, or upload it.",
+      );
       return;
     }
 
