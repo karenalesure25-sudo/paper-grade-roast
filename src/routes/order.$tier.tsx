@@ -54,6 +54,7 @@ function OrderPage() {
   const [background, setBackground] = useState("");
   const [jobUrl, setJobUrl] = useState("");
   const [jobText, setJobText] = useState("");
+  const [jobFile, setJobFile] = useState<File | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [template, setTemplate] = useState<TemplateId>("sidebar");
   /** intake+checkout -> layout (+photo) -> delivered résumé */
