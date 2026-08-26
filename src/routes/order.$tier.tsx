@@ -12,6 +12,11 @@ import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
 import { saveOrder, type StoredOrder } from "@/lib/order-session";
 import {
+  COVER_LETTER_STYLES,
+  renderCoverLetterHtml,
+  type CoverLetterStyle,
+} from "@/lib/cover-letter-doc";
+import {
   PHOTO_LAYOUT_COUNT,
   RESUME_TEMPLATES,
   type TemplateId,
@@ -63,6 +68,7 @@ function OrderPage() {
   const [jobFile, setJobFile] = useState<File | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [template, setTemplate] = useState<TemplateId>("sidebar");
+  const [letterStyle, setLetterStyle] = useState<CoverLetterStyle>("ivory");
   /** intake -> (job review, $60 only) -> checkout -> layout (+photo) -> delivered résumé */
   const [phase, setPhase] = useState<"intake" | "confirm" | "layout" | "done">(
     "intake",
@@ -296,7 +302,7 @@ function OrderPage() {
                   )}
                   {order.result.coverLetterUrl && (
                     <a
-                      href={order.result.coverLetterUrl}
+                      href={`${order.result.coverLetterUrl}?style=${letterStyle}`}
                       className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
                     >
                       Download my cover letter
@@ -335,6 +341,45 @@ function OrderPage() {
                         <p className="font-sans text-[0.95rem] leading-relaxed whitespace-pre-wrap text-ink">
                           {order.result.coverLetter}
                         </p>
+                      </div>
+                      <div className="mt-6">
+                        <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
+                          Pick a letterhead
+                        </p>
+                        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                          {COVER_LETTER_STYLES.map((option) => {
+                            const active = option.id === letterStyle;
+                            return (
+                              <button
+                                key={option.id}
+                                type="button"
+                                onClick={() => setLetterStyle(option.id)}
+                                aria-pressed={active}
+                                className={`border p-4 text-left transition-colors ${
+                                  active
+                                    ? "border-redpen bg-paper-shade"
+                                    : "border-border bg-card hover:border-ink-soft"
+                                }`}
+                              >
+                                <span className="flex gap-1.5">
+                                  {option.swatch.map((color) => (
+                                    <span
+                                      key={color}
+                                      className="h-4 w-4 rounded-full border border-border"
+                                      style={{ backgroundColor: color }}
+                                    />
+                                  ))}
+                                </span>
+                                <span className="mt-3 block font-sans text-[0.95rem] font-semibold text-ink">
+                                  {option.name}
+                                </span>
+                                <span className="mt-1 block font-sans text-[0.8rem] leading-snug text-muted-foreground">
+                                  {option.blurb}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
                       <StampButton
                         type="button"
