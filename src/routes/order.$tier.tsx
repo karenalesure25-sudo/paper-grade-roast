@@ -131,10 +131,27 @@ function OrderPage() {
       }
 
       if (jobStep) {
+        let extraJobText = jobText.trim();
+        let preparedJobFile: Payload["jobFile"];
+
+        if (jobFile) {
+          const preparedJob = await prepareUpload(jobFile);
+          if (preparedJob.kind === "pdf") {
+            preparedJobFile = {
+              filename: preparedJob.filename,
+              mimeType: preparedJob.mimeType,
+              dataBase64: preparedJob.dataBase64,
+            };
+          } else {
+            extraJobText = [extraJobText, preparedJob.text].filter(Boolean).join("\n\n");
+          }
+        }
+
         payload = {
           ...payload,
-          jobUrl: jobUrl.trim(),
-          ...(jobText.trim() ? { jobText: jobText.trim() } : {}),
+          ...(jobUrl.trim() ? { jobUrl: jobUrl.trim() } : {}),
+          ...(extraJobText ? { jobText: extraJobText } : {}),
+          ...(preparedJobFile ? { jobFile: preparedJobFile } : {}),
         };
       }
 
