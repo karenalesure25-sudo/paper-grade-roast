@@ -249,8 +249,8 @@ function OrderPage() {
               <div>
                 <SectionLabel step={layoutStep}>Pick your layout</SectionLabel>
                 <p className="mt-3 max-w-2xl font-typewriter text-sm text-muted-foreground">
-                  Payment received &mdash; all three layouts are unlocked. Two use a
-                  photo; the plain sheet is text only.
+                  Payment received &mdash; every layout is unlocked. Two use a photo;
+                  the rest are text only.
                 </p>
               </div>
 
