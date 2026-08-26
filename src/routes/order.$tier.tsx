@@ -53,6 +53,7 @@ function OrderPage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [background, setBackground] = useState("");
+  const [email, setEmail] = useState("");
   const [jobUrl, setJobUrl] = useState("");
   const [jobText, setJobText] = useState("");
   const [jobFile, setJobFile] = useState<File | null>(null);
@@ -93,10 +94,15 @@ function OrderPage() {
       );
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
+      setError("Add the email address we should send your order confirmation to.");
+      return;
+    }
 
     setError(null);
     setPhase(jobStep ? "confirm" : "layout");
   }
+
 
   async function build() {
     if (pending) return;
