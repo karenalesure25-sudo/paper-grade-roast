@@ -3,7 +3,7 @@ const steps = [
     n: "01",
     title: "Upload",
     body: "Upload a PDF or DOCX, or paste the text. No account needed.",
-    note: "takes 4 seconds",
+    note: "PDF, DOCX, or paste",
   },
   {
     n: "02",
@@ -15,37 +15,35 @@ const steps = [
     n: "03",
     title: "Unlock the Fix",
     body: "Choose a $40, $50, or $60 service and Kay builds the fix from your real experience.",
-    note: "this is the good part",
+    note: "optional paid service",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how" className="px-5 py-20 sm:py-28">
-      <div className="mx-auto max-w-5xl">
-        <h2 className="font-display text-[1.7rem] leading-tight text-ink uppercase sm:text-4xl">
-          How the grading works
-        </h2>
-        <div className="gold-rule mt-4 w-40" />
+    <section id="how" className="section-shell border-y border-border/60 bg-surface-subtle">
+      <div className="mx-auto max-w-6xl">
+        <p className="eyebrow">A clear three-step process</p>
+        <h2 className="section-title mt-4">How it works</h2>
 
-        <ol className="mt-12 space-y-10 sm:mt-16 sm:space-y-14">
+        <ol className="mt-10 grid gap-px overflow-hidden border border-border bg-border md:grid-cols-3">
           {steps.map((s) => (
             <li
               key={s.n}
-              className="grid gap-x-8 gap-y-3 border-b border-dashed border-border pb-8 sm:grid-cols-[7rem_1fr_13rem] sm:items-baseline"
+              className="bg-card p-6 sm:p-8"
             >
-              <span className="gold-foil font-display text-4xl sm:text-5xl">
+              <span className="font-brand text-4xl text-gold">
                 {s.n}
               </span>
               <div>
-                <h3 className="font-sans text-xl font-bold text-ink sm:text-2xl">
+                <h3 className="mt-6 font-brand-sub text-xl text-ivory">
                   {s.title}
                 </h3>
-                <p className="mt-2 max-w-md text-[0.975rem] leading-relaxed text-muted-foreground">
+                <p className="mt-3 text-[0.95rem] leading-7 text-muted-foreground">
                   {s.body}
                 </p>
               </div>
-              <p className="font-hand text-2xl leading-tight text-ink-soft sm:-rotate-3 sm:text-right">
+              <p className="mt-5 border-t border-border pt-4 text-xs font-semibold tracking-[0.08em] text-gold uppercase">
                 {s.note}
               </p>
             </li>

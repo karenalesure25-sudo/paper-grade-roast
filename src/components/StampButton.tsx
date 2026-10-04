@@ -5,20 +5,18 @@ import { cn } from "@/lib/utils";
 /** Shared rubber-stamp styling for CTA buttons and links. */
 export const stampClasses = cn(
   "group relative inline-flex items-center justify-center gap-2",
-  "border-[3px] border-redpen bg-redpen px-8 py-4",
-  "font-stamp text-base tracking-[0.16em] text-primary-foreground uppercase sm:text-lg",
-  "-rotate-[1.5deg] transition-all duration-200",
-  "shadow-[0_5px_0_0_var(--redpen-deep)]",
-  "hover:-translate-y-0.5 hover:rotate-0 hover:shadow-[0_7px_0_0_var(--redpen-deep)]",
-  "active:translate-y-1 active:shadow-[0_1px_0_0_var(--redpen-deep)]",
+  "min-h-12 border border-redpen bg-redpen px-7 py-3.5",
+  "font-sans text-sm font-bold tracking-[0.08em] text-primary-foreground uppercase",
+  "transition-all duration-200",
+  "shadow-[0_8px_22px_-10px_color-mix(in_oklab,var(--redpen)_75%,transparent)]",
+  "hover:-translate-y-0.5 hover:bg-crimson-deep",
+  "active:translate-y-0",
   "disabled:pointer-events-none disabled:opacity-70",
   "focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
 );
 
 function StampInk() {
-  return (
-    <span className="pointer-events-none absolute inset-[3px] border border-primary-foreground/40" />
-  );
+  return null;
 }
 
 /** CTA styled as a red rubber stamp pressed onto the page. */
