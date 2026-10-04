@@ -38,7 +38,7 @@ export function Hero() {
               </div>
               <GradeStamp grade="C" delay={400} />
             </div>
-            <p className="mt-6 font-hand text-2xl leading-tight text-redpen">
+            <p className="mt-6 font-hand text-2xl leading-tight text-redpen-text">
               Says what you were responsible for, not what changed because of you.
             </p>
             <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">

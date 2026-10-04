@@ -67,7 +67,7 @@ export function RoastCards() {
                 </p>
               </div>
 
-              <p className="mt-5 font-hand text-2xl leading-none text-redpen">
+              <p className="mt-5 font-hand text-2xl leading-none text-redpen-text">
                 {r.note}
               </p>
             </article>

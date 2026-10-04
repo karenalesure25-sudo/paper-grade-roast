@@ -455,7 +455,7 @@ function OrderPage() {
                       </StampButton>
                     </>
                   ) : (
-                    <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
+                    <p className="mt-5 font-hand text-2xl leading-tight text-redpen-text">
                       The cover letter didn&rsquo;t come through. Run it again and it
                       will.
                     </p>
@@ -591,7 +591,7 @@ function OrderPage() {
                   </div>
                 </div>
               ) : (
-                <p className="font-hand text-2xl leading-tight text-redpen">
+                <p className="font-hand text-2xl leading-tight text-redpen-text">
                   Plain sheet &mdash; no photo needed. Straight to the writing.
                 </p>
               )}
@@ -606,7 +606,7 @@ function OrderPage() {
                     : "Your layout is locked in before the writing starts."}
                 </p>
                 {error && (
-                  <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
+                  <p className="mt-5 font-hand text-2xl leading-tight text-redpen-text">
                     {error}
                   </p>
                 )}

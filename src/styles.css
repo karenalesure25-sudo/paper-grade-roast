@@ -41,6 +41,7 @@
   --color-ink-soft: var(--ink-soft);
   --color-redpen: var(--redpen);
   --color-redpen-deep: var(--redpen-deep);
+  --color-redpen-text: var(--redpen-text);
   --color-highlighter: var(--highlighter);
   --color-paper: var(--paper);
   --color-paper-shade: var(--paper-shade);
@@ -76,6 +77,8 @@
   --ink-soft: #8a8a8a;
   --redpen: #c1121f;
   --redpen-deep: #7d0a13;
+  /* accessible red for readable text on dark surfaces (6.48:1 on #141414) */
+  --redpen-text: #ff6670;
   --crimson: #c1121f;
   --crimson-deep: #7d0a13;
   /* gold */

@@ -61,7 +61,7 @@ export function ResumeDeliverable({
       </div>
 
       {status === "error" && (
-        <p className="font-hand text-2xl text-redpen">
+        <p className="font-hand text-2xl text-redpen-text">
           The export choked. Try the print option instead.
         </p>
       )}

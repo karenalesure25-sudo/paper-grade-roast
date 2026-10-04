@@ -102,7 +102,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
           <ul className="mt-3 space-y-4">
             {roast.notes.map((note) => (
               <li key={note.point}>
-                <span className="font-hand text-2xl leading-tight text-redpen">{note.point}</span>
+                <span className="font-hand text-2xl leading-tight text-redpen-text">{note.point}</span>
                 <span className="mt-1 block font-sans text-[0.85rem] text-muted-foreground">
                   {note.quote
                     ? <>From your résumé: &ldquo;{note.quote}&rdquo;</>

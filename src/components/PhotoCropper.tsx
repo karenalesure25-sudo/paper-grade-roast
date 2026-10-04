@@ -104,7 +104,7 @@ export function PhotoCropper({
       />
 
       {error && (
-        <p className="mt-4 font-hand text-2xl leading-tight text-redpen">{error}</p>
+        <p className="mt-4 font-hand text-2xl leading-tight text-redpen-text">{error}</p>
       )}
 
       {src && (
@@ -185,7 +185,7 @@ export function PhotoCropper({
                 >
                   <img src={value} alt="Confirmed photo" className="h-full w-full object-cover" />
                 </div>
-                <p className="font-hand text-2xl leading-tight text-redpen">
+                <p className="font-hand text-2xl leading-tight text-redpen-text">
                   Placement locked in.
                 </p>
               </div>
