@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      intakes: {
+        Row: {
+          answers: Json
+          career_field: string | null
+          company_name: string | null
+          confirmed: boolean
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          job_description: string | null
+          job_file_filename: string | null
+          job_file_path: string | null
+          job_url: string | null
+          phone: string
+          resume_filename: string | null
+          resume_path: string | null
+          specific_job_title: string | null
+          target_job_title: string | null
+          tier: string
+        }
+        Insert: {
+          answers?: Json
+          career_field?: string | null
+          company_name?: string | null
+          confirmed?: boolean
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          job_description?: string | null
+          job_file_filename?: string | null
+          job_file_path?: string | null
+          job_url?: string | null
+          phone: string
+          resume_filename?: string | null
+          resume_path?: string | null
+          specific_job_title?: string | null
+          target_job_title?: string | null
+          tier: string
+        }
+        Update: {
+          answers?: Json
+          career_field?: string | null
+          company_name?: string | null
+          confirmed?: boolean
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          job_description?: string | null
+          job_file_filename?: string | null
+          job_file_path?: string | null
+          job_url?: string | null
+          phone?: string
+          resume_filename?: string | null
+          resume_path?: string | null
+          specific_job_title?: string | null
+          target_job_title?: string | null
+          tier?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           ats_report: Json | null
