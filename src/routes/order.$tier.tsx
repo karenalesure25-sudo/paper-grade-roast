@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { BrandLink } from "@/components/BrandMark";
+import { SiteHeader } from "@/components/SiteHeader";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { StampButton } from "@/components/StampButton";
@@ -290,24 +290,14 @@ function OrderPage() {
 
   return (
     <div className="paper-texture relative min-h-screen">
-      <header className="px-5 py-6">
-        <div className="mx-auto flex max-w-5xl items-center justify-between">
-          <BrandLink size="sm" withTagline={false} />
-          <Link
-            to="/"
-            className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
-          >
-            Back to the front page
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
-      <main className="px-5 pb-20">
+      <main className="px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-5xl">
-          <p className="font-typewriter text-xs tracking-[0.3em] text-ink-soft uppercase">
+          <p className="eyebrow">
             ${tier.price} &middot; {tier.name}
           </p>
-          <h1 className="mt-4 font-stamp text-[2.1rem] leading-[1.1] text-ink sm:text-5xl">
+          <h1 className="mt-4 font-brand text-[2.7rem] leading-[1.02] text-ivory sm:text-6xl">
             {tier.name}
           </h1>
           <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
@@ -473,7 +463,7 @@ function OrderPage() {
                 </p>
               </div>
 
-              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
+              <div className="premium-panel p-6 sm:p-8">
                 <dl className="space-y-6">
                   <div>
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
@@ -528,7 +518,7 @@ function OrderPage() {
                 </dl>
               </div>
 
-              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
+              <div className="premium-panel p-6 sm:p-8">
                 <SectionLabel step={checkoutStep}>Checkout</SectionLabel>
                 <div className="mt-5 flex flex-wrap items-end justify-between gap-6">
                   <div>
@@ -596,7 +586,7 @@ function OrderPage() {
                 </p>
               )}
 
-              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
+              <div className="premium-panel p-6 sm:p-8">
                 <StampButton type="button" onClick={build} disabled={pending}>
                   {pending ? "Checking..." : "Continue to Checkout"}
                 </StampButton>

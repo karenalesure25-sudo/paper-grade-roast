@@ -6,35 +6,34 @@ import { cn } from "@/lib/utils";
 /** The three paid tiers, each linking to its own flow. */
 export function PricingTiers() {
   return (
-    <div className="grid gap-6 lg:grid-cols-3">
+    <div className="grid gap-5 md:grid-cols-3">
       {TIERS.map((tier, index) => {
         const featured = tier.id === "bundle";
         return (
           <div
             key={tier.id}
             className={cn(
-              "gold-frame relative flex flex-col bg-card p-7 shadow-paper-lift",
-              index === 0 && "lg:-rotate-[0.7deg]",
-              index === 2 && "lg:rotate-[0.7deg]",
+              "service-card relative flex flex-col p-6 sm:p-7",
+              featured && "border-gold/70",
             )}
           >
             <div
               className={cn(
-                "absolute inset-x-0 top-0 h-1.5",
+                "absolute inset-x-0 top-0 h-1",
                 featured ? "bg-gradient-to-r from-gold-deep via-gold-light to-gold-deep" : "bg-gold/35",
               )}
             />
             {featured && (
-              <span className="absolute -top-3 right-5 border border-border bg-paper-shade px-2 py-1 font-sans font-semibold text-[0.6rem] tracking-[0.18em] text-gold uppercase">
-                Best value
+              <span className="absolute -top-3 right-4 border border-gold/50 bg-background px-3 py-1 font-sans text-[0.62rem] font-bold tracking-[0.14em] text-gold uppercase">
+                Most complete
               </span>
             )}
 
-            <p className="font-sans text-xs font-semibold tracking-[0.24em] text-gold uppercase">
+            <p className="font-sans text-[0.68rem] font-bold tracking-[0.18em] text-gold uppercase">
               {tier.name}
             </p>
             <div className="mt-4 flex items-end gap-2">
-              <span className="gold-foil font-display text-5xl leading-none">
+              <span className="gold-foil font-brand text-5xl leading-none">
                 ${tier.price}
               </span>
               <span className="pb-1 font-sans text-[0.85rem] text-muted-foreground">
@@ -61,7 +60,6 @@ export function PricingTiers() {
               params={{ tier: tier.id }}
               className={cn(stampClasses, "mt-7 w-full px-5 text-sm sm:text-sm")}
             >
-              <span className="pointer-events-none absolute inset-[3px] border border-primary-foreground/40" />
               {tier.cta}
             </Link>
           </div>

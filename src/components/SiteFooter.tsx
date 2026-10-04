@@ -3,19 +3,13 @@ import { BrandMark } from "@/components/BrandMark";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-8">
-      {/* gold sweep sign-off, as on the flyer */}
-      <div className="px-5 pb-10 text-center">
-        <div className="gold-rule mx-auto max-w-3xl" />
-        <p className="gold-foil mt-8 font-script text-[1.9rem] leading-tight sm:text-4xl">
-          Let&rsquo;s Build Your Next Chapter
-        </p>
-      </div>
-
-      <div className="border-t border-border px-5 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
-          <BrandMark size="sm" withTagline={false} />
-          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 font-sans text-[0.95rem] text-muted-foreground">
+    <footer className="border-t border-border bg-card/45 px-4 py-10 sm:px-6">
+        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1fr_auto] md:items-end">
+          <div>
+            <BrandMark size="md" />
+            <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">Honest résumé feedback and professional writing support built from your real experience.</p>
+          </div>
+          <nav className="flex flex-wrap gap-x-6 gap-y-3 font-sans text-sm text-muted-foreground">
             <Link to="/" hash="how" className="transition-colors hover:text-ink">
               How it works
             </Link>
@@ -29,18 +23,10 @@ export function SiteFooter() {
               Privacy
             </Link>
           </nav>
-          <p className="font-sans text-[0.85rem] text-muted-foreground">
+          <p className="font-sans text-xs text-muted-foreground md:col-span-2 md:text-right">
             &copy; {new Date().getFullYear()} Kay&rsquo;s Career Solutions
           </p>
         </div>
-      </div>
-
-      <div className="ribbon px-5 py-3 text-center">
-        <p className="font-sans text-[0.65rem] font-semibold tracking-[0.34em] text-ink uppercase sm:text-xs">
-          Confidence <span className="text-gold-light">&hearts;</span> Opportunity{" "}
-          <span className="text-gold-light">&hearts;</span> Success
-        </p>
-      </div>
     </footer>
   );
 }

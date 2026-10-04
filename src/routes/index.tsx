@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BrandLink } from "@/components/BrandMark";
+import { SiteHeader } from "@/components/SiteHeader";
+import { FAQ } from "@/components/FAQ";
 import { Hero } from "@/components/Hero";
 import { HowItWorks } from "@/components/HowItWorks";
 import { RoastCards } from "@/components/RoastCards";
@@ -31,16 +32,13 @@ export const Route = createFileRoute("/")({
 function Index() {
   return (
     <div className="paper-texture relative min-h-screen">
-      <header className="px-5 py-6">
-        <div className="mx-auto flex max-w-6xl items-center justify-center">
-          <BrandLink size="md" />
-        </div>
-      </header>
+      <SiteHeader />
       <main>
         <Hero />
         <Upsell />
         <HowItWorks />
         <RoastCards />
+        <FAQ />
       </main>
       <SiteFooter />
     </div>

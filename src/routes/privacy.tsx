@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { BrandLink } from "@/components/BrandMark";
+import { createFileRoute } from "@tanstack/react-router";
+import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 
 export const Route = createFileRoute("/privacy")({
@@ -28,15 +28,11 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function PrivacyPage() {
   return (
     <div className="paper-texture relative min-h-screen">
-      <header className="px-5 py-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
-          <BrandLink size="sm" withTagline={false} />
-          <Link to="/" className="font-sans text-[0.95rem] text-ink underline underline-offset-4">Home</Link>
-        </div>
-      </header>
-      <main className="px-5 pb-20">
-        <article className="mx-auto max-w-3xl">
-          <h1 className="font-display text-[2rem] leading-tight text-ink uppercase sm:text-4xl">Privacy</h1>
+      <SiteHeader />
+      <main className="px-4 py-12 sm:px-6 sm:py-16">
+        <article className="premium-panel mx-auto max-w-3xl p-6 sm:p-10">
+          <p className="eyebrow">Plain language policy</p>
+          <h1 className="mt-4 font-brand text-4xl leading-tight text-ivory sm:text-6xl">Privacy</h1>
           <p className="mt-4 font-sans text-[0.9rem] text-muted-foreground">
             A plain-language summary of how this site handles your information.
           </p>
@@ -77,7 +73,7 @@ function PrivacyPage() {
 
           <Section title="Questions">
             <p>
-              To ask about your information or have it removed, contact Kay&rsquo;s Career Solutions directly.
+              A verified business contact address has not been added to this site yet. It must be added before customers can request access to or removal of stored information through the site.
             </p>
           </Section>
         </article>

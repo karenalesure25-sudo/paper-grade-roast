@@ -24,7 +24,7 @@ export function TemplatePicker({
             type="button"
             aria-pressed={selected}
             onClick={() => onChange(template.id)}
-            className={`group block text-left transition-transform hover:-translate-y-0.5 ${
+            className={`group block min-h-11 text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
               selected ? "" : "opacity-90"
             }`}
           >
@@ -46,24 +46,24 @@ export function TemplatePicker({
                     className="absolute inset-x-0 top-[78px] bottom-0 backdrop-blur-[5px]"
                   />
                   <div className="absolute inset-x-0 bottom-0 flex flex-col items-center gap-1 bg-card/90 px-4 py-4 text-center">
-                    <span className="font-stamp text-[0.7rem] tracking-[0.2em] text-ink-soft uppercase">
-                      Sample &middot; locked
+                    <span className="font-sans text-[0.7rem] font-bold tracking-[0.12em] text-ivory uppercase">
+                      Preview only
                     </span>
                     <span className="font-sans text-[0.7rem] text-muted-foreground">
-                      Unlocks with your purchase
+                      Writing unlocks after verified payment
                     </span>
                   </div>
                 </>
               )}
 
               {selected && (
-                <span className="absolute top-2 right-2 border border-border bg-paper-shade px-2 py-1 font-stamp text-[0.6rem] tracking-widest text-ink uppercase">
+                <span className="absolute top-2 right-2 border border-gold bg-background px-2 py-1 font-sans text-[0.6rem] font-bold tracking-widest text-gold uppercase">
                   Chosen
                 </span>
               )}
             </div>
 
-            <p className="mt-3 font-stamp text-sm tracking-wide text-ink uppercase">
+            <p className="mt-3 font-sans text-sm font-semibold text-ivory">
               {template.name}
             </p>
             <p className="mt-1 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
