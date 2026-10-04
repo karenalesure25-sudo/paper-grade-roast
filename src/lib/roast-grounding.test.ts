@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { checkReadable, detectSections, gradeFromRubric, normalize, quoteInSource, verifyEvidence, hasUnsupportedClaim } from "./roast-grounding";
-import { checkModelOutput } from "./roast.server";
+import { checkModelOutput, parseVerdict } from "./roast.server";
+import { checkLength, cleanSource, pointContradictsQuote, unsupportedNumbers, MAX_SOURCE_CHARS } from "./roast-grounding";
 import { checkIntakeFile, validateIntake, emptyAnswers } from "./intake-schema";
 
 const STRONG = `Jordan Rivera
@@ -145,7 +146,7 @@ describe("full output check", () => {
           item("Cliché objective", "Hard working team player"),
           item("No education", null, "education"),
         ],
-        roast: "Three jobs, zero outcomes, and the objective is a fortune cookie.",
+        roast: "Two jobs, zero outcomes, and the objective is a fortune cookie.",
         tip: "Rewrite this as what you achieved for customers.",
         tip_quote: "Responsible for helping customers",
       }),
@@ -192,5 +193,150 @@ describe("intake upload rules", () => {
     const a = { ...emptyAnswers(), fullName: "A B", email: "a@b.co", phone: "5551234567", targetJobTitle: "x", companyName: "y", specificJobTitle: "z" };
     expect(validateIntake("bundle", a, { resume: true, jobFile: false })["jobDescription"]).toBeDefined();
     expect(validateIntake("bundle", a, { resume: true, jobFile: true })["jobDescription"]).toBeUndefined();
+  });
+});
+
+const SMALL = `Priya Nair
+priya.nair@example.com | +1 555 222 0199
+Career History
+Team Lead, Acme Support, 2021 - Present
+- Supervised 5 staff across two shifts and closed 8 tickets a day on average.
+- Delivered 3 projects for the billing team, including a refund workflow.
+- Trained twelve new hires on the support toolkit.
+Qualifications
+B.Tech in Computer Science, Anna University, 2020
+Core Expertise
+Zendesk, SQL, Jira, customer escalation handling`;
+
+describe("regressions: entailment, counts, presence", () => {
+  test("VAGUE has two jobs: 'Three jobs' in the roast is rejected", () => {
+    const r = checkModelOutput(
+      output({
+        rubric: { clarity: 2, impact: 0, specificity: 0, structure: 2, completeness: 1 },
+        weaknesses: [
+          item("Duty list, no outcomes", "Responsible for helping customers and other duties as assigned"),
+          item("Cliché objective", "Hard working team player"),
+        ],
+        roast: "Three jobs, zero outcomes, and the objective is a fortune cookie.",
+        tip: "Rewrite this as what you achieved for customers.",
+        tip_quote: "Responsible for helping customers",
+      }),
+      VAGUE,
+      "text",
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.feedback).toContain("three");
+  });
+
+  test("real metric quote paired with 'No metrics' is rejected and fails the whole output", () => {
+    expect(pointContradictsQuote("No metrics anywhere", "Reduced order fulfillment time by 32%")).not.toBeNull();
+    const r = checkModelOutput(
+      output({
+        rubric: { clarity: 3, impact: 2, specificity: 2, structure: 3, completeness: 3 },
+        strengths: [item("Clear title", "Operations Manager, Northwind Logistics")],
+        weaknesses: [item("No metrics", "Reduced order fulfillment time by 32%"), item("Duty-heavy", "Managed inventory accuracy program")],
+        roast: "Solid, but it hides its wins.",
+        tip: "Lead with the result.",
+        tip_quote: "Managed inventory accuracy program",
+      }),
+      STRONG,
+      "text",
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  test("point text claiming missing metrics with a non-metric quote is still checked against detector", () => {
+    const r = verifyEvidence([item("There are no numbers at all", "Managed inventory accuracy program")], normalize(STRONG), detectSections(STRONG), 140);
+    expect(r.kept).toHaveLength(0);
+  });
+
+  test("small and spelled-out counts count as metrics", () => {
+    for (const t of ["Supervised 5 staff", "closed 8 tickets a day", "Delivered 3 projects", "Trained twelve new hires", "led a team of four"]) {
+      expect(detectSections(`x\n${t}`).metrics).toBe(true);
+    }
+    expect(detectSections(SMALL).metrics).toBe(true);
+  });
+
+  test("header synonyms and credentials under other headings count as present", () => {
+    const d = detectSections(SMALL);
+    expect(d.experience).toBe(true);
+    expect(d.education).toBe(true);
+    expect(d.skills).toBe(true);
+    expect(detectSections("Relevant Employment\nClerk").experience).toBe(true);
+    expect(detectSections("Qualifications\nB.Tech, 2019").education).toBe(true);
+    const r = verifyEvidence([item("No education listed", null, "education")], normalize(SMALL), d, 140);
+    expect(r.kept).toHaveLength(0);
+  });
+
+  test("invented numbers/counts in prose are caught; real ones pass", () => {
+    expect(unsupportedNumbers("Five staff? Cute.", SMALL)).toEqual([]);
+    expect(unsupportedNumbers("Three projects shipped", SMALL)).toEqual([]);
+    expect(unsupportedNumbers("Grew revenue 40%", SMALL)).toEqual(["40%"]);
+    expect(unsupportedNumbers("Seven jobs in a row", SMALL)).toEqual(["seven"]);
+  });
+
+  test("null tip_quote is not allowed for an arbitrary fix", () => {
+    const r = checkModelOutput(
+      output({
+        rubric: { clarity: 3, impact: 3, specificity: 3, structure: 3, completeness: 3 },
+        strengths: [item("Real results", "Reduced order fulfillment time by 32%")],
+        weaknesses: [item("Duty-heavy", "Managed inventory accuracy program")],
+        roast: "Good bones.",
+        tip: "Add a link to your portfolio of Kubernetes work.",
+        tip_quote: null,
+      }),
+      STRONG,
+      "text",
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  test("harsh roast with an A/B grade is rejected", () => {
+    const r = checkModelOutput(
+      output({
+        rubric: { clarity: 4, impact: 4, specificity: 4, structure: 3, completeness: 4 },
+        strengths: [item("Real results", "Reduced order fulfillment time by 32%")],
+        weaknesses: [],
+        roast: "An absolute disaster of a résumé.",
+        tip: "Lead with this.",
+        tip_quote: "turnover fell from 41% to 18%",
+      }),
+      STRONG,
+      "text",
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  test("missing summary is not counted against a strong résumé", () => {
+    const noSummary = STRONG.replace(/SUMMARY\n.*\n/, "");
+    const r = checkModelOutput(
+      output({
+        rubric: { clarity: 4, impact: 4, specificity: 4, structure: 4, completeness: 4 },
+        strengths: [item("Real results", "Reduced order fulfillment time by 32%")],
+        weaknesses: [item("No summary", null, "summary")],
+        roast: "Annoyingly good.",
+        tip: "Add a summary.",
+        tip_quote: null,
+      }),
+      noSummary,
+      "text",
+    );
+    expect(r.ok).toBe(false);
+  });
+
+  test("overlong text is rejected, never truncated", () => {
+    const big = `${STRONG}\n${"Additional detail line about work. ".repeat(1000)}`;
+    expect(cleanSource(big).length).toBe(big.trim().length);
+    expect(big.length).toBeGreaterThan(MAX_SOURCE_CHARS);
+    expect(checkLength(cleanSource(big)).ok).toBe(false);
+    expect(checkLength(STRONG).ok).toBe(true);
+  });
+
+  test("verifier verdict parsing fails closed", () => {
+    expect(parseVerdict("garbage").approved).toBe(false);
+    expect(parseVerdict(JSON.stringify({ approved: "yes", reasons: [] })).approved).toBe(false);
+    expect(parseVerdict(JSON.stringify({ approved: true })).approved).toBe(false);
+    expect(parseVerdict(JSON.stringify({ approved: false, reasons: [] })).approved).toBe(false);
+    expect(parseVerdict(JSON.stringify({ approved: true, reasons: [] })).approved).toBe(true);
   });
 });

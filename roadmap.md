@@ -8,3 +8,6 @@
 - [ ] Product copy: no fabricated metrics; ATS score labeled advisory; bundle job fetch failure asks for text
 - [ ] SSRF hardening for job posting fetch
 - [ ] Tests + report (run vs unverified, files changed, launch blockers)
+- [x] Accuracy follow-up: entailment checks, independent fact-check pass, presence detection, no truncation, aria-live, $50/$60 browser checks, test-data cleanup
+- [ ] Connect payment provider (blocked: user choice/account)
+- [ ] Email sender domain (blocked: user setup)

@@ -468,8 +468,8 @@ function OrderPage() {
               <div>
                 <SectionLabel step={reviewStep}>Confirm the job posting</SectionLabel>
                 <p className="mt-3 max-w-2xl font-sans text-[0.95rem] text-muted-foreground">
-                  Read this back before we charge you &mdash; the tailoring and the
-                  cover letter are written from exactly what&rsquo;s here.
+                  Read this back &mdash; the tailoring and the cover letter will be
+                  written from exactly what&rsquo;s here.
                 </p>
               </div>
 
@@ -555,14 +555,14 @@ function OrderPage() {
                         setPhase("layout");
                       }}
                     >
-                      {`Confirm & Pay $${tier.price}`}
+                      Confirm job details
                     </StampButton>
                   </div>
                 </div>
                 <p className="mt-5 border-t border-dashed border-border pt-4 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
-                  Placeholder checkout &mdash; no card is charged yet. Next you pick your
-                  layout, add a photo if it needs one, and then we write the tailored
-                  résumé plus the cover letter.
+                  Online checkout isn&rsquo;t connected yet &mdash; no card is charged, and
+                  résumé writing stays off until payment is set up. Next you can preview
+                  the layouts.
                 </p>
               </div>
             </section>
