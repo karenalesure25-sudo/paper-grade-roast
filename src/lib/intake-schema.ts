@@ -1,14 +1,13 @@
 import { z } from "zod";
 import type { TierId } from "./products";
 
-export const INTAKE_MAX_FILE_BYTES = 10 * 1024 * 1024;
+export const INTAKE_MAX_FILE_BYTES = 5 * 1024 * 1024;
 export const INTAKE_FILE_ACCEPT =
-  ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
-const ALLOWED_EXT = [".pdf", ".doc", ".docx"];
+const ALLOWED_EXT = [".pdf", ".docx"];
 const ALLOWED_MIME = [
   "application/pdf",
-  "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "",
 ];
@@ -17,10 +16,10 @@ const ALLOWED_MIME = [
 export function checkIntakeFile(file: { name: string; size: number; type: string }): string | null {
   const name = file.name.toLowerCase();
   if (!ALLOWED_EXT.some((ext) => name.endsWith(ext)) || !ALLOWED_MIME.includes(file.type)) {
-    return "Upload a PDF, DOC, or DOCX file.";
+    return "Upload a PDF or DOCX file.";
   }
   if (file.size === 0) return "That file is empty. Try another export.";
-  if (file.size > INTAKE_MAX_FILE_BYTES) return "That file is over 10 MB. Try a smaller export.";
+  if (file.size > INTAKE_MAX_FILE_BYTES) return "That file is over 5 MB. Try a smaller export.";
   return null;
 }
 
