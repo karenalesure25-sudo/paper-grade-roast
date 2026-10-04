@@ -49,7 +49,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
   );
 }
 
-function FieldError({ id, msg }: { id: string; msg?: string }) {
+function FieldError({ id, msg }: { id: string; msg?: string | undefined }) {
   if (!msg) return null;
   return (
     <p id={`${id}-error`} className="mt-2 font-sans text-[0.9rem] text-redpen">
