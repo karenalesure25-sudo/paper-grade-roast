@@ -50,10 +50,15 @@
   --color-gold: var(--gold);
   --color-gold-light: var(--gold-light);
   --color-gold-deep: var(--gold-deep);
+  --color-ivory: var(--ivory);
+  --color-ivory-muted: var(--ivory-muted);
+  --color-surface-subtle: var(--surface-subtle);
   --color-crimson: var(--crimson);
   --color-crimson-deep: var(--crimson-deep);
-  --font-script: "Great Vibes", "Caveat", cursive;
-  --font-display: "Archivo Black", "Inter", ui-sans-serif, sans-serif;
+  --font-brand: "Cormorant Garamond", Georgia, serif;
+  --font-brand-sub: "Inter", ui-sans-serif, sans-serif;
+  --font-script: "Cormorant Garamond", Georgia, serif;
+  --font-display: "Cormorant Garamond", Georgia, serif;
   --font-stamp: "Special Elite", "Courier Prime", ui-monospace, monospace;
   --font-typewriter: "Courier Prime", ui-monospace, monospace;
   --font-hand: "Caveat", "Special Elite", cursive;
@@ -85,6 +90,9 @@
   --gold: #d4af37;
   --gold-light: #f6dd8b;
   --gold-deep: #9b7420;
+  --ivory: #fff7e6;
+  --ivory-muted: #c8c1b5;
+  --surface-subtle: #10100f;
   --highlighter: oklch(0.885 0.176 92);
   --rule: #2f2716;
 
@@ -245,6 +253,18 @@
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    letter-spacing: 0;
+    min-width: 320px;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 6rem;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--gold-light);
+    outline-offset: 3px;
   }
 
   ::selection {
@@ -266,6 +286,108 @@
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+@utility eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+@utility section-shell {
+  padding: 5rem 1rem;
+  @media (min-width: 40rem) {
+    padding: 6.5rem 1.5rem;
+  }
+}
+
+@utility section-title {
+  max-width: 48rem;
+  font-family: var(--font-brand);
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1.06;
+  color: var(--ivory);
+  @media (min-width: 40rem) {
+    font-size: 3.4rem;
+  }
+}
+
+@utility premium-panel {
+  border: 1px solid color-mix(in oklab, var(--gold) 42%, var(--border));
+  background: linear-gradient(145deg, color-mix(in oklab, var(--card) 90%, var(--gold) 10%), var(--card));
+  box-shadow: 0 30px 80px -45px color-mix(in oklab, var(--gold) 34%, transparent);
+}
+
+@utility service-card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 24px 48px -36px rgb(0 0 0 / 0.9);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  &:hover {
+    border-color: color-mix(in oklab, var(--gold) 58%, var(--border));
+    transform: translateY(-3px);
+    box-shadow: 0 30px 60px -38px color-mix(in oklab, var(--gold) 25%, transparent);
+  }
+}
+
+@utility premium-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 3rem;
+  border: 1px solid var(--redpen);
+  background: var(--redpen);
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--primary-foreground);
+  transition: transform 180ms ease, background-color 180ms ease;
+  &:hover { background: var(--crimson-deep); transform: translateY(-2px); }
+}
+
+@utility secondary-button {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in oklab, var(--gold) 55%, var(--border));
+  padding: 0.75rem 1.5rem;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--ivory);
+  transition: background-color 180ms ease, border-color 180ms ease;
+  &:hover { border-color: var(--gold); background: color-mix(in oklab, var(--gold) 8%, transparent); }
+}
+
+@utility nav-link {
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ivory-muted);
+  transition: color 180ms ease;
+  &:hover { color: var(--gold-light); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Thin gold hairline frame */
