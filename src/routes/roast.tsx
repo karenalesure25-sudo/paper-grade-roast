@@ -19,10 +19,10 @@ export const Route = createFileRoute("/roast")({
       {
         name: "description",
         content:
-          "Upload a PDF or DOCX, or paste your résumé text, for a free letter grade and red-pen notes quoted from your own résumé.",
+          "Upload a PDF or DOCX, or paste your résumé text, for a free letter grade and fact-checked red-pen notes.",
       },
       { property: "og:title", content: "Free Resume Roast — Kay’s Career Solutions" },
-      { property: "og:description", content: "A letter grade and red-pen notes, backed by quotes from your résumé." },
+      { property: "og:description", content: "A letter grade and red-pen notes, checked against your résumé." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -44,12 +44,15 @@ function RoastPage() {
   const [preview, setPreview] = useState<TemplateId>("sidebar");
   const requestId = useRef(0);
   const fileRef = useRef<HTMLInputElement>(null);
+  const resultRef = useRef<HTMLHeadingElement>(null);
+  const [announce, setAnnounce] = useState("");
 
   useEffect(() => setHistory(readRoasts()), []);
 
   /** Any change to the input invalidates what's on screen. */
   function resetResult() {
     setCurrent(null);
+    setAnnounce("");
     setError(null);
   }
 
@@ -59,6 +62,7 @@ function RoastPage() {
     const id = ++requestId.current;
     setCurrent(null);
     setError(null);
+    setAnnounce("");
 
     const selected = file ?? fileRef.current?.files?.[0] ?? null;
     if (mode === "file" && !selected) return setError("Choose a PDF or DOCX file first.");
@@ -71,13 +75,17 @@ function RoastPage() {
         | { source: "pdf"; filename: string; dataBase64: string }
         | { source: "docx" | "text"; filename?: string; text: string };
       if (mode === "paste") {
-        payload = { source: "text", text: pasted.slice(0, MAX_PASTE) };
+        if (pasted.length > MAX_PASTE) {
+          setPending(false);
+          return setError(`Your text is ${pasted.length.toLocaleString()} characters; the limit is ${MAX_PASTE.toLocaleString()}. We don't grade partial résumés — trim it and try again.`);
+        }
+        payload = { source: "text", text: pasted };
       } else {
         const prepared = await prepareUpload(selected!);
         payload =
           prepared.kind === "pdf"
             ? { source: "pdf", filename: prepared.filename, dataBase64: prepared.dataBase64 }
-            : { source: "docx", filename: prepared.filename, text: prepared.text.slice(0, MAX_PASTE) };
+            : { source: "docx", filename: prepared.filename, text: prepared.text };
       }
       const result = await grade({ data: payload });
       if (id !== requestId.current) return; // input changed while we waited
@@ -87,6 +95,8 @@ function RoastPage() {
       }
       const stored = saveRoast(result);
       setCurrent(stored);
+      setAnnounce(`Graded ${stored.grade}. ${stored.roast}`);
+      requestAnimationFrame(() => resultRef.current?.focus());
       setHistory(readRoasts());
     } catch (cause) {
       if (id !== requestId.current) return;
@@ -121,7 +131,7 @@ function RoastPage() {
           <p className="font-typewriter text-xs tracking-[0.3em] text-ink-soft uppercase">Free resume roast</p>
           <h1 className="mt-4 font-stamp text-[2.2rem] leading-[1.1] text-ink sm:text-5xl">Grade my resume</h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Upload a PDF or DOCX, or paste the text. Every note quotes your own résumé. Your text is sent to an
+            Upload a PDF or DOCX, or paste the text. Notes either quote your résumé or point out something we confirmed is missing. Your text is sent to an
             AI service to be graded; results stay in this browser tab. See our{" "}
             <Link to="/privacy" className="underline underline-offset-4">privacy page</Link>.
           </p>
@@ -165,12 +175,12 @@ function RoastPage() {
                   <textarea
                     id="resumeText"
                     rows={12}
-                    maxLength={MAX_PASTE}
+                    aria-describedby="resumeTextCount"
                     value={pasted}
                     onChange={(e) => { setPasted(e.target.value); resetResult(); }}
                     className="mt-2 w-full border border-border bg-paper-shade p-3 font-sans text-[16px] text-ink outline-none focus:border-redpen"
                   />
-                  <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
+                  <p id="resumeTextCount" className={`mt-2 font-sans text-[0.85rem] ${pasted.length > MAX_PASTE ? "text-redpen" : "text-muted-foreground"}`}>
                     {pasted.length.toLocaleString()} / {MAX_PASTE.toLocaleString()} characters
                   </p>
                 </div>
@@ -182,7 +192,8 @@ function RoastPage() {
             </div>
 
             <div role="status" aria-live="polite" className="mt-5">
-              {pending && <p className="font-sans text-[0.95rem] text-muted-foreground">Reading and grading your résumé…</p>}
+              {pending && <p className="font-sans text-[0.95rem] text-muted-foreground">Reading, grading and fact-checking your résumé…</p>}
+              {!pending && announce && <p className="sr-only">{announce}</p>}
             </div>
             <div role="alert" aria-live="assertive">
               {error && <p className="font-sans text-[1rem] leading-relaxed text-redpen">{error}</p>}
@@ -192,7 +203,7 @@ function RoastPage() {
           {current && (
             <>
               <section className="mt-14" aria-labelledby="result-heading">
-                <h2 id="result-heading" className="font-stamp text-2xl text-ink sm:text-3xl">
+                <h2 id="result-heading" ref={resultRef} tabIndex={-1} className="outline-none font-stamp text-2xl text-ink sm:text-3xl">
                   Your grade: {current.grade}
                 </h2>
                 <div className="mt-8">

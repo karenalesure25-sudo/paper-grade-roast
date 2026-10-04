@@ -13,12 +13,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Get a free resume roast with notes quoted from your own résumé, plus Kay’s $40, $50 and $60 résumé services.",
+          "Get a free resume roast with notes checked against your own résumé, plus Kay’s $40, $50 and $60 résumé services.",
       },
       { property: "og:title", content: "Free Resume Roast — Kay’s Career Solutions" },
       {
         property: "og:description",
-        content: "A free letter grade and red-pen notes backed by quotes from your résumé.",
+        content: "A free letter grade and red-pen notes checked against your résumé.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary"

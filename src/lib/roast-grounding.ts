@@ -29,8 +29,18 @@ export function cleanSource(text: string): string {
     .replace(/\u0000/g, "")
     .replace(/[ \t\f\v]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
-    .trim()
-    .slice(0, MAX_SOURCE_CHARS);
+    .trim();
+}
+
+/** Never grade a partial résumé: overlong extracted text is rejected, not truncated. */
+export function checkLength(text: string): Readability {
+  if (text.length > MAX_SOURCE_CHARS) {
+    return {
+      ok: false,
+      reason: `This résumé came out to ${text.length.toLocaleString("en-US")} characters of text, over our ${MAX_SOURCE_CHARS.toLocaleString("en-US")}-character limit. We don't grade partial résumés — remove extra pages or paste a shorter version.`,
+    };
+  }
+  return { ok: true };
 }
 
 export type Readability = { ok: true } | { ok: false; reason: string };
@@ -61,19 +71,40 @@ export type SectionId =
   | "skills"
   | "metrics";
 
+const COUNT_WORDS =
+  "two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|hundred|hundreds|thousand|thousands|dozen|dozens|million|millions|billion";
+const COUNT_NOUNS =
+  "clients?|customers?|patients?|users?|people|employees?|staff|members?|accounts?|tickets?|calls?|orders?|projects?|students?|units?|sales|hours|stores?|locations?|sites?|teams?|reports?|vendors?|cases?|events?|products?|applications?|campaigns?|interns?|agents?|engineers?|volunteers?|facilities|warehouses?|departments?|shifts?|beds?|courses?|classes?|properties|homes?|vehicles?|machines?|systems?|servers?|releases?|features?|languages?|countries|states|regions|partners?|deals?|contracts?|leads?|hires?|direct reports?";
+
+/** Measurable results: %, money, any count of a countable thing (digits or words), "Nx", verbs + numbers. */
+const METRIC_RE = new RegExp(
+  [
+    String.raw`\d+(\.\d+)?\s?%`,
+    String.raw`[$£€]\s?\d`,
+    String.raw`\b\d+(\.\d+)?\s?(k|m|mm|b)\b`,
+    String.raw`\b\d+(\.\d+)?x\b`,
+    String.raw`\b\d[\d,]*\+?\s?(-\s?)?(${COUNT_NOUNS})\b`,
+    String.raw`\b(${COUNT_WORDS})\s(${COUNT_NOUNS})\b`,
+    String.raw`\b(team|staff|crew|group) of (\d+|${COUNT_WORDS})\b`,
+    String.raw`\b(increased|reduced|grew|cut|saved|improved|decreased|boosted|raised|lowered|generated|delivered|processed|handled|managed|trained|led|supervised|resolved|closed)\b[^.\n]{0,50}\b(\d+|${COUNT_WORDS})\b`,
+    String.raw`\bfrom \d[\d,.]*\s?%? to \d`,
+  ].join("|"),
+);
+
 /** Deterministic presence checks. Missing-section claims must agree with these. */
 export function detectSections(text: string): Record<SectionId, boolean> {
   const n = normalize(text);
   return {
     contact_email: /[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/.test(n),
     contact_phone: /(\+?\d[\d\s().-]{8,}\d)/.test(n),
-    summary: /\b(summary|profile|objective|about me)\b/.test(n),
-    experience: /\b(experience|employment|work history|professional background)\b/.test(n),
-    education: /\b(education|university|college|degree|diploma|b\.?s\.?|b\.?a\.?|bachelor|master|ged|high school)\b/.test(n),
-    skills: /\b(skills|competencies|proficiencies|technologies|tools)\b/.test(n),
-    metrics: /(\d+(\.\d+)?\s?%|\$\s?\d|\b\d{2,}[,\d]*\+?\s?(clients|customers|patients|users|people|employees|staff|accounts|tickets|calls|orders|projects|students|members|units|sales|hours)\b|\b(increased|reduced|grew|cut|saved|improved)\b[^.]{0,40}\d)/.test(
-      n,
-    ),
+    summary: /\b(summary|profile|objective|about me|overview|introduction|personal statement)\b/.test(n),
+    experience:
+      /\b(experience|employment|work history|career history|professional background|career|positions held|work)\b/.test(n) ||
+      /\b(19|20)\d{2}\s?-\s?((19|20)\d{2}|present|current|now)\b/.test(n),
+    education:
+      /\b(education|academic|university|universit[a-z]+|college|school|institute|academy|polytechnic|degree|diploma|bachelor'?s?|master'?s?|doctorate|ph\.?\s?d|mba|ged|high school|associate'?s? (degree|of)|b\.?\s?(s|a|sc|tech|e|eng|com|ba)\b\.?|m\.?\s?(s|a|sc|tech|e|eng|ba)\b\.?|a\.?a\.?s\b|bsn|msn|coursework|graduated|graduate|alumn[a-z]*|certificate program|vocational)\b/.test(n),
+    skills: /\b(skills?|competenc(y|ies)|proficienc(y|ies)|technologies|tools|qualifications|expertise|core expertise|strengths|toolkit|tech stack|software|languages|certifications?)\b/.test(n),
+    metrics: METRIC_RE.test(n),
   };
 }
 
@@ -179,7 +210,7 @@ export function verifyEvidence(
       rejected.push("empty or overlong point");
       continue;
     }
-    const bad = hasUnsupportedClaim(point);
+    const bad = hasUnsupportedClaim(point) ?? textClaimsMissing(point, sections);
     if (bad) {
       rejected.push(`"${point}": ${bad}`);
       continue;
@@ -187,6 +218,11 @@ export function verifyEvidence(
     if (quote) {
       if (!quoteInSource(quote, normalizedSource)) {
         rejected.push(`quote not found in résumé: "${quote.slice(0, 80)}"`);
+        continue;
+      }
+      const contra = pointContradictsQuote(point, quote);
+      if (contra) {
+        rejected.push(`"${point}": ${contra}`);
         continue;
       }
       kept.push({ point, quote, missing: null });
@@ -212,12 +248,63 @@ export function textClaimsMissing(text: string, sections: Record<SectionId, bool
     [/\bno (email|e-mail)\b|missing (an )?email/, "contact_email"],
     [/\bno phone\b|missing (a )?phone/, "contact_phone"],
     [/\bno (summary|objective|profile)\b|missing (a )?(summary|objective)/, "summary"],
-    [/\bno (education|degree)\b|missing (an )?education/, "education"],
-    [/\bno skills\b|missing (a )?skills/, "skills"],
-    [/\bno (numbers|metrics|measurable)\b|zero (numbers|metrics)|not (a |one |single )?(number|metric)/, "metrics"],
+    [/\bno (education|degree|schooling)\b|missing (an |the )?(education|degree)|without (an? )?(education|degree)|education (is )?(missing|absent)/, "education"],
+    [/\bno (work )?(experience|job history|work history|employment)\b|missing (the )?(experience|work history)/, "experience"],
+    [/\bno skills\b|missing (a |the )?skills|skills (section )?(is )?(missing|absent)/, "skills"],
+    [/\bno (numbers|metrics|measurable|quantified|results)\b|zero (numbers|metrics|results)|not (a |one |single )?(number|metric)|without (any )?(numbers|metrics)|lacks? (any )?(numbers|metrics|quantif)|unquantified|no quantif/, "metrics"],
   ];
   for (const [re, id] of checks) {
     if (re.test(n) && sections[id]) return `says ${id} is missing but it is present`;
   }
   return null;
 }
+
+/** A point that says "no numbers" must not be paired with a quote that has numbers, etc. */
+export function pointContradictsQuote(point: string, quote: string): string | null {
+  const p = normalize(point);
+  const q = normalize(quote);
+  const saysNoMetrics =
+    /\b(no|zero|lacks?|without|missing|absent)\b[^.]{0,20}\b(numbers?|metrics?|measur|quantif|results?|data)/.test(p) ||
+    /unquantified|not quantified/.test(p);
+  if (saysNoMetrics && (METRIC_RE.test(q) || /\d/.test(q))) return "says there are no numbers but the quote contains one";
+  return null;
+}
+
+const NUMBER_WORDS: Record<string, number> = {
+  two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  eleven: 11, twelve: 12, fifteen: 15, twenty: 20, thirty: 30, forty: 40, fifty: 50,
+};
+
+/**
+ * Every number in free prose (roast/tip) must appear in the résumé, as digits or as the
+ * spelled-out word. Catches "Three jobs" on a two-job résumé, and invented metrics.
+ * "zero"/"one"/"single" are allowed as rhetorical. Conservative: unknown ⇒ reject.
+ */
+export function unsupportedNumbers(prose: string, source: string): string[] {
+  const p = normalize(prose);
+  const n = normalize(source);
+  const bad: string[] = [];
+  for (const m of p.match(/\d[\d,.]*%?/g) ?? []) {
+    const core = m.replace(/[.,]+$/, "");
+    if (!n.includes(core)) bad.push(core);
+  }
+  const jobCount = (n.match(/\b(19|20)\d{2}\s?-\s?((19|20)\d{2}|present|current|now)\b/g) ?? []).length;
+  for (const [word, val] of Object.entries(NUMBER_WORDS)) {
+    if (new RegExp(`\\b${word}\\b`).test(p)) {
+      // "Two jobs" is allowed only when the résumé has exactly that many dated entries.
+      const jobRef = new RegExp(`\\b${word} (jobs|roles|positions|employers|gigs)\\b`).test(p);
+      if (jobRef) {
+        if (val !== jobCount) bad.push(word);
+        continue;
+      }
+      const asWord = new RegExp(`\\b${word}\\b`).test(n);
+      const asDigit = new RegExp(`(^|[^\\d.,])${val}([^\\d]|$)`).test(n);
+      if (!asWord && !asDigit) bad.push(word);
+    }
+  }
+  return bad;
+}
+
+/** Harsh language that can't sit next to an A or B. */
+export const SEVERE_NEGATIVE =
+  /\b(disaster|terrible|awful|dreadful|trainwreck|train wreck|mess|hopeless|zero (results|outcomes|impact)|nothing (of value|here)|worst|embarrassing|painful|fortune cookie|duty list|generic|forgettable|unreadable|weak|vague)\b/i;

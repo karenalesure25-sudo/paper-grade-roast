@@ -8,7 +8,7 @@ const steps = [
   {
     n: "02",
     title: "Get Roasted + Graded",
-    body: "A letter grade, what’s working, and red-pen notes that quote your own résumé.",
+    body: "A letter grade, what’s working, and red-pen notes that quote your résumé or flag what’s confirmed missing.",
     note: "honest, not mean",
   },
   {

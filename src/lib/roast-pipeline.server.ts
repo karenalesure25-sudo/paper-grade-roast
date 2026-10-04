@@ -1,9 +1,10 @@
-import { checkReadable, cleanSource, type SourceKind } from "./roast-grounding";
+import { checkLength, checkReadable, cleanSource, type SourceKind } from "./roast-grounding";
 import { gradeResumeText, type RoastOutcome } from "./roast.server";
 
 export type RoastResult =
   | (Extract<RoastOutcome, { status: "graded" }> & { label: string })
   | { status: "unreadable"; message: string; label: string }
+  | { status: "too_long"; message: string; label: string }
   | { status: "not_resume"; message: string; label: string }
   | { status: "unavailable"; message: string; label: string };
 
@@ -40,6 +41,8 @@ export async function gradeAnySource(input: Input): Promise<RoastResult> {
     };
   }
   const text = cleanSource(raw);
+  const length = checkLength(text);
+  if (!length.ok) return { status: "too_long", label, message: length.reason };
   const readable = checkReadable(text);
   if (!readable.ok) {
     return {
