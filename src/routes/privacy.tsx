@@ -73,7 +73,7 @@ function PrivacyPage() {
 
           <Section title="Questions">
             <p>
-              To ask about your information or have it removed, contact Kay&rsquo;s Career Solutions directly.
+              A verified business contact address has not been added to this site yet. It must be added before customers can request access to or removal of stored information through the site.
             </p>
           </Section>
         </article>

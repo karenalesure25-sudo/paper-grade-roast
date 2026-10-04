@@ -11,7 +11,7 @@ export function Hero() {
             Your next career move starts with a <span className="gold-foil">stronger résumé.</span>
           </h1>
           <p className="mt-6 max-w-2xl font-sans text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
-            Get honest, résumé-specific feedback before you invest in a professional rewrite. Upload your file or paste the text for a grounded grade, clear strengths, and one useful next step.
+            Get honest, résumé-specific feedback before you invest in a professional rewrite. Upload your file or paste the text for a grounded grade, clear strengths, and one useful next step. Professional services start at $40.
           </p>
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">

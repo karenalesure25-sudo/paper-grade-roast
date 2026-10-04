@@ -1,4 +1,4 @@
-- [ ] Premium gold/red full-site redesign, responsive logo, and cross-route verification (visual implementation complete; testing in progress)
+- [ ] Premium gold/red full-site redesign, responsive logo, and cross-route verification (visual implementation complete; final flow testing in progress)
 # Roadmap
 
 - [x] Customer intake forms ($40/$50/$60) + review/submit, saved to backend
