@@ -67,7 +67,9 @@ function RoastPage() {
 
     setPending(true);
     try {
-      let payload: Parameters<typeof grade>[0]["data"];
+      let payload:
+        | { source: "pdf"; filename: string; dataBase64: string }
+        | { source: "docx" | "text"; filename?: string; text: string };
       if (mode === "paste") {
         payload = { source: "text", text: pasted.slice(0, MAX_PASTE) };
       } else {
