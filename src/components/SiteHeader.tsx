@@ -12,10 +12,10 @@ const links = [
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   return (
-    <header className="site-header sticky top-0 z-50 border-b border-border/70 bg-background/92 px-4 backdrop-blur-xl sm:px-6">
-      <div className="mx-auto grid min-h-20 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+    <header className="site-header sticky top-0 z-50 border-b border-gold/25 bg-background/95 px-3 backdrop-blur-xl sm:px-6">
+      <div className="mx-auto grid min-h-20 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:min-h-24 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:gap-8">
         <Link to="/" aria-label="Kay's Career Solutions home" className="min-w-0 justify-self-start rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <BrandLogo />
+          <BrandLogo compact />
         </Link>
         <nav aria-label="Main navigation" className="hidden items-center gap-7 lg:flex">
           {links.map((link) => (
