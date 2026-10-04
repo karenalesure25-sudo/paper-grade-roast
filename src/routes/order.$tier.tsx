@@ -463,7 +463,7 @@ function OrderPage() {
                 </p>
               </div>
 
-              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
+              <div className="premium-panel p-6 sm:p-8">
                 <dl className="space-y-6">
                   <div>
                     <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
@@ -518,7 +518,7 @@ function OrderPage() {
                 </dl>
               </div>
 
-              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
+              <div className="premium-panel p-6 sm:p-8">
                 <SectionLabel step={checkoutStep}>Checkout</SectionLabel>
                 <div className="mt-5 flex flex-wrap items-end justify-between gap-6">
                   <div>
@@ -586,7 +586,7 @@ function OrderPage() {
                 </p>
               )}
 
-              <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
+              <div className="premium-panel p-6 sm:p-8">
                 <StampButton type="button" onClick={build} disabled={pending}>
                   {pending ? "Checking..." : "Continue to Checkout"}
                 </StampButton>

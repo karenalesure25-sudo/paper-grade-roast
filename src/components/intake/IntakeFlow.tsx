@@ -19,10 +19,10 @@ export type SubmittedIntake = {
 };
 
 const inputCls =
-  "mt-2 w-full border border-border bg-paper-shade p-3 font-sans text-[16px] text-ink outline-none focus:border-redpen aria-[invalid=true]:border-redpen-text";
-const labelCls = "block font-typewriter text-sm tracking-widest text-ink uppercase";
+  "mt-2 min-h-12 w-full border border-border bg-paper-shade p-3 font-sans text-[16px] text-ivory outline-none transition-colors focus:border-gold focus:ring-1 focus:ring-gold aria-[invalid=true]:border-redpen-text";
+const labelCls = "block font-sans text-sm font-semibold text-ivory";
 const fileCls =
-  "mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-3 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase";
+  "mt-2 block min-h-12 w-full border border-border bg-paper-shade p-2 font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:min-h-10 file:border file:border-gold/50 file:bg-card file:px-4 file:py-2 file:font-sans file:text-xs file:font-bold file:text-ivory file:uppercase";
 
 const CONFIRM_TEXT =
   "I confirm that the information I provided is accurate and that I have provided all required information and documents for my selected service.";
@@ -42,8 +42,8 @@ async function filePayload(file: File) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="border border-border bg-card p-6 shadow-paper sm:p-8">
-      <h2 className="font-stamp text-xl text-ink sm:text-2xl">{title}</h2>
+    <section className="premium-panel p-6 sm:p-8">
+      <h2 className="font-brand text-2xl text-ivory sm:text-3xl">{title}</h2>
       <div className="mt-6 space-y-6">{children}</div>
     </section>
   );

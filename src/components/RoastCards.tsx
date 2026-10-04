@@ -4,50 +4,41 @@ const roasts = [
   {
     grade: "C",
     name: "marketing_resume_FINAL_v7.pdf",
-    critique:
-      "\u201cResults-driven team player\u201d appears twice and means nothing either time.",
-    note: "Say what you actually did.",
-    rotate: "sm:-rotate-2",
-    offset: "sm:translate-y-0",
+    quote: "Results-driven team player",
+    critique: "This phrase is broad. Replace it with a specific contribution from the role.",
+    note: "Specific beats generic.",
   },
   {
     grade: "B",
     name: "swe_resume_2026.pdf",
-    critique:
-      "Six years of work compressed into bullets that all start with \u201cHelped.\u201d",
-    note: "Lead with numbers.",
-    rotate: "sm:rotate-[1.5deg]",
-    offset: "sm:translate-y-6",
+    quote: "Helped the team complete projects",
+    critique: "Name your action first, then add the verified outcome if the résumé supports one.",
+    note: "Own the action.",
   },
   {
     grade: "D",
     name: "my resume (1) (1).docx",
-    critique:
-      "Your objective statement is addressed to a company you stopped applying to in 2021.",
-    note: "Cut the objective. Entirely.",
-    rotate: "sm:-rotate-1",
-    offset: "sm:translate-y-2",
+    quote: "Responsible for handling customer calls",
+    critique: "This shows a duty, but not the result of doing it well.",
+    note: "Show the outcome.",
   },
 ];
 
 export function RoastCards() {
   return (
-    <section className="border-y border-border/70 bg-paper-shade/50 px-5 py-20 sm:py-28">
+    <section id="free-roast" className="section-shell border-y border-border/70 bg-surface-subtle">
       <div className="mx-auto max-w-6xl">
         <div className="max-w-xl">
-          <p className="font-typewriter text-xs tracking-[0.28em] text-ink-soft uppercase">
-            Sample feedback
-          </p>
-          <h2 className="mt-3 font-stamp text-3xl leading-tight text-ink sm:text-4xl">
-            The kind of notes you&rsquo;ll get
-          </h2>
+          <p className="eyebrow">The free résumé roast</p>
+          <h2 className="section-title mt-4">Feedback grounded in the words on your résumé.</h2>
+          <p className="mt-5 text-base leading-7 text-muted-foreground">These illustrative samples show the format. Your result is generated from your own source and must pass accuracy checks before it appears.</p>
         </div>
 
         <div className="mt-12 grid gap-8 sm:mt-16 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
           {roasts.map((r, i) => (
             <article
               key={r.name}
-              className={`group torn-edge relative bg-card px-6 pt-7 pb-9 shadow-paper transition-transform duration-300 hover:-translate-y-1.5 hover:shadow-paper-lift ${r.rotate} ${r.offset}`}
+              className="service-card relative px-6 pt-7 pb-8"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -61,7 +52,9 @@ export function RoastCards() {
                 <GradeStamp grade={r.grade} delay={i * 220} />
               </div>
 
-              <div className="ruled-lines mt-6 space-y-1 pb-2">
+              <div className="mt-6 space-y-3 border-l-2 border-gold/60 pl-4">
+                <p className="text-xs font-semibold tracking-[0.08em] text-gold uppercase">Evidence quote</p>
+                <blockquote className="text-sm leading-6 text-ivory">&ldquo;{r.quote}&rdquo;</blockquote>
                 <p className="font-sans text-[0.95rem] leading-[1.9rem] text-ink">
                   {r.critique}
                 </p>
