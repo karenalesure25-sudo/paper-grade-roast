@@ -1,4 +1,5 @@
 - [x] Premium gold/red full-site redesign, responsive logo, and cross-route verification
+- [ ] Metallic-logo signature homepage revision and responsive cross-route verification
 # Roadmap
 
 - [x] Customer intake forms ($40/$50/$60) + review/submit, saved to backend
