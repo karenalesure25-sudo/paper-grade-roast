@@ -38,7 +38,7 @@ function PrivacyPage() {
         <article className="mx-auto max-w-3xl">
           <h1 className="font-display text-[2rem] leading-tight text-ink uppercase sm:text-4xl">Privacy</h1>
           <p className="mt-4 font-sans text-[0.9rem] text-muted-foreground">
-            A plain-language summary of how this site handles your information. It isn&rsquo;t legal advice.
+            A plain-language summary of how this site handles your information.
           </p>
 
           <Section title="Free resume roast">
