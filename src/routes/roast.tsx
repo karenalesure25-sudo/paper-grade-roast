@@ -180,7 +180,7 @@ function RoastPage() {
                     onChange={(e) => { setPasted(e.target.value); resetResult(); }}
                     className="mt-2 w-full border border-border bg-paper-shade p-3 font-sans text-[16px] text-ink outline-none focus:border-redpen"
                   />
-                  <p id="resumeTextCount" className={`mt-2 font-sans text-[0.85rem] ${pasted.length > MAX_PASTE ? "text-redpen" : "text-muted-foreground"}`}>
+                  <p id="resumeTextCount" className={`mt-2 font-sans text-[0.85rem] ${pasted.length > MAX_PASTE ? "text-redpen-text" : "text-muted-foreground"}`}>
                     {pasted.length.toLocaleString()} / {MAX_PASTE.toLocaleString()} characters
                   </p>
                 </div>
@@ -196,7 +196,7 @@ function RoastPage() {
               {!pending && announce && <p className="sr-only">{announce}</p>}
             </div>
             <div role="alert" aria-live="assertive">
-              {error && <p className="font-sans text-[1rem] leading-relaxed text-redpen">{error}</p>}
+              {error && <p className="font-sans text-[1rem] leading-relaxed text-redpen-text">{error}</p>}
             </div>
           </form>
 

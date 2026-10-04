@@ -69,7 +69,7 @@ export function TemplatePicker({
             <p className="mt-1 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
               {template.blurb}
             </p>
-            <p className="mt-1 font-sans text-[0.7rem] text-redpen">
+            <p className="mt-1 font-sans text-[0.7rem] text-redpen-text">
               {template.usesPhoto ? "Uses your selfie" : "No photo"}
             </p>
           </button>

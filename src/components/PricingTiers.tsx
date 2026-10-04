@@ -48,7 +48,7 @@ export function PricingTiers() {
             <ul className="mt-5 flex-1 space-y-2.5">
               {tier.includes.map((item) => (
                 <li key={item} className="flex gap-2.5 text-ink">
-                  <span className="mt-0.5 font-hand text-xl leading-none text-redpen">
+                  <span className="mt-0.5 font-hand text-xl leading-none text-redpen-text">
                     &#10003;
                   </span>
                   <span className="text-[0.9rem] leading-relaxed">{item}</span>

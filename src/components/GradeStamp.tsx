@@ -34,7 +34,7 @@ export function GradeStamp({
     <div ref={ref} className={cn("select-none", className)}>
       <div
         className={cn(
-          "grid size-20 place-items-center rounded-full border-[3px] border-redpen text-redpen opacity-0 sm:size-24",
+          "grid size-20 place-items-center rounded-full border-[3px] border-redpen text-redpen-text opacity-0 sm:size-24",
           "shadow-[inset_0_0_0_2px_var(--paper),0_0_0_1px_color-mix(in_oklab,var(--redpen)_35%,transparent)]",
           stamped && "animate-stamp-in",
         )}

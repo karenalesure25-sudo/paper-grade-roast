@@ -35,7 +35,7 @@ export function AtsReportCard({
           className="shrink-0 rotate-[-4deg] border-4 border-redpen px-6 py-3 text-center"
           aria-label={`Advisory keyword match estimate ${report.score} out of 100`}
         >
-          <div className="font-sans text-4xl leading-none text-redpen">
+          <div className="font-sans text-4xl leading-none text-redpen-text">
             {report.score}
             <span className="text-lg">/100</span>
           </div>
@@ -111,7 +111,7 @@ export function AtsReportCard({
           <ul className="mt-4 space-y-3">
             {report.missing.map((item) => (
               <li key={item.keyword}>
-                <span className="font-hand text-2xl leading-none text-redpen">
+                <span className="font-hand text-2xl leading-none text-redpen-text">
                   {item.keyword}
                 </span>
                 {item.why ? (

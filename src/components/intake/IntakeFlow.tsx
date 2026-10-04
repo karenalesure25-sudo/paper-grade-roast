@@ -19,7 +19,7 @@ export type SubmittedIntake = {
 };
 
 const inputCls =
-  "mt-2 w-full border border-border bg-paper-shade p-3 font-sans text-[16px] text-ink outline-none focus:border-redpen aria-[invalid=true]:border-redpen";
+  "mt-2 w-full border border-border bg-paper-shade p-3 font-sans text-[16px] text-ink outline-none focus:border-redpen aria-[invalid=true]:border-redpen-text";
 const labelCls = "block font-typewriter text-sm tracking-widest text-ink uppercase";
 const fileCls =
   "mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-3 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase";
@@ -52,7 +52,7 @@ function Card({ title, children }: { title: string; children: React.ReactNode })
 function FieldError({ id, msg }: { id: string; msg?: string | undefined }) {
   if (!msg) return null;
   return (
-    <p id={`${id}-error`} className="mt-2 font-sans text-[0.9rem] text-redpen">
+    <p id={`${id}-error`} className="mt-2 font-sans text-[0.9rem] text-redpen-text">
       {msg}
     </p>
   );
@@ -102,7 +102,7 @@ export function IntakeFlow({
     return (
       <div>
         <label htmlFor={id} className={labelCls}>
-          {label} {opts.required ? <span className="text-redpen">*</span> : <span className="normal-case tracking-normal text-muted-foreground">(optional)</span>}
+          {label} {opts.required ? <span className="text-redpen-text">*</span> : <span className="normal-case tracking-normal text-muted-foreground">(optional)</span>}
         </label>
         {opts.area ? (
           <textarea {...common} rows={opts.area} onChange={(e) => set(key, e.target.value as never)} />
@@ -126,7 +126,7 @@ export function IntakeFlow({
     return (
       <div>
         <label htmlFor={id} className={labelCls}>
-          {label} {required ? <span className="text-redpen">*</span> : <span className="normal-case tracking-normal text-muted-foreground">(optional)</span>}
+          {label} {required ? <span className="text-redpen-text">*</span> : <span className="normal-case tracking-normal text-muted-foreground">(optional)</span>}
         </label>
         <input
           ref={kind === "resume" ? resumeRef : jobRef}
@@ -282,7 +282,7 @@ export function IntakeFlow({
           </StampButton>
         </div>
         <div aria-live="polite">
-          {submitError && <p className="font-sans text-[0.95rem] text-redpen">{submitError}</p>}
+          {submitError && <p className="font-sans text-[0.95rem] text-redpen-text">{submitError}</p>}
         </div>
       </div>
     );
@@ -345,7 +345,7 @@ export function IntakeFlow({
                   return (
                     <div key={k}>
                       <label htmlFor={id} className={labelCls}>
-                        {label} <span className="text-redpen">*</span>
+                        {label} <span className="text-redpen-text">*</span>
                       </label>
                       {area ? <textarea {...props} rows={5} /> : <input {...props} type="text" />}
                       <FieldError id={id} msg={err} />
@@ -397,7 +397,7 @@ export function IntakeFlow({
                       <label htmlFor={id} className={labelCls}>
                         {label}{" "}
                         {required ? (
-                          <span className="text-redpen">*</span>
+                          <span className="text-redpen-text">*</span>
                         ) : (
                           <span className="normal-case tracking-normal text-muted-foreground">(optional)</span>
                         )}
@@ -457,7 +457,7 @@ export function IntakeFlow({
           {text("jobDescription", "Full job description", { area: 8, placeholder: "Paste the full posting here." })}
           {fileField("jobFile", "Job posting upload", false)}
           <p className="font-sans text-[0.9rem] text-muted-foreground">
-            <span className="text-redpen">*</span> You must paste the full job description <strong>or</strong> upload the job posting.
+            <span className="text-redpen-text">*</span> You must paste the full job description <strong>or</strong> upload the job posting.
           </p>
         </Card>
       )}
@@ -490,7 +490,7 @@ export function IntakeFlow({
         </div>
         <div aria-live="polite">
           {errCount > 0 && (
-            <p className="mt-4 font-sans text-[0.95rem] text-redpen">
+            <p className="mt-4 font-sans text-[0.95rem] text-redpen-text">
               Please fix the {errCount === 1 ? "highlighted field" : `${errCount} highlighted fields`} above.
             </p>
           )}
