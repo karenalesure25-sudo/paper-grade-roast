@@ -480,7 +480,7 @@ export function IntakeFlow({
                   return n;
                 });
             }}
-            className="mt-1 size-5 shrink-0 accent-[var(--color-redpen)]"
+            className="mt-1 size-5 shrink-0 accent-redpen"
           />
           <span className="font-sans text-[0.95rem] leading-relaxed text-ink">{CONFIRM_TEXT}</span>
         </label>

@@ -8,6 +8,7 @@ import { TemplatePicker } from "@/components/TemplatePicker";
 import { PhotoCropper } from "@/components/PhotoCropper";
 import { ResumeDeliverable } from "@/components/ResumeDeliverable";
 import { AtsReportCard } from "@/components/AtsReportCard";
+import { IntakeFlow, type SubmittedIntake } from "@/components/intake/IntakeFlow";
 import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
@@ -123,6 +124,50 @@ function OrderPage() {
     setPhase(jobStep ? "confirm" : "layout");
   }
 
+
+  /** Intake submitted and saved: carry the answers into the existing layout + build steps. */
+  function handleIntake(intake: SubmittedIntake) {
+    const a = intake.answers;
+    setEmail(a.email.trim());
+    setFile(intake.resume);
+    setJobFile(intake.jobFile);
+    if (tier.id === "bundle") {
+      setJobUrl(a.jobUrl.trim());
+      setJobText(
+        [
+          `Company: ${a.companyName}`,
+          `Job title: ${a.specificJobTitle}`,
+          a.jobDescription.trim() ? `Job description:\n${a.jobDescription.trim()}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+    }
+    if (tier.id === "scratch") {
+      setBackground(
+        [
+          `Name: ${a.fullName}`,
+          `Email: ${a.email}`,
+          `Phone: ${a.phone}`,
+          `Target job title: ${a.targetJobTitle}`,
+          a.careerField ? `Career field: ${a.careerField}` : "",
+          "Work history:",
+          ...a.workHistory.map((w) => `- ${w.title}, ${w.employer} (${w.dates}): ${w.details}`),
+          "Education:",
+          ...a.education.map((e) => `- ${e.credential}, ${e.school}${e.dates ? ` (${e.dates})` : ""}`),
+          `Skills: ${a.skills}`,
+          a.certifications ? `Certifications: ${a.certifications}` : "",
+          a.additionalExperience ? `Additional experience: ${a.additionalExperience}` : "",
+          a.additionalInfo ? `Additional instructions: ${a.additionalInfo}` : "",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
+    }
+    setError(null);
+    setPhase("layout");
+    window.scrollTo({ top: 0 });
+  }
 
   async function build() {
     if (pending) return;
@@ -569,171 +614,7 @@ function OrderPage() {
               </div>
             </section>
           ) : (
-            <form onSubmit={pay} className="mt-12 space-y-12">
-              <section>
-                <SectionLabel step={1}>
-                  {tier.intake === "background"
-                    ? "Your background"
-                    : "Upload your résumé"}
-                </SectionLabel>
-
-                <div className="mt-5 border border-border bg-card p-6 shadow-paper sm:p-8">
-                  {tier.intake === "background" ? (
-                    <>
-                      <label
-                        htmlFor="background"
-                        className="font-typewriter text-sm tracking-widest text-ink uppercase"
-                      >
-                        Jobs, dates, duties, wins &mdash; however messy
-                      </label>
-                      <textarea
-                        id="background"
-                        name="background"
-                        rows={8}
-                        value={background}
-                        onChange={(event) => setBackground(event.target.value)}
-                        placeholder="Fresenius Medical Care, patient care tech, 2024 to now. Verify patient ID, record vitals, HIPAA..."
-                        className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
-                      />
-                      <p className="mt-4 font-sans text-[0.85rem] text-muted-foreground">
-                        Or upload your notes as a PDF or DOCX instead:
-                      </p>
-                    </>
-                  ) : (
-                    <label
-                      htmlFor="resumeFile"
-                      className="font-typewriter text-sm tracking-widest text-ink uppercase"
-                    >
-                      Your current résumé (PDF or DOCX)
-                    </label>
-                  )}
-
-                  <input
-                    ref={resumeInputRef}
-                    id="resumeFile"
-                    name="resumeFile"
-                    type="file"
-                    accept=".pdf,.docx,application/pdf"
-                    onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                    className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
-                  />
-                  <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
-                    {file ? `Attached: ${file.name}` : "PDF or DOCX \u00b7 up to 5MB"}
-                  </p>
-
-                  <label
-                    htmlFor="email"
-                    className="mt-8 block font-typewriter text-sm tracking-widest text-ink uppercase"
-                  >
-                    Where should we send it?
-                  </label>
-                  <input
-                    ref={emailInputRef}
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="you@example.com"
-                    className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
-                  />
-                  <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
-                    Your order confirmation and download links go here. Links expire
-                    after 7 days.
-                  </p>
-                </div>
-              </section>
-
-
-              {jobStep && (
-                <section>
-                  <SectionLabel step={2}>The job you want</SectionLabel>
-                  <div className="mt-5 border border-border bg-card p-6 shadow-paper sm:p-8">
-                    <label
-                      htmlFor="jobUrl"
-                      className="font-typewriter text-sm tracking-widest text-ink uppercase"
-                    >
-                      Job posting link
-                    </label>
-                    <input
-                      id="jobUrl"
-                      name="jobUrl"
-                      type="url"
-                      value={jobUrl}
-                      onChange={(event) => setJobUrl(event.target.value)}
-                      placeholder="https://boards.example.com/jobs/1234"
-                      className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
-                    />
-                    <label
-                      htmlFor="jobText"
-                      className="mt-6 block font-typewriter text-sm tracking-widest text-ink uppercase"
-                    >
-                      Or paste the posting / role description
-                    </label>
-                    <textarea
-                      id="jobText"
-                      name="jobText"
-                      rows={5}
-                      value={jobText}
-                      onChange={(event) => setJobText(event.target.value)}
-                      placeholder="Title, company, responsibilities, required skills..."
-                      className="mt-3 w-full border border-border bg-paper-shade p-3 font-sans text-[0.95rem] text-ink outline-none focus:border-redpen"
-                    />
-                    <label
-                      htmlFor="jobFile"
-                      className="mt-6 block font-typewriter text-sm tracking-widest text-ink uppercase"
-                    >
-                      Or upload the posting (PDF or DOCX)
-                    </label>
-                    <input
-                      ref={jobFileInputRef}
-                      id="jobFile"
-                      name="jobFile"
-                      type="file"
-                      accept=".pdf,.docx,application/pdf"
-                      onChange={(event) => setJobFile(event.target.files?.[0] ?? null)}
-                      className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
-                    />
-                    <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
-                      {jobFile
-                        ? `Attached: ${jobFile.name}`
-                        : "A link, pasted text, or a file \u2014 any one is enough."}
-                    </p>
-                  </div>
-                </section>
-              )}
-
-              <section>
-                <SectionLabel step={jobStep ? reviewStep : checkoutStep}>
-                  {jobStep ? "Review the job posting" : "Checkout"}
-                </SectionLabel>
-                <div className="mt-5 border border-border bg-card p-6 shadow-paper sm:p-8">
-                  <div className="flex flex-wrap items-end justify-between gap-6">
-                    <div>
-                      <p className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">
-                        {tier.name}
-                      </p>
-                      <p className="mt-2 font-stamp text-4xl text-ink">${tier.price}</p>
-                    </div>
-                    <StampButton type="submit">
-                      {jobStep ? "Review Job Details" : `Pay $${tier.price}`}
-                    </StampButton>
-                  </div>
-                  <p className="mt-5 border-t border-dashed border-border pt-4 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
-                    {jobStep
-                      ? "Nothing is charged yet \u2014 you confirm the job posting on the next screen before checkout finalizes."
-                      : "Placeholder checkout \u2014 no card is charged yet. Next you pick your layout, add a photo if it needs one, and then we write it."}
-                  </p>
-                  {error && (
-                    <p className="mt-5 font-hand text-2xl leading-tight text-redpen">
-                      {error}
-                    </p>
-                  )}
-                </div>
-              </section>
-            </form>
+            <IntakeFlow tier={tier} onSubmitted={handleIntake} />
           )}
         </div>
       </main>
