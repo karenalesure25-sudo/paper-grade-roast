@@ -89,7 +89,7 @@ export const SECTION_LABEL: Record<SectionId, string> = {
 
 /** Words that imply we saw the visual document. We only ever see text. */
 const VISUAL_CLAIMS =
-  /\b(font|fonts|typeface|colou?rs?|layout|columns?|margins?|white ?space|page length|one[- ]page|two[- ]pages?|\d+ pages?|graphics?|icons?|headshot|photo|bold(ed)?|italics?|spacing|design|visually|looks? (cluttered|crowded|clean))\b/i;
+  /\b(font|fonts|typeface|colou?rs?|layout|columns?|margins?|white ?space|page length|(one|two|three|four|five|\d+)[- ]pages?|graphics?|icons?|headshot|photo|bold(ed)?|italics?|spacing|design|visually|looks? (cluttered|crowded|clean))\b/i;
 
 /** Claims about real ATS outcomes we cannot know. */
 const ATS_OUTCOME_CLAIMS =
