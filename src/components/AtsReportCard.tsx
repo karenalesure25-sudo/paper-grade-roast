@@ -23,10 +23,12 @@ export function AtsReportCard({
           </h3>
           {jobLabel ? (
             <p className="mt-2 font-sans text-[0.95rem] text-muted-foreground">
-              Scored against <span className="marker break-all">{jobLabel}</span>
+              Compared with <span className="marker break-all">{jobLabel}</span>
             </p>
-          <p className="mt-2 font-sans text-[0.8rem] text-muted-foreground">An AI estimate of keyword overlap with this posting — not a score from any employer&rsquo;s real applicant tracking system.</p>
           ) : null}
+          <p className="mt-2 font-sans text-[0.8rem] text-muted-foreground">
+            An AI estimate of keyword overlap with this posting — not a score from any employer&rsquo;s real applicant tracking system.
+          </p>
         </div>
 
         <div
