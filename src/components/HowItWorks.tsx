@@ -2,19 +2,19 @@ const steps = [
   {
     n: "01",
     title: "Upload",
-    body: "Drop in a PDF or DOCX. No account, no forms, no waiting room.",
+    body: "Upload a PDF or DOCX, or paste the text. No account needed.",
     note: "takes 4 seconds",
   },
   {
     n: "02",
     title: "Get Roasted + Graded",
-    body: "A letter grade, line-by-line red pen, and the one thing recruiters skip past.",
-    note: "brutal but fair",
+    body: "A letter grade, what’s working, and red-pen notes that quote your own résumé.",
+    note: "honest, not mean",
   },
   {
     n: "03",
     title: "Unlock the Fix",
-    body: "Turn every note into rewritten bullets that actually clear the ATS.",
+    body: "Choose a $40, $50, or $60 service and Kay builds the fix from your real experience.",
     note: "this is the good part",
   },
 ];
