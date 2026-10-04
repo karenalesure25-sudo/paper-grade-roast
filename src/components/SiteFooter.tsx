@@ -6,7 +6,7 @@ export function SiteFooter() {
     <footer className="border-t border-border bg-card/45 px-4 py-10 sm:px-6">
         <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[1fr_auto] md:items-end">
           <div>
-            <BrandMark size="md" className="max-w-[300px]" />
+            <BrandMark size="md" className="w-[170px]" />
             <p className="mt-4 max-w-md text-sm leading-6 text-muted-foreground">Honest résumé feedback and professional writing support built from your real experience.</p>
           </div>
           <nav className="flex flex-wrap gap-x-6 gap-y-3 font-sans text-sm text-muted-foreground">

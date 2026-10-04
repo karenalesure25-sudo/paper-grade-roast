@@ -7,11 +7,7 @@ export function Hero() {
       <div className="relative mx-auto max-w-7xl border border-gold/35 p-5 sm:p-10 lg:p-14">
         <span aria-hidden className="absolute left-4 top-4 size-6 border-l border-t border-gold sm:left-6 sm:top-6" />
         <span aria-hidden className="absolute bottom-4 right-4 size-6 border-b border-r border-gold sm:bottom-6 sm:right-6" />
-        <div className="mx-auto flex max-w-3xl justify-center">
-          <img src="/brand/kays-career-solutions-metallic.webp" alt="Kay's Career Solutions — Polish, Optimize, Elevate" width="2172" height="724" fetchPriority="high" className="h-auto w-full max-w-[620px] object-contain" />
-        </div>
-
-        <div className="mt-8 grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
+        <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
           <div className="max-w-2xl">
           <p className="eyebrow">Free, résumé-specific feedback</p>
           <h1 className="mt-5 font-brand text-[2.8rem] font-semibold leading-[0.94] text-ivory sm:text-6xl lg:text-[4.4rem]">

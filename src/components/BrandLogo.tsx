@@ -31,7 +31,7 @@ export function BrandLogo({ compact = false, className }: { compact?: boolean; c
       decoding="async"
       className={cn(
         "block h-auto object-contain object-left",
-        compact ? "w-[218px] sm:w-[285px]" : "w-full max-w-[560px]",
+        compact ? "w-[180px] sm:w-[220px]" : "w-full max-w-[560px]",
         className,
       )}
     />
