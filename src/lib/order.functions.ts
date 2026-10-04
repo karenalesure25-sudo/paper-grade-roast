@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { OrderInput } from "./order-input";
-import { fetchJobPostingText, writeResume, type AtsReport, type ContentBlock } from "./order.server";
+import { writeResume, type AtsReport, type ContentBlock } from "./order.server";
 import type { ResumeData } from "./resume-templates";
 
 export type OrderResult = {
@@ -30,9 +30,16 @@ export type { AtsReport };
 export const buildResume = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => OrderInput.parse(input))
   .handler(async ({ data }): Promise<OrderResult> => {
+    // Hard server-side gate: no paid deliverable until a verified payment exists.
+    // There is no payment integration yet, so this always refuses. No client flag can bypass it.
+    const { hasVerifiedPayment } = await import("./payment-gate.server");
+    if (!(await hasVerifiedPayment())) {
+      throw new Error("Checkout isn't connected yet, so résumé writing is turned off. Your intake was saved.");
+    }
+    if (data.tier === "bundle" && !data.jobText?.trim() && !data.jobFile) {
+      throw new Error("Paste the job description or upload the job posting — we don't fetch links.");
+    }
     const content: ContentBlock[] = [];
-    const fetchedJobText =
-      data.tier === "bundle" && data.jobUrl ? await fetchJobPostingText(data.jobUrl) : undefined;
 
     const instruction =
       data.tier === "scratch"
@@ -40,8 +47,7 @@ export const buildResume = createServerFn({ method: "POST" })
         : data.tier === "bundle"
           ? [
               "Rewrite the attached résumé in polished professional language, optimize it for ATS, and tailor it to the job below. Then write the matching cover letter.",
-              data.jobUrl ? `Job posting URL: ${data.jobUrl}` : "",
-              fetchedJobText ? `Fetched job posting details from that URL:\n${fetchedJobText}` : "",
+              data.jobUrl ? `Job posting URL (reference only, not fetched): ${data.jobUrl}` : "",
               data.jobText ? `Job / role details:\n${data.jobText}` : "",
               data.jobFile ? "The job posting is also attached as a file." : "",
             ]

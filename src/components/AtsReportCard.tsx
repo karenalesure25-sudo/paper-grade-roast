@@ -2,7 +2,7 @@ import type { AtsReport } from "@/lib/order.functions";
 
 function scoreVerdict(score: number): string {
   if (score >= 85) return "Strong match";
-  if (score >= 70) return "Likely to pass";
+  if (score >= 70) return "Good keyword match";
   if (score >= 55) return "Borderline";
   return "Needs work";
 }
@@ -19,18 +19,21 @@ export function AtsReportCard({
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="font-sans text-xl tracking-tight text-ink">
-            ATS optimization report
+            ATS keyword estimate (advisory)
           </h3>
           {jobLabel ? (
             <p className="mt-2 font-sans text-[0.95rem] text-muted-foreground">
-              Scored against <span className="marker break-all">{jobLabel}</span>
+              Compared with <span className="marker break-all">{jobLabel}</span>
             </p>
           ) : null}
+          <p className="mt-2 font-sans text-[0.8rem] text-muted-foreground">
+            An AI estimate of keyword overlap with this posting — not a score from any employer&rsquo;s real applicant tracking system.
+          </p>
         </div>
 
         <div
           className="shrink-0 rotate-[-4deg] border-4 border-redpen px-6 py-3 text-center"
-          aria-label={`Estimated ATS score ${report.score} out of 100`}
+          aria-label={`Advisory keyword match estimate ${report.score} out of 100`}
         >
           <div className="font-sans text-4xl leading-none text-redpen">
             {report.score}

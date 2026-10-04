@@ -22,7 +22,7 @@ export const TIERS: Tier[] = [
     intake: "resume",
     includes: [
       "Every bullet rewritten in your voice",
-      "Quantified impact where you had none",
+      "Your real numbers highlighted — we never invent metrics",
       "ATS-safe formatting, no broken columns",
       "Your pick of every template",
     ],

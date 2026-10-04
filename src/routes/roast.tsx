@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BrandLink } from "@/components/BrandMark";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { Link } from "@tanstack/react-router";
 import { StampButton } from "@/components/StampButton";
 import { GradedPaperCard } from "@/components/GradedPaperCard";
 import { TemplatePicker } from "@/components/TemplatePicker";
@@ -16,162 +15,198 @@ import { readRoasts, saveRoast, clearRoasts, type StoredRoast } from "@/lib/roas
 export const Route = createFileRoute("/roast")({
   head: () => ({
     meta: [
-      { title: "Grade My Resume — Kay’s Career Solutions" },
+      { title: "Free Resume Roast — Kay’s Career Solutions" },
       {
         name: "description",
         content:
-          "Upload your resume as a PDF or DOCX and get an instant letter grade, a short roast, and the red-pen notes that matter. Free.",
+          "Upload a PDF or DOCX, or paste your résumé text, for a free letter grade and red-pen notes quoted from your own résumé.",
       },
-      { property: "og:title", content: "Grade My Resume — Kay’s Career Solutions" },
-      {
-        property: "og:description",
-        content: "Upload it. Get roasted. Get better. Free.",
-      },
+      { property: "og:title", content: "Free Resume Roast — Kay’s Career Solutions" },
+      { property: "og:description", content: "A letter grade and red-pen notes, backed by quotes from your résumé." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
     ],
   }),
   component: RoastPage,
 });
 
+const MAX_PASTE = 24000;
+
 function RoastPage() {
   const grade = useServerFn(roastResume);
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [mode, setMode] = useState<"file" | "paste">("file");
+  const [file, setFile] = useState<File | null>(null);
+  const [pasted, setPasted] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [current, setCurrent] = useState<StoredRoast | null>(null);
   const [history, setHistory] = useState<StoredRoast[]>([]);
   const [preview, setPreview] = useState<TemplateId>("sidebar");
+  const requestId = useRef(0);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => setHistory(readRoasts()), []);
+
+  /** Any change to the input invalidates what's on screen. */
+  function resetResult() {
+    setCurrent(null);
+    setError(null);
+  }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
-
-    const form = event.currentTarget;
-    const input = form.elements.namedItem("resumeFile") as HTMLInputElement | null;
-    const file = input?.files?.[0] ?? null;
-
-    if (!file) {
-      setError("Upload a PDF or DOCX file to get it graded.");
-      return;
-    }
-
-    setPending(true);
+    const id = ++requestId.current;
+    setCurrent(null);
     setError(null);
 
-    try {
-      const prepared = await prepareUpload(file);
-      const payload =
-        prepared.kind === "pdf"
-          ? {
-              file: {
-                filename: prepared.filename,
-                mimeType: prepared.mimeType,
-                dataBase64: prepared.dataBase64,
-              },
-            }
-          : { text: prepared.text };
+    const selected = file ?? fileRef.current?.files?.[0] ?? null;
+    if (mode === "file" && !selected) return setError("Choose a PDF or DOCX file first.");
+    if (mode === "paste" && pasted.trim().length < 200)
+      return setError("Paste your full résumé text (at least a few lines).");
 
+    setPending(true);
+    try {
+      let payload:
+        | { source: "pdf"; filename: string; dataBase64: string }
+        | { source: "docx" | "text"; filename?: string; text: string };
+      if (mode === "paste") {
+        payload = { source: "text", text: pasted.slice(0, MAX_PASTE) };
+      } else {
+        const prepared = await prepareUpload(selected!);
+        payload =
+          prepared.kind === "pdf"
+            ? { source: "pdf", filename: prepared.filename, dataBase64: prepared.dataBase64 }
+            : { source: "docx", filename: prepared.filename, text: prepared.text.slice(0, MAX_PASTE) };
+      }
       const result = await grade({ data: payload });
-      const stored = saveRoast({
-        ...result,
-        label: file.name,
-      });
+      if (id !== requestId.current) return; // input changed while we waited
+      if (result.status !== "graded") {
+        setError(result.message);
+        return;
+      }
+      const stored = saveRoast(result);
       setCurrent(stored);
-      setHistory(readRoasts().filter((r) => r.id !== stored.id));
+      setHistory(readRoasts());
     } catch (cause) {
-      console.error(cause);
+      if (id !== requestId.current) return;
       setError(
-        cause instanceof Error && cause.message
+        cause instanceof Error && cause.message && cause.message.length < 200
           ? cause.message
-          : "Something went wrong on the way to the grader. Try again.",
+          : "Something went wrong reaching the grader. Try again.",
       );
     } finally {
-      setPending(false);
+      if (id === requestId.current) setPending(false);
     }
   }
+
+  const tabCls = (active: boolean) =>
+    `flex-1 border px-4 py-3 font-stamp text-xs tracking-widest uppercase transition-colors ${
+      active ? "border-redpen bg-paper-shade text-ink" : "border-border text-muted-foreground hover:text-ink"
+    }`;
 
   return (
     <div className="paper-texture relative min-h-screen">
       <header className="px-5 py-6">
-        <div className="mx-auto flex max-w-4xl items-center justify-between">
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
           <BrandLink size="sm" withTagline={false} />
-          <Link
-            to="/"
-            className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4 transition-colors hover:text-ink"
-          >
-            Back to the front page
+          <Link to="/" className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft underline-offset-4">
+            Home
           </Link>
         </div>
       </header>
 
       <main className="px-5 pb-20">
         <div className="mx-auto max-w-4xl">
-          <p className="font-typewriter text-xs tracking-[0.3em] text-ink-soft uppercase">
-            Hand it in
-          </p>
-          <h1 className="mt-4 font-stamp text-[2.2rem] leading-[1.1] text-ink sm:text-5xl">
-            Grade my resume
-          </h1>
+          <p className="font-typewriter text-xs tracking-[0.3em] text-ink-soft uppercase">Free resume roast</p>
+          <h1 className="mt-4 font-stamp text-[2.2rem] leading-[1.1] text-ink sm:text-5xl">Grade my resume</h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Upload a PDF or DOCX. Nothing you submit is stored on our end &mdash; your
-            roast lives in this browser tab and disappears when you close it.
+            Upload a PDF or DOCX, or paste the text. Every note quotes your own résumé. Your text is sent to an
+            AI service to be graded; results stay in this browser tab. See our{" "}
+            <Link to="/privacy" className="underline underline-offset-4">privacy page</Link>.
           </p>
 
-          <form onSubmit={submit} className="mt-10 border border-border bg-card p-6 shadow-paper sm:p-8">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex-1">
-                <label
-                  htmlFor="resumeFile"
-                  className="font-typewriter text-sm tracking-widest text-ink uppercase"
-                >
-                  Upload your resume
-                </label>
-                <input
-                  id="resumeFile"
-                  name="resumeFile"
-                  type="file"
-                  accept=".pdf,.docx,application/pdf"
-                  onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
-                  className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-2 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase hover:file:border-ink-soft hover:file:text-ink"
-                />
-                <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
-                  {fileName ? `Attached: ${fileName}` : "PDF or DOCX \u00b7 up to 5MB"}
-                </p>
-              </div>
-              <StampButton type="submit" disabled={pending} className="shrink-0">
-                {pending ? "Grading..." : "Grade it"}
-              </StampButton>
+          <form onSubmit={submit} className="mt-10 border border-border bg-card p-6 shadow-paper sm:p-8" aria-busy={pending}>
+            <div role="tablist" aria-label="How to send your résumé" className="flex gap-3">
+              <button type="button" role="tab" aria-selected={mode === "file"} disabled={pending}
+                onClick={() => { setMode("file"); resetResult(); }} className={tabCls(mode === "file")}>
+                Upload file
+              </button>
+              <button type="button" role="tab" aria-selected={mode === "paste"} disabled={pending}
+                onClick={() => { setMode("paste"); resetResult(); }} className={tabCls(mode === "paste")}>
+                Paste text
+              </button>
             </div>
 
-            {error && (
-              <p className="mt-5 font-hand text-2xl leading-tight text-redpen">{error}</p>
-            )}
+            <fieldset disabled={pending} className="mt-6">
+              {mode === "file" ? (
+                <div>
+                  <label htmlFor="resumeFile" className="font-typewriter text-sm tracking-widest text-ink uppercase">
+                    Your résumé (PDF or DOCX)
+                  </label>
+                  <input
+                    ref={fileRef}
+                    id="resumeFile"
+                    name="resumeFile"
+                    type="file"
+                    accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={(e) => { setFile(e.target.files?.[0] ?? null); resetResult(); }}
+                    className="mt-2 block w-full font-sans text-[0.95rem] text-muted-foreground file:mr-4 file:border file:border-ink file:bg-transparent file:px-4 file:py-3 file:font-stamp file:text-xs file:tracking-widest file:text-ink file:uppercase"
+                  />
+                  <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
+                    {file ? `Attached: ${file.name}` : "PDF or DOCX · up to 5 MB · scanned image PDFs can't be read"}
+                  </p>
+                </div>
+              ) : (
+                <div>
+                  <label htmlFor="resumeText" className="font-typewriter text-sm tracking-widest text-ink uppercase">
+                    Paste your résumé text
+                  </label>
+                  <textarea
+                    id="resumeText"
+                    rows={12}
+                    maxLength={MAX_PASTE}
+                    value={pasted}
+                    onChange={(e) => { setPasted(e.target.value); resetResult(); }}
+                    className="mt-2 w-full border border-border bg-paper-shade p-3 font-sans text-[16px] text-ink outline-none focus:border-redpen"
+                  />
+                  <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
+                    {pasted.length.toLocaleString()} / {MAX_PASTE.toLocaleString()} characters
+                  </p>
+                </div>
+              )}
+            </fieldset>
+
+            <div className="mt-6">
+              <StampButton type="submit" disabled={pending}>{pending ? "Grading..." : "Grade it"}</StampButton>
+            </div>
+
+            <div role="status" aria-live="polite" className="mt-5">
+              {pending && <p className="font-sans text-[0.95rem] text-muted-foreground">Reading and grading your résumé…</p>}
+            </div>
+            <div role="alert" aria-live="assertive">
+              {error && <p className="font-sans text-[1rem] leading-relaxed text-redpen">{error}</p>}
+            </div>
           </form>
 
           {current && (
             <>
-              <section className="mt-14">
-                <h2 className="font-stamp text-2xl text-ink sm:text-3xl">Your grade</h2>
-                <div className="mt-3 h-px w-20 bg-ink-soft/60" />
+              <section className="mt-14" aria-labelledby="result-heading">
+                <h2 id="result-heading" className="font-stamp text-2xl text-ink sm:text-3xl">
+                  Your grade: {current.grade}
+                </h2>
                 <div className="mt-8">
                   <GradedPaperCard roast={current} />
                 </div>
               </section>
 
               <section className="mt-16">
-                <h2 className="font-stamp text-2xl text-ink sm:text-3xl">
-                  Now pick the paper it lands on
-                </h2>
-                <div className="mt-3 h-px w-20 bg-ink-soft/60" />
+                <h2 className="font-stamp text-2xl text-ink sm:text-3xl">Want Kay to fix it?</h2>
                 <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-                  {RESUME_TEMPLATES.length} layouts, shown here as samples with fake details
-                  and a blank photo slot. They unblur the moment you buy a fix.
+                  {RESUME_TEMPLATES.length} layouts, shown as blurred samples with placeholder details.
                 </p>
                 <div className="mt-8">
-                  <TemplatePicker
-                    value={preview}
-                    onChange={setPreview}
-                    unlocked={false}
-                  />
+                  <TemplatePicker value={preview} onChange={setPreview} unlocked={false} />
                 </div>
                 <div className="mt-12">
                   <PricingTiers />
@@ -180,41 +215,27 @@ function RoastPage() {
             </>
           )}
 
-
           {history.length > 0 && (
-            <section className="mt-16">
+            <section className="mt-16" aria-labelledby="history-heading">
               <div className="flex flex-wrap items-baseline justify-between gap-3">
-                <h2 className="font-stamp text-xl text-ink">Earlier this session</h2>
+                <h2 id="history-heading" className="font-stamp text-xl text-ink">This browser session</h2>
                 <button
                   type="button"
-                  onClick={() => {
-                    clearRoasts();
-                    setHistory([]);
-                    setCurrent(null);
-                  }}
-                  className="font-sans text-[0.95rem] text-muted-foreground underline decoration-dotted underline-offset-4 transition-colors hover:text-ink"
+                  onClick={() => { clearRoasts(); setHistory([]); setCurrent(null); }}
+                  className="font-sans text-[0.95rem] text-muted-foreground underline underline-offset-4 hover:text-ink"
                 >
-                  Clear this session
+                  Clear my results
                 </button>
               </div>
               <ul className="mt-6 space-y-3">
                 {history.map((entry) => (
-                  <li
-                    key={entry.id}
-                    className="flex items-center gap-4 border border-border bg-paper-shade px-4 py-3"
-                  >
+                  <li key={entry.id} className="flex items-center gap-4 border border-border bg-paper-shade px-4 py-3">
                     <span className="grid size-10 shrink-0 place-items-center rounded-full border border-border font-stamp text-lg text-ink-soft">
                       {entry.grade}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setCurrent(entry)}
-                      className="min-w-0 flex-1 text-left font-sans text-[0.95rem] text-ink transition-colors hover:text-ink"
-                    >
+                    <button type="button" onClick={() => setCurrent(entry)} className="min-w-0 flex-1 text-left font-sans text-[0.95rem] text-ink">
                       <span className="block truncate">{entry.label}</span>
-                      <span className="block truncate text-xs text-muted-foreground">
-                        {entry.roast}
-                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">{entry.roast}</span>
                     </button>
                   </li>
                 ))}

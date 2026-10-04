@@ -348,13 +348,12 @@ function OrderPage() {
                 <p className="mt-3 font-sans text-[0.95rem] leading-relaxed text-ink">
                   {order.result.emailed && order.result.email ? (
                     <>
-                      Sent to <span className="marker">{order.result.email}</span> with
-                      your download links.
+                      Download links for <span className="marker">{order.result.email}</span>.
                     </>
                   ) : (
                     <>
-                      Email delivery isn&rsquo;t switched on yet, so grab your files
-                      right here &mdash; the links below are yours for 7 days.
+                      Email delivery isn&rsquo;t set up yet, so nothing was emailed. Use the
+                      links below; they are set to expire after 7 days.
                     </>
                   )}
                 </p>
@@ -378,9 +377,8 @@ function OrderPage() {
                 </div>
                 {order.result.downloadsExpireAt && (
                   <p className="mt-4 font-sans text-[0.85rem] text-muted-foreground">
-                    These links work until{" "}
-                    {new Date(order.result.downloadsExpireAt).toLocaleDateString()} — 7
-                    days — then your files are deleted for good.
+                    These links are set to expire on{" "}
+                    {new Date(order.result.downloadsExpireAt).toLocaleDateString()}.
                   </p>
                 )}
               </div>
@@ -573,12 +571,13 @@ function OrderPage() {
               <div>
                 <SectionLabel step={layoutStep}>Pick your layout</SectionLabel>
                 <p className="mt-3 max-w-2xl font-sans text-[0.95rem] text-muted-foreground">
-                  Payment received &mdash; all {RESUME_TEMPLATES.length} layouts are
-                  unlocked. {PHOTO_LAYOUT_COUNT} use a photo; the rest are text only.
+                  Your intake was saved. Preview the {RESUME_TEMPLATES.length} layouts
+                  ({PHOTO_LAYOUT_COUNT} use a photo). Online checkout isn&rsquo;t connected yet, so
+                  no payment is taken and résumé writing is turned off for now.
                 </p>
               </div>
 
-              <TemplatePicker value={template} onChange={setTemplate} unlocked={true} />
+              <TemplatePicker value={template} onChange={setTemplate} unlocked={false} />
 
               {templateUsesPhoto ? (
                 <div>
@@ -599,7 +598,7 @@ function OrderPage() {
 
               <div className="border border-border bg-card p-6 shadow-paper sm:p-8">
                 <StampButton type="button" onClick={build} disabled={pending}>
-                  {pending ? "Writing..." : "Build My Résumé"}
+                  {pending ? "Checking..." : "Continue to Checkout"}
                 </StampButton>
                 <p className="mt-5 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
                   {templateUsesPhoto

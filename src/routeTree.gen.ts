@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RoastRouteImport } from './routes/roast'
 import { Route as OrderTierRouteImport } from './routes/order.$tier'
 import { Route as ApiPublicDownloadTokenRouteImport } from './routes/api/public/download.$token'
@@ -17,6 +18,11 @@ import { Route as ApiPublicDownloadTokenRouteImport } from './routes/api/public/
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RoastRoute = RoastRouteImport.update({
@@ -37,12 +43,14 @@ const ApiPublicDownloadTokenRoute = ApiPublicDownloadTokenRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
   '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
   '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
@@ -50,21 +58,30 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
   '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/roast' | '/order/$tier' | '/api/public/download/$token'
+  fullPaths:
+    '/' | '/privacy' | '/roast' | '/order/$tier' | '/api/public/download/$token'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/roast' | '/order/$tier' | '/api/public/download/$token'
+  to:
+    '/' | '/privacy' | '/roast' | '/order/$tier' | '/api/public/download/$token'
   id:
-    '__root__' | '/' | '/roast' | '/order/$tier' | '/api/public/download/$token'
+    | '__root__'
+    | '/'
+    | '/privacy'
+    | '/roast'
+    | '/order/$tier'
+    | '/api/public/download/$token'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PrivacyRoute: typeof PrivacyRoute
   RoastRoute: typeof RoastRoute
   OrderTierRoute: typeof OrderTierRoute
   ApiPublicDownloadTokenRoute: typeof ApiPublicDownloadTokenRoute
@@ -77,6 +94,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/roast': {
@@ -105,6 +129,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PrivacyRoute: PrivacyRoute,
   RoastRoute: RoastRoute,
   OrderTierRoute: OrderTierRoute,
   ApiPublicDownloadTokenRoute: ApiPublicDownloadTokenRoute,

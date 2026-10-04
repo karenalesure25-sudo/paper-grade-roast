@@ -13,12 +13,15 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Upload your resume and get a letter grade, a roast, and the fix. Free grading, paid rewrites with ATS scoring.",
+          "Get a free resume roast with notes quoted from your own résumé, plus Kay’s $40, $50 and $60 résumé services.",
       },
-      { property: "og:title", content: "Kay’s Career Solutions — Land your dream job." },
+      { property: "og:title", content: "Free Resume Roast — Kay’s Career Solutions" },
       {
         property: "og:description",
-        content: "Upload it. Get roasted. Get better. Free.",
+        content: "A free letter grade and red-pen notes backed by quotes from your résumé.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary"
       },
     ],
   }),
@@ -35,9 +38,9 @@ function Index() {
       </header>
       <main>
         <Hero />
+        <Upsell />
         <HowItWorks />
         <RoastCards />
-        <Upsell />
       </main>
       <SiteFooter />
     </div>

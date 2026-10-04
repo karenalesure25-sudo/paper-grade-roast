@@ -152,7 +152,7 @@ export function IntakeFlow({
           }}
         />
         <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
-          {current ? `Attached: ${current.name}` : "PDF, DOC, or DOCX · up to 10 MB"}
+          {current ? `Attached: ${current.name}` : "PDF or DOCX · up to 5 MB"}
         </p>
         <FieldError id={id} msg={err} />
       </div>

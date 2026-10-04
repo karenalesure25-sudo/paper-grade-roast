@@ -2,7 +2,7 @@ import { GradeStamp } from "@/components/GradeStamp";
 
 const roasts = [
   {
-    grade: "C-",
+    grade: "C",
     name: "marketing_resume_FINAL_v7.pdf",
     critique:
       "\u201cResults-driven team player\u201d appears twice and means nothing either time.",
@@ -20,7 +20,7 @@ const roasts = [
     offset: "sm:translate-y-6",
   },
   {
-    grade: "D+",
+    grade: "D",
     name: "my resume (1) (1).docx",
     critique:
       "Your objective statement is addressed to a company you stopped applying to in 2021.",
@@ -36,10 +36,10 @@ export function RoastCards() {
       <div className="mx-auto max-w-6xl">
         <div className="max-w-xl">
           <p className="font-typewriter text-xs tracking-[0.28em] text-ink-soft uppercase">
-            From the grading pile
+            Sample feedback
           </p>
           <h2 className="mt-3 font-stamp text-3xl leading-tight text-ink sm:text-4xl">
-            Real papers. Real red pen.
+            The kind of notes you&rsquo;ll get
           </h2>
         </div>
 
@@ -52,7 +52,7 @@ export function RoastCards() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <p className="font-typewriter text-[0.7rem] tracking-widest text-muted-foreground uppercase">
-                    Submission {String(i + 1).padStart(2, "0")}
+                    Example {String(i + 1).padStart(2, "0")}
                   </p>
                   <p className="mt-1 truncate font-sans text-[0.95rem] text-ink">
                     {r.name}
