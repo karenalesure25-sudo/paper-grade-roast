@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { BrandLink } from "@/components/BrandMark";
+import { SiteHeader } from "@/components/SiteHeader";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { StampButton } from "@/components/StampButton";
@@ -117,26 +117,19 @@ function RoastPage() {
 
   return (
     <div className="paper-texture relative min-h-screen">
-      <header className="px-5 py-6">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">
-          <BrandLink size="sm" withTagline={false} />
-          <Link to="/" className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft underline-offset-4">
-            Home
-          </Link>
-        </div>
-      </header>
+      <SiteHeader />
 
-      <main className="px-5 pb-20">
+      <main className="px-4 py-12 sm:px-6 sm:py-16">
         <div className="mx-auto max-w-4xl">
-          <p className="font-typewriter text-xs tracking-[0.3em] text-ink-soft uppercase">Free resume roast</p>
-          <h1 className="mt-4 font-stamp text-[2.2rem] leading-[1.1] text-ink sm:text-5xl">Grade my resume</h1>
+          <p className="eyebrow">Free résumé roast · No signup</p>
+          <h1 className="mt-4 font-brand text-[2.7rem] leading-[1.02] text-ivory sm:text-6xl">See what your résumé is really saying.</h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
             Upload a PDF or DOCX, or paste the text. Notes either quote your résumé or point out something we confirmed is missing. Your text is sent to an
             AI service to be graded; results stay in this browser tab. See our{" "}
             <Link to="/privacy" className="underline underline-offset-4">privacy page</Link>.
           </p>
 
-          <form onSubmit={submit} className="mt-10 border border-border bg-card p-6 shadow-paper sm:p-8" aria-busy={pending}>
+          <form onSubmit={submit} className="premium-panel mt-10 p-6 sm:p-8" aria-busy={pending}>
             <div role="tablist" aria-label="How to send your résumé" className="flex gap-3">
               <button type="button" role="tab" aria-selected={mode === "file"} disabled={pending}
                 onClick={() => { setMode("file"); resetResult(); }} className={tabCls(mode === "file")}>

@@ -4,9 +4,9 @@ import { Menu, X } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 
 const links = [
-  { label: "Free Roast", to: "/roast" as const },
-  { label: "Services", to: "/" as const, hash: "services" },
-  { label: "How It Works", to: "/" as const, hash: "how" },
+  { label: "Free Roast", href: "/roast" },
+  { label: "Services", href: "/#services" },
+  { label: "How It Works", href: "/#how" },
 ];
 
 export function SiteHeader() {
@@ -19,7 +19,7 @@ export function SiteHeader() {
         </Link>
         <nav aria-label="Main navigation" className="hidden items-center gap-7 lg:flex">
           {links.map((link) => (
-            <Link key={link.label} to={link.to} hash={link.hash} className="nav-link">{link.label}</Link>
+            <a key={link.label} href={link.href} className="nav-link">{link.label}</a>
           ))}
         </nav>
         <Link to="/roast" className="premium-button hidden min-h-11 px-5 text-xs lg:inline-flex">Get My Free Roast</Link>
@@ -30,7 +30,7 @@ export function SiteHeader() {
       {open && (
         <nav aria-label="Mobile navigation" className="mx-auto grid max-w-7xl gap-1 border-t border-border py-3 lg:hidden">
           {links.map((link) => (
-            <Link key={link.label} to={link.to} hash={link.hash} onClick={() => setOpen(false)} className="flex min-h-12 items-center px-2 font-sans text-sm font-semibold text-ivory hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{link.label}</Link>
+            <a key={link.label} href={link.href} onClick={() => setOpen(false)} className="flex min-h-12 items-center px-2 font-sans text-sm font-semibold text-ivory hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{link.label}</a>
           ))}
           <Link to="/roast" onClick={() => setOpen(false)} className="premium-button mt-2 min-h-12 w-full">Get My Free Roast</Link>
         </nav>

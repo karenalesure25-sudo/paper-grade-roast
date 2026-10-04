@@ -15,7 +15,7 @@ export function BrandMark({
   withTagline?: boolean;
   className?: string;
 }) {
-  return <BrandLogo compact={!withTagline || size === "sm"} className={className} />;
+  return <BrandLogo compact={!withTagline || size === "sm"} {...(className ? { className } : {})} />;
 }
 
 /** Wordmark that links home — used in page headers. */
