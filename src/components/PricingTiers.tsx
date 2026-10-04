@@ -13,7 +13,7 @@ export function PricingTiers() {
           <div
             key={tier.id}
             className={cn(
-              "service-card relative flex flex-col p-6 sm:p-7",
+              "service-card relative flex flex-col p-6 sm:p-7 lg:p-8",
               featured && "border-gold/70",
             )}
           >
@@ -29,9 +29,10 @@ export function PricingTiers() {
               </span>
             )}
 
-            <p className="font-sans text-[0.68rem] font-bold tracking-[0.18em] text-gold uppercase">
-              {tier.name}
-            </p>
+            <div className="flex items-start justify-between gap-4">
+              <p className="font-sans text-[0.68rem] font-bold tracking-[0.18em] text-gold uppercase">{tier.name}</p>
+              <span className="font-brand text-3xl leading-none text-gold/55">0{index + 1}</span>
+            </div>
             <div className="mt-4 flex items-end gap-2">
               <span className="gold-foil font-brand text-5xl leading-none">
                 ${tier.price}

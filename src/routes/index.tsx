@@ -35,9 +35,12 @@ function Index() {
       <SiteHeader />
       <main>
         <Hero />
+        <section aria-label="Our approach" className="ribbon border-y border-redpen/60 px-4 py-5 sm:px-6">
+          <p className="mx-auto max-w-6xl text-center font-brand text-lg font-semibold text-ivory sm:text-2xl">Polish your story <span className="text-gold-light">•</span> Optimize your résumé <span className="text-gold-light">•</span> Elevate your next move</p>
+        </section>
         <Upsell />
-        <HowItWorks />
         <RoastCards />
+        <HowItWorks />
         <FAQ />
       </main>
       <SiteFooter />

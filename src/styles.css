@@ -322,6 +322,19 @@
   box-shadow: 0 30px 80px -45px color-mix(in oklab, var(--gold) 34%, transparent);
 }
 
+@utility luxury-hero {
+  background:
+    radial-gradient(circle at 82% 28%, color-mix(in oklab, var(--crimson-deep) 28%, transparent) 0, transparent 34%),
+    linear-gradient(180deg, var(--surface-subtle), var(--background));
+}
+
+@utility ivory-band {
+  background: var(--ivory);
+  color: var(--board);
+  & .eyebrow { color: var(--crimson-deep); }
+  & .section-title { color: var(--board); }
+}
+
 @utility service-card {
   min-width: 0;
   overflow: hidden;

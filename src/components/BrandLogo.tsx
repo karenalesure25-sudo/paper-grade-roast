@@ -1,5 +1,7 @@
 import { cn } from "@/lib/utils";
 
+const metallicLogo = "/brand/kays-career-solutions-metallic.webp";
+
 export function DocumentCheckIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 76 86" role="img" aria-label="Résumé with check" className={className}>
@@ -21,20 +23,17 @@ export function DocumentCheckIcon({ className }: { className?: string }) {
 
 export function BrandLogo({ compact = false, className }: { compact?: boolean; className?: string }) {
   return (
-    <div className={cn("brand-logo flex min-w-0 items-center", compact ? "gap-2.5" : "gap-3 sm:gap-4", className)}>
-      <DocumentCheckIcon className={cn("shrink-0", compact ? "h-10 w-9" : "h-12 w-11 sm:h-14 sm:w-12")} />
-      <div className="min-w-0">
-        <div className="flex min-w-0 items-baseline gap-2">
-          <span className={cn("gold-foil font-brand leading-none", compact ? "text-[1.55rem]" : "text-[1.85rem] sm:text-[2.2rem]")}>Kay&rsquo;s</span>
-          <span className={cn("font-brand-sub leading-none text-ivory uppercase", compact ? "text-[0.54rem]" : "text-[0.62rem] sm:text-[0.72rem]")}>Career Solutions</span>
-        </div>
-        {!compact && (
-          <div className="mt-1.5 flex items-center gap-2" aria-label="Polish, Optimize, Elevate">
-            <span className="h-px flex-1 bg-gold/45" />
-            <span className="truncate font-sans text-[0.48rem] font-semibold tracking-[0.22em] text-ivory-muted uppercase sm:text-[0.56rem]">Polish <b className="text-gold">•</b> Optimize <b className="text-gold">•</b> Elevate</span>
-          </div>
-        )}
-      </div>
-    </div>
+    <img
+      src={metallicLogo}
+      alt="Kay's Career Solutions — Polish, Optimize, Elevate"
+      width="2172"
+      height="724"
+      decoding="async"
+      className={cn(
+        "block h-auto object-contain object-left",
+        compact ? "w-[218px] sm:w-[285px]" : "w-full max-w-[560px]",
+        className,
+      )}
+    />
   );
 }
