@@ -32,8 +32,6 @@ export function Hero() {
           </div>
         </div>
 
-          </div>
-
         {/* Illustrative source and review — no customer or outcome claim. */}
         <figure className="relative mx-auto w-full max-w-xl pb-10 sm:pr-10">
           <div className="resume-sheet relative min-h-[360px] border border-gold/35 bg-ivory p-6 text-board shadow-paper-lift sm:min-h-[400px] sm:p-8">
