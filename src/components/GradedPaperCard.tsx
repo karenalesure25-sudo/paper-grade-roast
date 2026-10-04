@@ -3,6 +3,7 @@ import { toPng } from "html-to-image";
 import { GradeStamp } from "@/components/GradeStamp";
 import { StampButton } from "@/components/StampButton";
 import type { StoredRoast } from "@/lib/roast-session";
+import { SECTION_LABEL } from "@/lib/roast-grounding";
 
 /** The graded-paper result card, plus a share-as-image action. */
 export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
@@ -74,27 +75,63 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
           </p>
         </div>
 
-        <ul className="mt-8 space-y-4 border-t border-dashed border-border pt-6">
-          {roast.notes.map((note) => (
-            <li key={note} className="flex gap-3">
-              <span aria-hidden className="font-hand text-2xl leading-none text-redpen">
-                &#8250;
-              </span>
-              <span className="font-hand text-2xl leading-tight text-redpen">{note}</span>
-            </li>
-          ))}
-        </ul>
+        {roast.strengths.length > 0 && (
+          <div className="mt-8 border-t border-dashed border-border pt-6">
+            <p className="font-typewriter text-[0.68rem] tracking-[0.22em] text-ink-soft uppercase">
+              What&rsquo;s working
+            </p>
+            <ul className="mt-3 space-y-3">
+              {roast.strengths.map((s) => (
+                <li key={s.point} className="font-sans text-[0.95rem] leading-relaxed text-ink">
+                  <span className="text-gold">&#10003;</span> {s.point}
+                  {s.quote && (
+                    <span className="mt-1 block text-[0.85rem] text-muted-foreground">
+                      From your résumé: &ldquo;{s.quote}&rdquo;
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        <div className="mt-8 border-t border-dashed border-border pt-6">
+          <p className="font-typewriter text-[0.68rem] tracking-[0.22em] text-ink-soft uppercase">
+            Red-pen notes
+          </p>
+          <ul className="mt-3 space-y-4">
+            {roast.notes.map((note) => (
+              <li key={note.point}>
+                <span className="font-hand text-2xl leading-tight text-redpen">{note.point}</span>
+                <span className="mt-1 block font-sans text-[0.85rem] text-muted-foreground">
+                  {note.quote
+                    ? <>From your résumé: &ldquo;{note.quote}&rdquo;</>
+                    : note.missing
+                      ? <>We didn&rsquo;t find {SECTION_LABEL[note.missing]} in the text.</>
+                      : null}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
         {roast.tip && (
           <div className="mt-8 border-l-2 border-redpen bg-paper-shade/40 px-5 py-4">
             <p className="font-typewriter text-[0.68rem] tracking-[0.22em] text-ink-soft uppercase">
               The one fix
             </p>
-            <p className="mt-2 font-sans text-[0.95rem] leading-[1.7rem] text-ink">
-              {roast.tip}
-            </p>
+            <p className="mt-2 font-sans text-[0.95rem] leading-[1.7rem] text-ink">{roast.tip}</p>
+            {roast.tipQuote && (
+              <p className="mt-2 font-sans text-[0.85rem] text-muted-foreground">
+                Applies to: &ldquo;{roast.tipQuote}&rdquo;
+              </p>
+            )}
           </div>
         )}
+
+        <p className="mt-6 font-sans text-[0.75rem] text-muted-foreground">
+          Graded from the text we read{roast.source === "pdf" ? " out of your PDF" : roast.source === "docx" ? " out of your DOCX" : " you pasted"}. Layout, fonts and design aren&rsquo;t judged.
+        </p>
 
         <p className="mt-9 font-stamp text-[0.65rem] tracking-[0.3em] text-muted-foreground uppercase">
           Kay&rsquo;s Career Solutions &middot; resume grading
