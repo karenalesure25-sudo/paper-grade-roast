@@ -5,10 +5,10 @@
  */
 import type { Certification, FullResume, SourceFacts, Violation } from "./validate";
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
-const WRITER_MODEL = "google/gemini-2.5-pro";
-const CHECKER_MODEL = "openai/gpt-5-mini";
-const TIMEOUT_MS = 90_000;
+const RESPONSES_URL = "https://ai.gateway.lovable.dev/v1/responses";
+const WRITER_MODEL = "openai/gpt-6-astra";
+const CHECKER_MODEL = "openai/gpt-6-astra";
+const TIMEOUT_MS = 120_000;
 
 export type WriterOutput =
   | { kind: "package"; resume: Omit<FullResume, "name" | "email" | "phone">; coverLetter?: string; keywords: string[] }
