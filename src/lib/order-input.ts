@@ -20,6 +20,7 @@ export const OrderInput = z
       .max(255)
       .email({ message: "That email address doesn't look right." }),
     template: z.string().trim().min(1).max(40),
+    sessionId: z.string().trim().max(300).optional(),
     text: z.string().trim().max(MAX_TEXT_CHARS).optional(),
     file: FileInput.optional(),
     jobUrl: z.string().trim().url({ message: "That job link doesn't look right." }).max(500).optional(),

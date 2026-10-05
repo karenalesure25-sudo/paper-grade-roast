@@ -30,11 +30,12 @@ export type { AtsReport };
 export const buildResume = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => OrderInput.parse(input))
   .handler(async ({ data }): Promise<OrderResult> => {
-    // Hard server-side gate: no paid deliverable until a verified payment exists.
-    // There is no payment integration yet, so this always refuses. No client flag can bypass it.
-    const { hasVerifiedPayment } = await import("./payment-gate.server");
-    if (!(await hasVerifiedPayment())) {
-      throw new Error("Checkout isn't connected yet, so résumé writing is turned off. Your intake was saved.");
+    // Hard server-side gate: Stripe must confirm a paid session for this tier + email.
+    const { verifyPayment, claimSession, markDelivered } = await import("./payment-gate.server");
+    const check = await verifyPayment({ sessionId: data.sessionId, tier: data.tier, email: data.email });
+    if (!check.ok) throw new Error(check.reason);
+    if (!(await claimSession(check.sessionId, data.tier, data.email))) {
+      throw new Error("This payment was already used for a delivered résumé.");
     }
     if (data.tier === "bundle" && !data.jobText?.trim() && !data.jobFile) {
       throw new Error("Paste the job description or upload the job posting — we don't fetch links.");
@@ -103,6 +104,8 @@ export const buildResume = createServerFn({ method: "POST" })
       ...(written.coverLetter ? { coverLetter: written.coverLetter } : {}),
       ...(written.atsReport ? { atsReport: written.atsReport } : {}),
     });
+
+    await markDelivered(check.sessionId);
 
     return {
       tier: data.tier,
