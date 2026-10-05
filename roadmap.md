@@ -12,4 +12,5 @@
 - [x] Accuracy tests and browser checks
 - [x] Accuracy follow-up: entailment checks, independent fact-check pass, presence detection, no truncation, aria-live, $50/$60 browser checks, test-data cleanup
 - [x] Stripe test-mode checkout + server-side payment verification
+- [x] Stripe hosted Checkout black/gold branding, Affirm exclusion, and three-tier verification
 - [ ] Email sender domain (blocked: user setup)

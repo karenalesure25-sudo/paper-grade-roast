@@ -42,6 +42,17 @@ export type StripeSession = {
   amount_total: number | null;
   currency: string | null;
   livemode: boolean;
+  branding_settings?: {
+    background_color?: string | null;
+    border_style?: string | null;
+    button_color?: string | null;
+    display_name?: string | null;
+    font_family?: string | null;
+    icon?: { file?: string | null; type?: string | null } | null;
+    logo?: { file?: string | null; type?: string | null } | null;
+  } | null;
+  excluded_payment_method_types?: string[] | null;
+  expires_at?: number;
   currency_conversion?: { amount_total: number; source_currency: string } | null;
   metadata: Record<string, string> | null;
 };
@@ -71,6 +82,13 @@ export async function createCheckoutSession(opts: {
   f.set("branding_settings[logo][file]", "file_1UN2wKB29VijguUHq3l2A6U3");
   f.set("branding_settings[icon][type]", "file");
   f.set("branding_settings[icon][file]", "file_1UN2wgB29VijguUH3OzPfqm4");
+  // Match the site's black-and-gold system within hosted Checkout's supported controls.
+  f.set("branding_settings[background_color]", "#0A0A0A");
+  f.set("branding_settings[button_color]", "#D4AF37");
+  f.set("branding_settings[border_style]", "rectangular");
+  f.set("branding_settings[font_family]", "inter");
+  // Keep Stripe's dynamic payment methods, excluding only Affirm for this project.
+  f.append("excluded_payment_method_types[]", "affirm");
   f.set("success_url", `${opts.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`);
   f.set("cancel_url", `${opts.origin}/payment-canceled`);
   return stripe<StripeSession>("/checkout/sessions", { method: "POST", form: f });
@@ -78,4 +96,11 @@ export async function createCheckoutSession(opts: {
 
 export async function getCheckoutSession(id: string): Promise<StripeSession> {
   return stripe<StripeSession>(`/checkout/sessions/${encodeURIComponent(id)}`);
+}
+
+export async function expireCheckoutSession(id: string): Promise<StripeSession> {
+  return stripe<StripeSession>(`/checkout/sessions/${encodeURIComponent(id)}/expire`, {
+    method: "POST",
+    form: new URLSearchParams(),
+  });
 }
