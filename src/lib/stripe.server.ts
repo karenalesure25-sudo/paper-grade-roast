@@ -65,6 +65,12 @@ export async function createCheckoutSession(opts: {
   }
   f.set("metadata[tier]", opts.tier);
   f.set("metadata[email]", opts.email.toLowerCase());
+  // Per-session branding override (Stripe File IDs for the Kay's logo/icon).
+  f.set("branding_settings[display_name]", "Kay's Career Solutions");
+  f.set("branding_settings[logo][type]", "file");
+  f.set("branding_settings[logo][file]", "file_1UN2wKB29VijguUHq3l2A6U3");
+  f.set("branding_settings[icon][type]", "file");
+  f.set("branding_settings[icon][file]", "file_1UN2wgB29VijguUH3OzPfqm4");
   f.set("success_url", `${opts.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`);
   f.set("cancel_url", `${opts.origin}/payment-canceled`);
   return stripe<StripeSession>("/checkout/sessions", { method: "POST", form: f });
