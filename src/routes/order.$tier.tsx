@@ -173,7 +173,7 @@ function OrderPage() {
     window.scrollTo({ top: 0 });
   }
 
-  async function pay() {
+  async function startPayment() {
     if (pending) return;
     if (templateUsesPhoto && !photo) {
       setError("Upload a photo and confirm its placement for this layout.");
@@ -617,7 +617,7 @@ function OrderPage() {
 
               <div className="premium-panel p-6 sm:p-8">
                 {!sessionId ? (
-                  <StampButton type="button" onClick={pay} disabled={pending}>
+                  <StampButton type="button" onClick={startPayment} disabled={pending}>
                     {pending ? "Opening checkout..." : `Pay $${tier.price} with Stripe`}
                   </StampButton>
                 ) : (

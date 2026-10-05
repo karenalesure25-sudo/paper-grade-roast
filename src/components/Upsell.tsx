@@ -24,7 +24,7 @@ export function Upsell() {
         </div>
 
         <p className="mt-8 text-center font-sans text-[0.85rem] text-muted-foreground">
-          {RESUME_TEMPLATES.length} professional templates to preview &middot; Online checkout is not connected yet
+          {RESUME_TEMPLATES.length} professional templates to preview &middot; Secure checkout by Stripe
         </p>
 
       </div>

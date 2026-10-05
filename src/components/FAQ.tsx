@@ -2,7 +2,7 @@ const questions = [
   ["Is the résumé roast really free?", "Yes. You can upload a PDF or DOCX, or paste your résumé text. No account or payment is required."],
   ["How is the feedback checked?", "The grade is based on the résumé text we can read. Claims and quoted evidence are checked against that source, then a separate fact-check must approve the result before it appears. This reduces mistakes, but no AI review can guarantee perfect accuracy."],
   ["What happens to my résumé?", "Free-roast text is sent to an outside AI service for analysis. The résumé and result are not saved to our database; the result stays in your browser tab until you clear it or close the tab."],
-  ["Can I buy a service today?", "You can complete the correct intake form and preview available layouts. Online checkout is not connected yet, so no card is charged and résumé writing remains off until verified payment is available."],
+  ["Can I buy a service today?", "Yes. Complete the intake form for your service, pick a layout, then pay securely through Stripe. Your résumé is written only after Stripe confirms the payment."],
   ["Does every package include job tailoring?", "No. Resume Revamp is a general professional rewrite. Résumé From Scratch builds a new résumé from your background. Only the $60 Revamp + ATS Optimization service is tailored to one specific job and includes a matching cover letter."],
 ];
 
