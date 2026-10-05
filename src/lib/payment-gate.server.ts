@@ -22,12 +22,16 @@ export async function verifyPayment(input: {
   }
   const s = await getCheckoutSession(id);
   const expected = TIER_PRICING[input.tier];
+  // With Stripe's local-currency pricing the buyer may pay in another currency;
+  // then the original USD amount lives in currency_conversion.
+  const usdTotal = s.currency_conversion?.source_currency === "usd"
+    ? s.currency_conversion.amount_total
+    : s.currency === "usd" ? s.amount_total : null;
   const paid =
     s.mode === "payment" &&
     s.status === "complete" &&
     s.payment_status === "paid" &&
-    s.amount_total === expected.cents &&
-    s.currency === "usd" &&
+    usdTotal === expected.cents &&
     s.metadata?.["tier"] === input.tier &&
     s.metadata?.["email"] === input.email.trim().toLowerCase();
   if (!paid) {

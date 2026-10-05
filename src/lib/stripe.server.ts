@@ -42,6 +42,7 @@ export type StripeSession = {
   amount_total: number | null;
   currency: string | null;
   livemode: boolean;
+  currency_conversion?: { amount_total: number; source_currency: string } | null;
   metadata: Record<string, string> | null;
 };
 
