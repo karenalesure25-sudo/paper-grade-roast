@@ -4,10 +4,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/*
- * Kay's Career Solutions — black, gold and crimson luxury aesthetic.
- * charcoal board / chalk ink / red pen / highlighter yellow
- */
+/* Kay's Career Solutions — deep graphite, teal and indigo brand system. */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -55,17 +52,18 @@
   --color-surface-subtle: var(--surface-subtle);
   --color-crimson: var(--crimson);
   --color-crimson-deep: var(--crimson-deep);
-  --font-brand: "Cormorant Garamond", Georgia, serif;
+  --color-highlight: var(--highlight);
+  --font-brand: "Gloock", "Cormorant Garamond", Georgia, serif;
   --font-brand-sub: "Inter", ui-sans-serif, sans-serif;
-  --font-script: "Cormorant Garamond", Georgia, serif;
-  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-script: "Gloock", "Cormorant Garamond", Georgia, serif;
+  --font-display: "Gloock", "Cormorant Garamond", Georgia, serif;
   --font-stamp: "Special Elite", "Courier Prime", ui-monospace, monospace;
   --font-typewriter: "Courier Prime", ui-monospace, monospace;
   --font-hand: "Caveat", "Special Elite", cursive;
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --shadow-paper: 0 1px 2px rgb(0 0 0 / 0.5), 0 12px 28px -14px rgb(0 0 0 / 0.7);
   --shadow-paper-lift: 0 2px 4px rgb(0 0 0 / 0.55), 0 26px 48px -18px rgb(0 0 0 / 0.8);
-  --shadow-stamp: 0 4px 0 0 var(--redpen-deep);
+  --shadow-stamp: 0 4px 0 0 var(--primary-deep);
   --animate-stamp-in: stamp-in 0.55s cubic-bezier(0.2, 1.5, 0.4, 1) both;
   --animate-rise: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
@@ -73,38 +71,36 @@
 :root {
   --radius: 0.25rem;
 
-  /* three layered surface tones */
-  --board: #0a0a0a; /* page */
-  --paper: #0a0a0a; /* page */
-  --paper-shade: #1c1c1c; /* nested: inputs, chips, sub-panels */
-  /* chalk ink */
-  --ink: #e8e8e8;
-  --ink-soft: #8a8a8a;
-  --redpen: #c1121f;
-  --redpen-deep: #7d0a13;
-  /* accessible red for readable text on dark surfaces (6.48:1 on #141414) */
-  --redpen-text: #ff6670;
-  --crimson: #c1121f;
-  --crimson-deep: #7d0a13;
-  /* gold */
-  --gold: #d4af37;
-  --gold-light: #f6dd8b;
-  --gold-deep: #9b7420;
-  --ivory: #fff7e6;
-  --ivory-muted: #c8c1b5;
-  --surface-subtle: #10100f;
-  --highlighter: oklch(0.885 0.176 92);
-  --rule: #2f2716;
+  --board: #080d1b;
+  --paper: #080d1b;
+  --paper-shade: #111a2d;
+  --ink: #f5f2ec;
+  --ink-soft: #aab3c7;
+  --redpen: #ff6670;
+  --redpen-deep: #a82f50;
+  --redpen-text: #ff8992;
+  --crimson: #7957e8;
+  --crimson-deep: #4630a8;
+  --gold: #2dd4d0;
+  --gold-light: #76f3eb;
+  --gold-deep: #168da2;
+  --highlight: #8b7cff;
+  --ivory: #f5f2ec;
+  --ivory-muted: #cbd1dd;
+  --surface-subtle: #0d1426;
+  --highlighter: #70e8df;
+  --rule: #253350;
 
   --background: var(--paper);
   --foreground: var(--ink);
-  --card: #141414; /* cards / sections */
+  --card: #10182b;
 
   --card-foreground: var(--ink);
   --popover: var(--card);
   --popover-foreground: var(--ink);
-  --primary: var(--redpen);
-  --primary-foreground: oklch(0.985 0.008 90);
+  --primary: #2dd4d0;
+  --primary-deep: #15969e;
+  --primary-foreground: #07101c;
   --secondary: var(--paper-shade);
   --secondary-foreground: var(--ink);
   --muted: var(--paper-shade);
@@ -112,10 +108,10 @@
   --accent: var(--highlighter);
   --accent-foreground: var(--board);
   --destructive: var(--redpen);
-  --destructive-foreground: oklch(0.985 0.008 90);
-  --border: #3a2f14;
-  --input: #2a2a2a;
-  --ring: var(--gold);
+  --destructive-foreground: #080d1b;
+  --border: #263654;
+  --input: #2b3b5d;
+  --ring: var(--gold-light);
 }
 
 @keyframes stamp-in {
@@ -149,7 +145,7 @@
   }
 }
 
-/* Subtle fibrous paper texture */
+/* Subtle technical grain over the deep graphite surface. */
 @utility paper-texture {
   position: relative;
   background-color: var(--paper);
@@ -159,7 +155,7 @@
     inset: 0;
     pointer-events: none;
     z-index: 0;
-    opacity: 0.35;
+    opacity: 0.16;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='0.09'/%3E%3C/svg%3E");
   }
 }
@@ -273,15 +269,13 @@
   }
 }
 
-/* Gold foil text */
+/* Teal-to-lavender brand highlight. */
 @utility gold-foil {
   background-image: linear-gradient(
-    170deg,
-    #fff3c4 0%,
-    var(--gold-light) 22%,
-    var(--gold) 48%,
-    var(--gold-deep) 66%,
-    var(--gold-light) 88%
+    110deg,
+    var(--gold-light) 0%,
+    var(--gold) 38%,
+    var(--highlight) 100%
   );
   -webkit-background-clip: text;
   background-clip: text;
@@ -294,7 +288,7 @@
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold-light);
 }
 
 @utility section-shell {
@@ -317,28 +311,31 @@
 }
 
 @utility premium-panel {
-  border: 1px solid color-mix(in oklab, var(--gold) 42%, var(--border));
-  background: linear-gradient(145deg, color-mix(in oklab, var(--card) 90%, var(--gold) 10%), var(--card));
-  box-shadow: 0 30px 80px -45px color-mix(in oklab, var(--gold) 34%, transparent);
+  border: 1px solid color-mix(in oklab, var(--gold) 32%, var(--border));
+  border-radius: 0.75rem;
+  background: linear-gradient(145deg, color-mix(in oklab, var(--card) 92%, var(--highlight) 8%), var(--card));
+  box-shadow: 0 30px 80px -45px color-mix(in oklab, var(--highlight) 35%, transparent);
 }
 
 @utility luxury-hero {
   background:
-    radial-gradient(circle at 82% 28%, color-mix(in oklab, var(--crimson-deep) 28%, transparent) 0, transparent 34%),
-    linear-gradient(180deg, var(--surface-subtle), var(--background));
+    radial-gradient(ellipse at 96% 8%, color-mix(in oklab, var(--highlight) 24%, transparent) 0, transparent 38%),
+    radial-gradient(ellipse at -10% 56%, color-mix(in oklab, var(--gold) 16%, transparent) 0, transparent 35%),
+    linear-gradient(150deg, #0c1730 0%, var(--surface-subtle) 52%, var(--background) 100%);
 }
 
 @utility ivory-band {
-  background: var(--ivory);
-  color: var(--board);
-  & .eyebrow { color: var(--crimson-deep); }
-  & .section-title { color: var(--board); }
+  background: linear-gradient(145deg, #101c34, #0b1223 60%, #17142e);
+  color: var(--ivory);
+  & .eyebrow { color: var(--gold-light); }
+  & .section-title { color: var(--ivory); }
 }
 
 @utility service-card {
   min-width: 0;
   overflow: hidden;
   border: 1px solid var(--border);
+  border-radius: 0.65rem;
   background: var(--card);
   box-shadow: 0 24px 48px -36px rgb(0 0 0 / 0.9);
   transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
@@ -356,8 +353,9 @@
   justify-content: center;
   gap: 0.5rem;
   min-height: 3rem;
-  border: 1px solid var(--redpen);
-  background: var(--redpen);
+  border: 1px solid var(--primary);
+  border-radius: 0.375rem;
+  background: var(--primary);
   padding: 0.75rem 1.5rem;
   font-family: var(--font-sans);
   font-size: 0.875rem;
@@ -366,7 +364,7 @@
   text-transform: uppercase;
   color: var(--primary-foreground);
   transition: transform 180ms ease, background-color 180ms ease;
-  &:hover { background: var(--crimson-deep); transform: translateY(-2px); }
+  &:hover { background: color-mix(in oklab, var(--primary) 88%, white); transform: translateY(-2px); }
 }
 
 @utility secondary-button {
@@ -375,6 +373,7 @@
   align-items: center;
   justify-content: center;
   border: 1px solid color-mix(in oklab, var(--gold) 55%, var(--border));
+  border-radius: 0.375rem;
   padding: 0.75rem 1.5rem;
   font-family: var(--font-sans);
   font-size: 0.875rem;
@@ -405,7 +404,7 @@
   }
 }
 
-/* Thin gold hairline frame */
+/* Fine cyan hairline frame. */
 @utility gold-frame {
   border: 1px solid color-mix(in oklab, var(--gold) 55%, transparent);
   box-shadow:
@@ -413,13 +412,13 @@
     0 22px 50px -28px color-mix(in oklab, var(--gold) 45%, transparent);
 }
 
-/* Crimson-to-black ribbon band */
+/* Indigo-to-graphite ribbon band. */
 @utility ribbon {
   background-image: linear-gradient(
     100deg,
-    var(--crimson-deep) 0%,
-    var(--crimson) 45%,
-    var(--crimson-deep) 100%
+    var(--surface-subtle) 0%,
+    var(--crimson-deep) 48%,
+    var(--surface-subtle) 100%
   );
 }
 

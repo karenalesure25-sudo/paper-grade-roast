@@ -442,7 +442,7 @@ function OrderPage() {
                                 aria-pressed={active}
                                 className={`border p-4 text-left transition-colors ${
                                   active
-                                    ? "border-redpen bg-paper-shade"
+                                    ? "border-accent bg-paper-shade"
                                     : "border-border bg-card hover:border-ink-soft"
                                 }`}
                               >

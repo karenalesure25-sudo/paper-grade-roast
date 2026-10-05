@@ -112,7 +112,7 @@ function RoastPage() {
 
   const tabCls = (active: boolean) =>
     `flex-1 border px-4 py-3 font-stamp text-xs tracking-widest uppercase transition-colors ${
-      active ? "border-redpen bg-paper-shade text-ink" : "border-border text-muted-foreground hover:text-ink"
+      active ? "border-accent bg-paper-shade text-ink" : "border-border text-muted-foreground hover:text-ink"
     }`;
 
   return (
@@ -171,7 +171,7 @@ function RoastPage() {
                     aria-describedby="resumeTextCount"
                     value={pasted}
                     onChange={(e) => { setPasted(e.target.value); resetResult(); }}
-                    className="mt-2 w-full border border-border bg-paper-shade p-3 font-sans text-[16px] text-ink outline-none focus:border-redpen"
+                    className="mt-2 w-full rounded-md border border-border bg-paper-shade p-3 font-sans text-[16px] text-ink outline-none focus:border-accent"
                   />
                   <p id="resumeTextCount" className={`mt-2 font-sans text-[0.85rem] ${pasted.length > MAX_PASTE ? "text-redpen-text" : "text-muted-foreground"}`}>
                     {pasted.length.toLocaleString()} / {MAX_PASTE.toLocaleString()} characters

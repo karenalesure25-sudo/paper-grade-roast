@@ -293,7 +293,7 @@ export function IntakeFlow({
   return (
     <form onSubmit={review} noValidate className="mt-12 space-y-8">
       {isBundle && (
-        <p className="border-l-4 border-redpen bg-card p-5 font-sans text-[1rem] font-semibold text-ink">
+        <p className="rounded-r-lg border-l-4 border-accent bg-card p-5 font-sans text-[1rem] font-semibold text-ink">
           This package includes tailoring your resume to ONE specific job posting.
         </p>
       )}
@@ -480,7 +480,7 @@ export function IntakeFlow({
                   return n;
                 });
             }}
-            className="mt-1 size-5 shrink-0 accent-redpen"
+            className="mt-1 size-5 shrink-0 accent-accent"
           />
           <span className="font-sans text-[0.95rem] leading-relaxed text-ink">{CONFIRM_TEXT}</span>
         </label>

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 690 160" role="img" aria-labelledby="title desc">
+  <title id="title">Kay's Career Solutions</title>
+  <desc id="desc">Career clarity for what's next</desc>
+  <defs>
+    <linearGradient id="left" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#6df4ec"/><stop offset=".52" stop-color="#22cdd0"/><stop offset="1" stop-color="#3478ef"/></linearGradient>
+    <linearGradient id="upper" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#3158de"/><stop offset=".5" stop-color="#6b64ef"/><stop offset="1" stop-color="#a993ff"/></linearGradient>
+    <linearGradient id="lower" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#25d3d4"/><stop offset=".48" stop-color="#5176f1"/><stop offset="1" stop-color="#b58dff"/></linearGradient>
+  </defs>
+  <g transform="translate(4 12) scale(1.12)">
+    <path d="M20 18c26 9 39 25 42 45-19-4-34-14-42-29V18Z" fill="url(#left)"/><path d="M20 36c6 25 20 48 43 67-25-4-41-18-43-38V36Z" fill="url(#left)"/><path d="M61 61C68 36 82 20 103 13c-2 24-14 42-36 52l-6-4Z" fill="url(#upper)"/><path d="M59 64c22 6 38 20 47 42-24-3-41-15-51-35l4-7Z" fill="url(#lower)"/><path d="M45 53c8 3 14 7 18 12-5 5-10 9-16 11-4-7-6-15-2-23Z" fill="#14213c" opacity=".72"/>
+  </g>
+  <text x="146" y="74" fill="#f5f2ec" font-family="Georgia, 'Times New Roman', serif" font-size="68" font-weight="700">Kay’s</text>
+  <text x="148" y="112" fill="#f5f2ec" font-family="Arial, Helvetica, sans-serif" font-size="31" letter-spacing="1">Career Solutions</text>
+  <rect x="148" y="129" width="34" height="2" rx="1" fill="#28d7d6"/>
+  <text x="194" y="134" fill="#aab3c7" font-family="Arial, Helvetica, sans-serif" font-size="11" letter-spacing="3.1">CAREER CLARITY FOR WHAT’S NEXT</text>
+</svg>

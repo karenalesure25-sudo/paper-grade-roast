@@ -79,12 +79,12 @@ export async function createCheckoutSession(opts: {
   // Per-session branding override (Stripe File IDs for the Kay's logo/icon).
   f.set("branding_settings[display_name]", "Kay's Career Solutions");
   f.set("branding_settings[logo][type]", "file");
-  f.set("branding_settings[logo][file]", "file_1UN2wKB29VijguUHq3l2A6U3");
+  f.set("branding_settings[logo][file]", "file_1UN3GeB29VijguUHS6dc8l0y");
   f.set("branding_settings[icon][type]", "file");
-  f.set("branding_settings[icon][file]", "file_1UN2wgB29VijguUH3OzPfqm4");
-  // Match the site's black-and-gold system within hosted Checkout's supported controls.
-  f.set("branding_settings[background_color]", "#0A0A0A");
-  f.set("branding_settings[button_color]", "#D4AF37");
+  f.set("branding_settings[icon][file]", "file_1UN3I5B29VijguUH6KlBDRBp");
+  // Match the site's graphite, cyan and indigo system within hosted Checkout controls.
+  f.set("branding_settings[background_color]", "#080D1B");
+  f.set("branding_settings[button_color]", "#2DD4D0");
   f.set("branding_settings[border_style]", "rectangular");
   f.set("branding_settings[font_family]", "inter");
   // Keep Stripe's dynamic payment methods, excluding only Affirm for this project.

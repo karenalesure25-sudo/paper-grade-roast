@@ -10,7 +10,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Kay's Career Solutions — Polish. Optimize. Elevate." },
+      { title: "Kay's Career Solutions — Career clarity for what's next" },
       {
         name: "description",
         content:
@@ -35,8 +35,8 @@ function Index() {
       <SiteHeader />
       <main>
         <Hero />
-        <section aria-label="Our approach" className="ribbon border-y border-redpen/60 px-4 py-5 sm:px-6">
-          <p className="mx-auto max-w-6xl text-center font-brand text-lg font-semibold text-ivory sm:text-2xl">Polish your story <span className="text-gold-light">•</span> Optimize your résumé <span className="text-gold-light">•</span> Elevate your next move</p>
+        <section aria-label="Our approach" className="ribbon border-y border-accent/25 px-4 py-5 sm:px-6">
+          <p className="mx-auto max-w-6xl text-center font-sans text-xs font-semibold tracking-[0.18em] text-ivory uppercase sm:text-sm">Polish your story <span className="text-accent">•</span> Optimize your résumé <span className="text-accent">•</span> Elevate your next move</p>
         </section>
         <Upsell />
         <RoastCards />

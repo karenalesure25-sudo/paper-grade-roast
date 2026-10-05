@@ -2,14 +2,14 @@ import type { ComponentPropsWithoutRef } from "react";
 import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 
-/** Shared rubber-stamp styling for CTA buttons and links. */
+/** Shared polished gradient styling for primary actions. */
 export const stampClasses = cn(
   "group relative inline-flex items-center justify-center gap-2",
-  "min-h-12 border border-redpen bg-redpen px-7 py-3.5",
+  "min-h-12 rounded-md border border-primary bg-primary px-7 py-3.5",
   "font-sans text-sm font-bold tracking-[0.08em] text-primary-foreground uppercase",
   "transition-all duration-200",
-  "shadow-[0_8px_22px_-10px_color-mix(in_oklab,var(--redpen)_75%,transparent)]",
-  "hover:-translate-y-0.5 hover:bg-crimson-deep",
+  "shadow-[0_12px_30px_-14px_color-mix(in_oklab,var(--accent)_75%,transparent)]",
+  "hover:-translate-y-0.5 hover:bg-primary/90",
   "active:translate-y-0",
   "disabled:pointer-events-none disabled:opacity-70",
   "focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none",
@@ -19,7 +19,7 @@ function StampInk() {
   return null;
 }
 
-/** CTA styled as a red rubber stamp pressed onto the page. */
+/** Primary action button. */
 export function StampButton({
   className,
   children,

@@ -14,17 +14,17 @@ export function PricingTiers() {
             key={tier.id}
             className={cn(
               "service-card relative flex flex-col p-6 sm:p-7 lg:p-8",
-              featured && "border-gold/70",
+              featured && "border-accent/70",
             )}
           >
             <div
               className={cn(
                 "absolute inset-x-0 top-0 h-1",
-                featured ? "bg-gradient-to-r from-gold-deep via-gold-light to-gold-deep" : "bg-gold/35",
+                featured ? "bg-gradient-to-r from-primary via-accent to-highlight" : "bg-accent/35",
               )}
             />
             {featured && (
-              <span className="absolute -top-3 right-4 border border-gold/50 bg-background px-3 py-1 font-sans text-[0.62rem] font-bold tracking-[0.14em] text-gold uppercase">
+              <span className="absolute -top-3 right-4 rounded-full border border-accent/50 bg-background px-3 py-1 font-sans text-[0.62rem] font-bold tracking-[0.14em] text-accent uppercase">
                 Most complete
               </span>
             )}

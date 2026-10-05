@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Kay's Career Solutions — Polish. Optimize. Elevate." },
+      { title: "Kay's Career Solutions — Career clarity for what's next" },
       {
         name: "description",
         content:
           "Upload your resume, get a brutally honest grade and roast in seconds, then unlock a real rewrite with ATS scoring. Free to get roasted.",
       },
       { name: "author", content: "Kay's Career Solutions" },
-      { property: "og:title", content: "Kay's Career Solutions — Polish. Optimize. Elevate." },
+      { property: "og:title", content: "Kay's Career Solutions — Career clarity for what's next" },
       {
         property: "og:description",
         content:
@@ -104,7 +104,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Gloock&family=Cormorant+Garamond:wght@500;600;700&family=Special+Elite&family=Courier+Prime:wght@400;700&family=Caveat:wght@600;700&family=Inter:wght@400;500;600;700&display=swap",
       },
     ],
   }),

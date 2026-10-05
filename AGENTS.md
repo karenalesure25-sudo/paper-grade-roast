@@ -10,6 +10,6 @@
 <!-- LOVABLE:END -->
 - Free roast grades must pass deterministic grounding checks and an independent model fact-check (fail-closed) before display; overlong text is rejected, never truncated — prevents unbacked or partial grades.
 - Shared brand chrome lives in SiteHeader, SiteFooter, and BrandLogo; keep route business logic independent from presentation so redesigns cannot weaken safeguards.
-- The supplied metallic raster lockup is the primary website logo; keep the code-native document/check icon for favicon-scale use because the full lettering is unreadable there.
+- Shared branding uses the native ribbon-K SVG emblem and responsive SVG lockup; use the emblem alone at favicon/icon scale so lettering stays legible.
 
 - Paid deliverables require server-side Stripe Checkout Session verification (paid, tier, USD amount, email) plus a one-time redemption row in payment_redemptions — the browser can never unlock delivery.
