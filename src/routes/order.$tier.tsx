@@ -12,6 +12,7 @@ import { IntakeFlow, type SubmittedIntake } from "@/components/intake/IntakeFlow
 import { getTier, TIERS } from "@/lib/products";
 import { prepareUpload } from "@/lib/prepare-upload";
 import { buildResume } from "@/lib/order.functions";
+import { startCheckout } from "@/lib/checkout.functions";
 import { saveOrder, type StoredOrder } from "@/lib/order-session";
 import {
   COVER_LETTER_STYLES,
@@ -61,6 +62,9 @@ function OrderPage() {
   const { tier: tierId } = Route.useParams();
   const tier = getTier(tierId)!;
   const run = useServerFn(buildResume);
+  const checkout = useServerFn(startCheckout);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   const [file, setFile] = useState<File | null>(null);
   const [background, setBackground] = useState("");
@@ -169,10 +173,35 @@ function OrderPage() {
     window.scrollTo({ top: 0 });
   }
 
-  async function build() {
+  async function pay() {
     if (pending) return;
     if (templateUsesPhoto && !photo) {
       setError("Upload a photo and confirm its placement for this layout.");
+      return;
+    }
+    const selectedEmail = (email || emailInputRef.current?.value || "").trim();
+    // Open the tab synchronously so pop-up blockers allow it.
+    const tab = window.open("", "_blank");
+    setPending(true);
+    setError(null);
+    try {
+      const s = await checkout({ data: { tier: tier.id, email: selectedEmail } });
+      setSessionId(s.sessionId);
+      setCheckoutUrl(s.url);
+      if (tab) tab.location.href = s.url;
+      else window.location.assign(s.url);
+    } catch (cause) {
+      tab?.close();
+      setError(cause instanceof Error && cause.message ? cause.message : "Checkout couldn't start. Try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function build() {
+    if (pending) return;
+    if (!sessionId) {
+      setError("Complete checkout first.");
       return;
     }
 
@@ -184,6 +213,7 @@ function OrderPage() {
         tier: typeof tier.id;
         email: string;
         template: TemplateId;
+        sessionId: string;
         text?: string;
         file?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
         jobUrl?: string;
@@ -191,7 +221,7 @@ function OrderPage() {
         jobFile?: { filename: string; mimeType: "application/pdf"; dataBase64: string };
       };
       const selectedEmail = (email || emailInputRef.current?.value || "").trim();
-      let payload: Payload = { tier: tier.id, email: selectedEmail, template };
+      let payload: Payload = { tier: tier.id, email: selectedEmail, template, sessionId };
       const selectedFile = file ?? resumeInputRef.current?.files?.[0] ?? null;
       const selectedJobFile = jobFile ?? jobFileInputRef.current?.files?.[0] ?? null;
 
@@ -550,9 +580,8 @@ function OrderPage() {
                   </div>
                 </div>
                 <p className="mt-5 border-t border-dashed border-border pt-4 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
-                  Online checkout isn&rsquo;t connected yet &mdash; no card is charged, and
-                  résumé writing stays off until payment is set up. Next you can preview
-                  the layouts.
+                  Next you pick your layout, then pay securely with Stripe. Your
+                  résumé is written only after Stripe confirms the payment.
                 </p>
               </div>
             </section>
@@ -562,8 +591,8 @@ function OrderPage() {
                 <SectionLabel step={layoutStep}>Pick your layout</SectionLabel>
                 <p className="mt-3 max-w-2xl font-sans text-[0.95rem] text-muted-foreground">
                   Your intake was saved. Preview the {RESUME_TEMPLATES.length} layouts
-                  ({PHOTO_LAYOUT_COUNT} use a photo). Online checkout isn&rsquo;t connected yet, so
-                  no payment is taken and résumé writing is turned off for now.
+                  ({PHOTO_LAYOUT_COUNT} use a photo), then pay ${tier.price} securely with Stripe.
+                  Writing starts only after Stripe confirms your payment.
                 </p>
               </div>
 
@@ -587,9 +616,27 @@ function OrderPage() {
               )}
 
               <div className="premium-panel p-6 sm:p-8">
-                <StampButton type="button" onClick={build} disabled={pending}>
-                  {pending ? "Checking..." : "Continue to Checkout"}
-                </StampButton>
+                {!sessionId ? (
+                  <StampButton type="button" onClick={pay} disabled={pending}>
+                    {pending ? "Opening checkout..." : `Pay $${tier.price} with Stripe`}
+                  </StampButton>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="font-sans text-[0.95rem] text-ivory">
+                      Checkout opened in a new tab. After paying, come back here and press the button below.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-4">
+                      <StampButton type="button" onClick={build} disabled={pending}>
+                        {pending ? "Confirming payment & writing..." : "I've paid — write my résumé"}
+                      </StampButton>
+                      {checkoutUrl && (
+                        <a href={checkoutUrl} target="_blank" rel="noopener noreferrer" className="font-sans text-[0.9rem] text-gold underline underline-offset-4">
+                          Reopen checkout
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
                 <p className="mt-5 font-sans text-[0.85rem] leading-relaxed text-muted-foreground">
                   {templateUsesPhoto
                     ? "Your layout and photo are locked in before the writing starts."
