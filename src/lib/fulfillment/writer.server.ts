@@ -59,22 +59,35 @@ async function call(model: string, system: string, user: string): Promise<string
   const ctl = new AbortController();
   const t = setTimeout(() => ctl.abort(), TIMEOUT_MS);
   try {
-    const res = await fetch(GATEWAY_URL, {
+    const res = await fetch(RESPONSES_URL, {
       method: "POST",
       signal: ctl.signal,
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+      headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" },
       body: JSON.stringify({
         model,
-        messages: [{ role: "system", content: system }, { role: "user", content: user }],
-        response_format: { type: "json_object" },
+        instructions: system,
+        input: [{ role: "user", content: user }],
+        store: false,
+        reasoning: { effort: "low" },
+        text: { format: { type: "json_object" } },
       }),
     });
     if (!res.ok) {
+      // Status only — never log bodies (could echo customer content).
       console.error("fulfillment model call failed", { status: res.status });
       throw Object.assign(new Error(`AI ${res.status}`), { retryable: res.status !== 402 });
     }
-    const j = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    const text = j.choices?.[0]?.message?.content;
+    const j = (await res.json()) as {
+      output_text?: string;
+      output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>;
+    };
+    const text =
+      j.output_text ??
+      (j.output ?? [])
+        .flatMap((o) => o.content ?? [])
+        .filter((c) => c.type === "output_text")
+        .map((c) => c.text ?? "")
+        .join("");
     if (!text) throw new Error("empty AI reply");
     return text;
   } finally {
