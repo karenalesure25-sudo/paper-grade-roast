@@ -5,9 +5,9 @@ const API = "https://api.stripe.com/v1";
 
 /** Server-owned prices. The browser never sends an amount. */
 export const TIER_PRICING: Record<TierId, { cents: number; name: string; priceId?: string }> = {
-  revamp: { cents: 4000, name: "Resume Revamp", priceId: "price_1UMz0BB7fVbEhUs67SDa81o0" },
-  scratch: { cents: 5000, name: "Résumé From Scratch", priceId: "price_1UN0vtB7fVbEhUs6sEe8baX9" },
-  bundle: { cents: 6000, name: "Revamp + ATS Optimization", priceId: "price_1UN0w4B7fVbEhUs6xPe1HB3e" },
+  revamp: { cents: 4000, name: "Resume Revamp", priceId: "price_1UN1qPB29VijguUHaAc8Qh3g" },
+  scratch: { cents: 5000, name: "Résumé From Scratch", priceId: "price_1UN1qeB29VijguUHUytddPr8" },
+  bundle: { cents: 6000, name: "Revamp + ATS Optimization", priceId: "price_1UN1s2B29VijguUHtaQMBeu7" },
 };
 
 function key(): string {
