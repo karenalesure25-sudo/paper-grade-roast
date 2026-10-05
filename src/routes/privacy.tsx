@@ -56,7 +56,7 @@ function PrivacyPage() {
               and any files you upload so Kay can work on your order. This information is private and can only be
               accessed by the site&rsquo;s server. There is no automatic deletion schedule for intakes yet.
             </p>
-            <p>Online checkout isn&rsquo;t connected yet, so no payment details are collected.</p>
+            <p>Payments are handled by Stripe. Card details go directly to Stripe and never reach this site; we keep a record of the paid checkout (service, amount and email) to confirm your order.</p>
           </Section>
 
           <Section title="Finished résumés and download links">

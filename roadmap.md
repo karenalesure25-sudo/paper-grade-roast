@@ -11,5 +11,5 @@
 - [x] SSRF risk removed by requiring pasted or uploaded job posting content
 - [x] Accuracy tests and browser checks
 - [x] Accuracy follow-up: entailment checks, independent fact-check pass, presence detection, no truncation, aria-live, $50/$60 browser checks, test-data cleanup
-- [ ] Connect payment provider (blocked: user choice/account)
+- [x] Stripe test-mode checkout + server-side payment verification
 - [ ] Email sender domain (blocked: user setup)

@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PaymentCanceledRouteImport } from './routes/payment-canceled'
+import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RoastRouteImport } from './routes/roast'
 import { Route as OrderTierRouteImport } from './routes/order.$tier'
@@ -18,6 +20,16 @@ import { Route as ApiPublicDownloadTokenRouteImport } from './routes/api/public/
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentCanceledRoute = PaymentCanceledRouteImport.update({
+  id: '/payment-canceled',
+  path: '/payment-canceled',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentSuccessRoute = PaymentSuccessRouteImport.update({
+  id: '/payment-success',
+  path: '/payment-success',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -43,6 +55,8 @@ const ApiPublicDownloadTokenRoute = ApiPublicDownloadTokenRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/payment-canceled': typeof PaymentCanceledRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
@@ -50,6 +64,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/payment-canceled': typeof PaymentCanceledRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
@@ -58,6 +74,8 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/payment-canceled': typeof PaymentCanceledRoute
+  '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
@@ -66,13 +84,27 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/privacy' | '/roast' | '/order/$tier' | '/api/public/download/$token'
+    | '/'
+    | '/payment-canceled'
+    | '/payment-success'
+    | '/privacy'
+    | '/roast'
+    | '/order/$tier'
+    | '/api/public/download/$token'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/privacy' | '/roast' | '/order/$tier' | '/api/public/download/$token'
+    | '/'
+    | '/payment-canceled'
+    | '/payment-success'
+    | '/privacy'
+    | '/roast'
+    | '/order/$tier'
+    | '/api/public/download/$token'
   id:
     | '__root__'
     | '/'
+    | '/payment-canceled'
+    | '/payment-success'
     | '/privacy'
     | '/roast'
     | '/order/$tier'
@@ -81,6 +113,8 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PaymentCanceledRoute: typeof PaymentCanceledRoute
+  PaymentSuccessRoute: typeof PaymentSuccessRoute
   PrivacyRoute: typeof PrivacyRoute
   RoastRoute: typeof RoastRoute
   OrderTierRoute: typeof OrderTierRoute
@@ -94,6 +128,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment-canceled': {
+      id: '/payment-canceled'
+      path: '/payment-canceled'
+      fullPath: '/payment-canceled'
+      preLoaderRoute: typeof PaymentCanceledRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment-success': {
+      id: '/payment-success'
+      path: '/payment-success'
+      fullPath: '/payment-success'
+      preLoaderRoute: typeof PaymentSuccessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -129,6 +177,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PaymentCanceledRoute: PaymentCanceledRoute,
+  PaymentSuccessRoute: PaymentSuccessRoute,
   PrivacyRoute: PrivacyRoute,
   RoastRoute: RoastRoute,
   OrderTierRoute: OrderTierRoute,
