@@ -2,10 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { cn } from "@/lib/utils";
 import { BrandLogo } from "@/components/BrandLogo";
 
-/**
- * Gold-script wordmark for Kay's Career Solutions, framed like the
- * flyer nameplate: crown flourish, script name, spaced-out tagline.
- */
+/** Responsive ribbon-emblem wordmark for Kay's Career Solutions. */
 export function BrandMark({
   size = "md",
   withTagline = true,
