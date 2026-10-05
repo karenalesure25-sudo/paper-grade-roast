@@ -18,7 +18,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
       const dataUrl = await toPng(node, {
         pixelRatio: 2,
         cacheBust: true,
-        backgroundColor: "#faf9f6",
+        backgroundColor: "#10182b",
       });
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], `kcs-grade-${roast.grade}.png`, {
@@ -55,7 +55,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
     <div className="space-y-6">
       <div
         ref={cardRef}
-        className="torn-edge relative bg-card px-6 pt-8 pb-10 shadow-paper-lift sm:px-10"
+        className="relative rounded-lg border border-border bg-card px-6 pt-8 pb-10 shadow-paper-lift sm:px-10"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -116,7 +116,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
         </div>
 
         {roast.tip && (
-          <div className="mt-8 border-l-2 border-redpen bg-paper-shade/40 px-5 py-4">
+          <div className="mt-8 rounded-r-md border-l-2 border-accent bg-paper-shade/40 px-5 py-4">
             <p className="font-typewriter text-[0.68rem] tracking-[0.22em] text-ink-soft uppercase">
               The one fix
             </p>

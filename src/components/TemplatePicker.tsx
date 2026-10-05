@@ -29,9 +29,9 @@ export function TemplatePicker({
             }`}
           >
             <div
-              className={`relative overflow-hidden border-2 bg-white shadow-paper ${
+              className={`relative overflow-hidden rounded-lg border-2 bg-white shadow-paper ${
                 unlocked ? "" : "locked-glow"
-              } ${selected ? "border-ink" : "border-border"}`}
+              } ${selected ? "border-accent" : "border-border"}`}
             >
               <div className="pointer-events-none h-[290px] origin-top overflow-hidden">
                 <div className={unlocked ? "" : "[mask-image:linear-gradient(#000,#000)]"}>
@@ -57,7 +57,7 @@ export function TemplatePicker({
               )}
 
               {selected && (
-                <span className="absolute top-2 right-2 border border-gold bg-background px-2 py-1 font-sans text-[0.6rem] font-bold tracking-widest text-gold uppercase">
+                <span className="absolute top-2 right-2 rounded-full border border-accent bg-background px-2 py-1 font-sans text-[0.6rem] font-bold tracking-widest text-accent uppercase">
                   Chosen
                 </span>
               )}

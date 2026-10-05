@@ -172,7 +172,7 @@ export function PhotoCropper({
             <button
               type="button"
               onClick={crop}
-              className="mt-5 border-2 border-redpen bg-redpen px-5 py-2 font-stamp text-xs tracking-[0.2em] text-primary-foreground uppercase transition-opacity hover:opacity-90"
+              className="mt-5 rounded-md border border-primary bg-primary px-5 py-2 font-sans text-xs font-bold tracking-[0.12em] text-primary-foreground uppercase transition-opacity hover:opacity-90"
             >
               Confirm placement
             </button>
