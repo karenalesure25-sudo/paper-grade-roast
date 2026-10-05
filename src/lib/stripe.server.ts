@@ -81,7 +81,7 @@ export async function createCheckoutSession(opts: {
   f.set("branding_settings[logo][type]", "file");
   f.set("branding_settings[logo][file]", "file_1UN3GeB29VijguUHS6dc8l0y");
   f.set("branding_settings[icon][type]", "file");
-  f.set("branding_settings[icon][file]", "file_1UN3GeB29VijguUHHjlYKmxW");
+  f.set("branding_settings[icon][file]", "file_1UN3I5B29VijguUH6KlBDRBp");
   // Match the site's graphite, cyan and indigo system within hosted Checkout controls.
   f.set("branding_settings[background_color]", "#080D1B");
   f.set("branding_settings[button_color]", "#2DD4D0");
