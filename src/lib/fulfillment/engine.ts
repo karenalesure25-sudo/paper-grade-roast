@@ -1,0 +1,221 @@
+/**
+ * Fulfillment state machine. I/O is injected (repo, Stripe reader, models) so the
+ * exact production logic is exercised by tests with isolated fakes.
+ *
+ * awaiting_payment → queued → processing → ready
+ *                                       ↘ needs_information → (customer answers) → queued
+ *                                       ↘ queued (bounded retry) → failed → (customer retry, bounded) → queued
+ */
+import type { TierId } from "../products";
+import {
+  buildKeywordReport, missingEssentials, validatePackage,
+  type FullResume, type KeywordReport, type SourceFacts, type Violation,
+} from "./validate";
+import type { ModelPort } from "./writer.server";
+
+export const TIER_CENTS: Record<TierId, number> = { revamp: 4000, scratch: 5000, bundle: 6000 };
+export const MAX_GENERATIONS_PER_ATTEMPT = 3;
+export const MAX_CUSTOMER_RETRIES = 2;
+
+export type OrderStatus = "awaiting_payment" | "queued" | "processing" | "needs_information" | "ready" | "failed";
+
+export type OrderRow = {
+  id: string;
+  access_token: string;
+  tier: TierId;
+  email: string;
+  template: string;
+  snapshot: Snapshot;
+  source_text: string;
+  job_text: string | null;
+  stripe_session_id: string | null;
+  status: OrderStatus;
+  attempts: number;
+  max_attempts: number;
+  retry_rounds: number;
+  locked_until: string | null;
+  paid_at: string | null;
+  clarification_request: { questions: string[] } | null;
+  clarifications: Array<{ at: string; text: string }>;
+  result: DeliveredPackage | null;
+  failure_reason: string | null;
+};
+
+export type Snapshot = {
+  name: string;
+  email: string;
+  phone: string;
+  targetJobTitle?: string;
+  companyName?: string;
+  specificJobTitle?: string;
+  requiredEmployers: string[];
+  requiredSchools: string[];
+  requiredCertifications: string[];
+  additionalInfo?: string;
+  sourceLabel: string;
+};
+
+export type DeliveredPackage = {
+  resume: FullResume;
+  coverLetter?: string;
+  keywordReport?: KeywordReport;
+  validatedAt: string;
+  checks: { deterministic: "passed"; independent: "passed"; generations: number };
+};
+
+export type StripeSessionView = {
+  id: string;
+  mode: string;
+  status: string | null;
+  payment_status: string;
+  amount_total: number | null;
+  currency: string | null;
+  currency_conversion?: { amount_total: number; source_currency: string } | null;
+  metadata?: Record<string, string> | null;
+  client_reference_id?: string | null;
+};
+
+export type Repo = {
+  byId(id: string): Promise<OrderRow | null>;
+  bySession(sessionId: string): Promise<OrderRow | null>;
+  /** Conditional update: applies only if current status is in `from`. Returns updated row or null. */
+  transition(id: string, from: OrderStatus[], patch: Partial<OrderRow>): Promise<OrderRow | null>;
+  /** Atomic leased claim. Null when another worker holds it or nothing is due. */
+  claim(id: string): Promise<OrderRow | null>;
+  due(limit: number): Promise<string[]>;
+  recordRedemption(sessionId: string, tier: TierId, email: string, status: string): Promise<void>;
+};
+
+/** Pure: does this Stripe session pay for exactly this order? */
+export function sessionPaysOrder(order: Pick<OrderRow, "id" | "tier" | "email" | "stripe_session_id">, s: StripeSessionView): { ok: true } | { ok: false; reason: string } {
+  if (!order.stripe_session_id || s.id !== order.stripe_session_id) return { ok: false, reason: "session_mismatch" };
+  if (s.mode !== "payment" || s.status !== "complete" || s.payment_status !== "paid") return { ok: false, reason: "unpaid" };
+  const usd = s.currency_conversion?.source_currency === "usd" ? s.currency_conversion.amount_total : s.currency === "usd" ? s.amount_total : null;
+  if (usd !== TIER_CENTS[order.tier]) return { ok: false, reason: "amount_mismatch" };
+  const m = s.metadata ?? {};
+  if (m["order_id"] !== order.id || s.client_reference_id !== order.id) return { ok: false, reason: "order_mismatch" };
+  if (m["tier"] !== order.tier) return { ok: false, reason: "tier_mismatch" };
+  if ((m["email"] ?? "").toLowerCase() !== order.email.toLowerCase()) return { ok: false, reason: "email_mismatch" };
+  return { ok: true };
+}
+
+/** Verify payment with Stripe (server-side) and queue the order exactly once. Idempotent. */
+export async function confirmPayment(repo: Repo, getSession: (id: string) => Promise<StripeSessionView>, order: OrderRow): Promise<OrderRow> {
+  if (order.status !== "awaiting_payment" || !order.stripe_session_id) return order;
+  const s = await getSession(order.stripe_session_id);
+  const v = sessionPaysOrder(order, s);
+  if (!v.ok) return order;
+  const updated = await repo.transition(order.id, ["awaiting_payment"], { status: "queued", paid_at: new Date().toISOString() });
+  if (updated) await repo.recordRedemption(order.stripe_session_id, order.tier, order.email, "building");
+  return updated ?? (await repo.byId(order.id)) ?? order;
+}
+
+export function factsFor(order: OrderRow): SourceFacts {
+  const sn = order.snapshot;
+  const clar = order.clarifications.map((c) => c.text).join("\n");
+  return {
+    tier: order.tier,
+    text: [order.source_text, clar ? `Customer clarifications:\n${clar}` : ""].filter(Boolean).join("\n\n"),
+    name: sn.name,
+    email: sn.email,
+    phone: sn.phone,
+    ...(order.tier === "scratch" && sn.targetJobTitle ? { targetTitle: sn.targetJobTitle } : {}),
+    requiredEmployers: sn.requiredEmployers,
+    requiredSchools: sn.requiredSchools,
+    requiredCertifications: sn.requiredCertifications,
+    ...(order.tier === "bundle"
+      ? { job: { text: order.job_text ?? "", company: sn.companyName ?? "", title: sn.specificJobTitle ?? "" } }
+      : {}),
+  };
+}
+
+export type GenerationOutcome =
+  | { kind: "ready"; pkg: DeliveredPackage }
+  | { kind: "needs_information"; questions: string[] }
+  | { kind: "rejected"; violations: Violation[] };
+
+/** Generate + validate with bounded correction. Never returns an unvalidated package. */
+export async function generateValidated(facts: SourceFacts, models: ModelPort): Promise<GenerationOutcome> {
+  const pre = missingEssentials(facts);
+  if (pre.length) return { kind: "needs_information", questions: pre };
+  let feedback: Violation[] = [];
+  for (let g = 1; g <= MAX_GENERATIONS_PER_ATTEMPT; g++) {
+    const out = await models.write(facts, feedback);
+    if (out.kind === "needs_information") return { kind: "needs_information", questions: out.questions };
+    const resume: FullResume = { ...out.resume, name: facts.name, email: facts.email, phone: facts.phone };
+    const keywordReport = facts.job ? buildKeywordReport(out.keywords, facts.job.text, facts.text, resume) : undefined;
+    const pkg = { resume, ...(out.coverLetter ? { coverLetter: out.coverLetter } : {}), ...(keywordReport ? { keywordReport } : {}) };
+    const violations = validatePackage(pkg, facts);
+    if (violations.length === 0) {
+      const verdict = await models.check(facts, { resume, coverLetter: pkg.coverLetter });
+      if (verdict.approved) {
+        return { kind: "ready", pkg: { ...pkg, validatedAt: new Date().toISOString(), checks: { deterministic: "passed", independent: "passed", generations: g } } };
+      }
+      feedback = verdict.problems.map((p) => ({ code: "fact_check", detail: p }));
+    } else {
+      feedback = violations;
+    }
+  }
+  return { kind: "rejected", violations: feedback };
+}
+
+/** Claim and process one order. Safe to call concurrently and repeatedly. */
+export async function processOrder(repo: Repo, models: ModelPort, orderId: string): Promise<OrderStatus | "busy"> {
+  const claimed = await repo.claim(orderId);
+  if (!claimed) return "busy";
+  let outcome: GenerationOutcome;
+  try {
+    outcome = await generateValidated(factsFor(claimed), models);
+  } catch (e) {
+    const retryable = (e as { retryable?: boolean }).retryable !== false;
+    console.error("fulfillment attempt errored", { orderId, retryable });
+    return finishFailedAttempt(repo, claimed, "We hit a temporary problem writing your package.");
+  }
+  if (outcome.kind === "ready") {
+    await repo.transition(claimed.id, ["processing"], { status: "ready", result: outcome.pkg, locked_until: null, failure_reason: null, clarification_request: null });
+    if (claimed.stripe_session_id) await repo.recordRedemption(claimed.stripe_session_id, claimed.tier, claimed.email, "delivered");
+    return "ready";
+  }
+  if (outcome.kind === "needs_information") {
+    await repo.transition(claimed.id, ["processing"], { status: "needs_information", clarification_request: { questions: outcome.questions }, locked_until: null });
+    return "needs_information";
+  }
+  console.error("fulfillment validation rejected", { orderId, codes: [...new Set(outcome.violations.map((v) => v.code))] });
+  return finishFailedAttempt(repo, claimed, "Our accuracy checks couldn't approve a version that uses only your facts.");
+}
+
+async function finishFailedAttempt(repo: Repo, order: OrderRow, reason: string): Promise<OrderStatus> {
+  const last = order.attempts >= order.max_attempts;
+  await repo.transition(order.id, ["processing"], {
+    status: last ? "failed" : "queued",
+    locked_until: null,
+    failure_reason: reason,
+  });
+  if (last && order.stripe_session_id) await repo.recordRedemption(order.stripe_session_id, order.tier, order.email, "failed");
+  return last ? "failed" : "queued";
+}
+
+/** Customer answers clarification questions (append-only) and the order is re-queued. */
+export async function addClarification(repo: Repo, order: OrderRow, text: string): Promise<OrderRow | null> {
+  const clean = text.trim();
+  if (order.status !== "needs_information" || clean.length < 5 || clean.length > 6000) return null;
+  return repo.transition(order.id, ["needs_information"], {
+    status: "queued",
+    attempts: 0,
+    clarifications: [...order.clarifications, { at: new Date().toISOString(), text: clean }],
+  });
+}
+
+/** A failed purchase is never consumed: the customer may re-run it a bounded number of times. */
+export async function retryFailed(repo: Repo, order: OrderRow): Promise<OrderRow | null> {
+  if (order.status !== "failed" || order.retry_rounds >= MAX_CUSTOMER_RETRIES) return null;
+  return repo.transition(order.id, ["failed"], { status: "queued", attempts: 0, retry_rounds: order.retry_rounds + 1 });
+}
+
+/** Stale lease after the final attempt (worker died) → failed, so the customer can retry. */
+export async function settleStale(repo: Repo, order: OrderRow): Promise<OrderRow> {
+  if (order.status === "processing" && order.attempts >= order.max_attempts && order.locked_until && new Date(order.locked_until).getTime() < Date.now()) {
+    return (await repo.transition(order.id, ["processing"], { status: "failed", locked_until: null, failure_reason: "Processing was interrupted." })) ?? order;
+  }
+  return order;
+}

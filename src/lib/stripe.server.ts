@@ -61,6 +61,9 @@ export async function createCheckoutSession(opts: {
   tier: TierId;
   email: string;
   origin: string;
+  /** Server-owned fulfillment order this session pays for. */
+  orderId?: string;
+  successPath?: string;
 }): Promise<StripeSession> {
   const p = TIER_PRICING[opts.tier];
   const f = new URLSearchParams();
@@ -76,6 +79,11 @@ export async function createCheckoutSession(opts: {
   }
   f.set("metadata[tier]", opts.tier);
   f.set("metadata[email]", opts.email.toLowerCase());
+  if (opts.orderId) {
+    f.set("metadata[order_id]", opts.orderId);
+    f.set("client_reference_id", opts.orderId);
+    f.set("payment_intent_data[metadata][order_id]", opts.orderId);
+  }
   // Per-session branding override (Stripe File IDs for the Kay's logo/icon).
   f.set("branding_settings[display_name]", "Kay's Career Solutions");
   f.set("branding_settings[logo][type]", "file");
@@ -89,7 +97,7 @@ export async function createCheckoutSession(opts: {
   f.set("branding_settings[font_family]", "inter");
   // Keep Stripe's dynamic payment methods, excluding only Affirm for this project.
   f.append("excluded_payment_method_types[]", "affirm");
-  f.set("success_url", `${opts.origin}/payment-success?session_id={CHECKOUT_SESSION_ID}`);
+  f.set("success_url", `${opts.origin}${opts.successPath ?? "/payment-success"}${(opts.successPath ?? "").includes("?") ? "&" : "?"}session_id={CHECKOUT_SESSION_ID}`);
   f.set("cancel_url", `${opts.origin}/payment-canceled`);
   return stripe<StripeSession>("/checkout/sessions", { method: "POST", form: f });
 }
@@ -103,4 +111,20 @@ export async function expireCheckoutSession(id: string): Promise<StripeSession> 
     method: "POST",
     form: new URLSearchParams(),
   });
+}
+
+/**
+ * Verifies a Stripe webhook signature (v1, HMAC-SHA256) with a 5-minute tolerance.
+ * Pure Web Crypto, Worker-safe.
+ */
+export async function verifyStripeSignature(payload: string, header: string | null, secret: string, nowSec = Math.floor(Date.now() / 1000)): Promise<boolean> {
+  if (!header || !secret) return false;
+  const parts = header.split(",").map((p) => p.trim().split("="));
+  const t = parts.find(([k]) => k === "t")?.[1];
+  const sigs = parts.filter(([k]) => k === "v1").map(([, v]) => v ?? "");
+  if (!t || !sigs.length || Math.abs(nowSec - Number(t)) > 300) return false;
+  const k = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", k, new TextEncoder().encode(`${t}.${payload}`)));
+  const hex = [...mac].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return sigs.some((s) => s.length === hex.length && [...s].reduce((d, c, i) => d | (c.charCodeAt(0) ^ hex.charCodeAt(i)), 0) === 0);
 }

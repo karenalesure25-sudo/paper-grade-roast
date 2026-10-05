@@ -14,6 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
+      fulfillment_orders: {
+        Row: {
+          access_token: string
+          attempts: number
+          clarification_request: Json | null
+          clarifications: Json
+          created_at: string
+          email: string
+          expires_at: string
+          failure_reason: string | null
+          id: string
+          intake_id: string
+          is_test: boolean
+          job_text: string | null
+          locked_until: string | null
+          max_attempts: number
+          paid_at: string | null
+          photo: string | null
+          result: Json | null
+          retry_rounds: number
+          snapshot: Json
+          source_sha256: string
+          source_text: string
+          status: string
+          stripe_session_id: string | null
+          template: string
+          tier: string
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string
+          attempts?: number
+          clarification_request?: Json | null
+          clarifications?: Json
+          created_at?: string
+          email: string
+          expires_at?: string
+          failure_reason?: string | null
+          id?: string
+          intake_id: string
+          is_test?: boolean
+          job_text?: string | null
+          locked_until?: string | null
+          max_attempts?: number
+          paid_at?: string | null
+          photo?: string | null
+          result?: Json | null
+          retry_rounds?: number
+          snapshot: Json
+          source_sha256: string
+          source_text: string
+          status?: string
+          stripe_session_id?: string | null
+          template: string
+          tier: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          attempts?: number
+          clarification_request?: Json | null
+          clarifications?: Json
+          created_at?: string
+          email?: string
+          expires_at?: string
+          failure_reason?: string | null
+          id?: string
+          intake_id?: string
+          is_test?: boolean
+          job_text?: string | null
+          locked_until?: string | null
+          max_attempts?: number
+          paid_at?: string | null
+          photo?: string | null
+          result?: Json | null
+          retry_rounds?: number
+          snapshot?: Json
+          source_sha256?: string
+          source_text?: string
+          status?: string
+          stripe_session_id?: string | null
+          template?: string
+          tier?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fulfillment_orders_intake_id_fkey"
+            columns: ["intake_id"]
+            isOneToOne: true
+            referencedRelation: "intakes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intakes: {
         Row: {
           answers: Json
@@ -155,12 +250,67 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_events: {
+        Row: {
+          id: string
+          received_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          received_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          received_at?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      claim_fulfillment: {
+        Args: { _lease_seconds?: number; _order_id: string }
+        Returns: {
+          access_token: string
+          attempts: number
+          clarification_request: Json | null
+          clarifications: Json
+          created_at: string
+          email: string
+          expires_at: string
+          failure_reason: string | null
+          id: string
+          intake_id: string
+          is_test: boolean
+          job_text: string | null
+          locked_until: string | null
+          max_attempts: number
+          paid_at: string | null
+          photo: string | null
+          result: Json | null
+          retry_rounds: number
+          snapshot: Json
+          source_sha256: string
+          source_text: string
+          status: string
+          stripe_session_id: string | null
+          template: string
+          tier: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "fulfillment_orders"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      due_fulfillments: { Args: { _limit?: number }; Returns: string[] }
     }
     Enums: {
       [_ in never]: never
