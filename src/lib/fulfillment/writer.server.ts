@@ -48,6 +48,7 @@ Prioritise and phrase the candidate's REAL experience to match the posting. A re
 never add a posting skill/tool/credential the candidate doesn't have in <source>.
 Also write "coverLetter": 3-4 paragraphs separated by blank lines, beginning "Dear Hiring Manager," (or a named contact
 only if in <job>), naming the company, using only <source> facts, ending with a sign-off line and then the exact candidate name.
+In the résumé AND cover letter, never use a term from <job> that does not also appear in <source>, not even to describe the employer's needs; refer to the role and company by name instead.
 Also return "keywords": 10-25 important skills/terms copied verbatim from <job>.`,
 };
 
@@ -66,7 +67,8 @@ async function call(model: string, system: string, user: string): Promise<string
       body: JSON.stringify({
         model,
         instructions: system,
-        input: [{ role: "user", content: user }],
+        // The json_object format requires the word "json" in the input itself, not just the instructions.
+        input: [{ role: "user", content: `Respond with a single JSON object.\n\n${user}` }],
         store: false,
         reasoning: { effort: "low" },
         text: { format: { type: "json_object" } },
@@ -144,6 +146,13 @@ function userBlock(facts: SourceFacts): string {
   ].filter(Boolean).join("\n\n");
 }
 
+/** The keyword list is posting vocabulary for the comparison table, not a candidate claim; keep it out of the fact-check. */
+function checkable(output: unknown): unknown {
+  if (!output || typeof output !== "object") return output;
+  const { keywords: _k, kind: _kind, ...rest } = output as Record<string, unknown>;
+  return rest;
+}
+
 export const liveModels: ModelPort = {
   async write(facts, feedback) {
     const system = `You are the senior résumé writer for Kay's Career Solutions.\n${GUARD}\n${RULES}\n${TIER_TASK[facts.tier]}\nReply with ONLY JSON in this shape:\n${SHAPE}`;
@@ -157,8 +166,9 @@ export const liveModels: ModelPort = {
 Compare <output> with <source>. Report any claim in <output> (employer, title, date, degree, certification, tool, skill,
 metric, responsibility, achievement) not supported by <source>; any role/education/certification in <source> missing from <output>;
 any <job> requirement presented as the candidate's own experience; any placeholder or incomplete text.
-Rewording is fine. Reply ONLY JSON: {"approved":true|false,"problems":["..."]}. When unsure, reject.`;
-    const user = `${userBlock(facts)}\n\n<output>\n${strip(JSON.stringify(output))}\n</output>`;
+Rewording is fine. Empty strings or empty arrays mean that optional section is intentionally left out — they are NOT placeholders or incomplete text.
+Naming the target company and job title from <job> in the cover letter is expected, not a false claim. Reply ONLY JSON: {"approved":true|false,"problems":["..."]}. When unsure, reject.`;
+    const user = `${userBlock(facts)}\n\n<output>\n${strip(JSON.stringify(checkable(output), (_k, v) => (v === "" || (Array.isArray(v) && v.length === 0) ? undefined : v)))}\n</output>`;
     try {
       const j = parseJson(await call(CHECKER_MODEL, system, user));
       const problems = arr(j["problems"]).map(str).filter(Boolean);

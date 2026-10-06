@@ -1,5 +1,7 @@
 /** Editable Word (.docx) builders for delivered packages. Pure JS, Worker-safe. */
-import { AlignmentType, Document, HeadingLevel, Packer, Paragraph, TextRun } from "docx";
+import { AlignmentType, Document, HeadingLevel, ImageRun, Packer, Paragraph, TextRun } from "docx";
+import { RESUME_TEMPLATES } from "../resume-templates";
+import { safePhoto } from "../deliverable-doc";
 import type { FullResume } from "./validate";
 
 const FONT = "Calibri";
@@ -8,8 +10,19 @@ const run = (text: string, o: { bold?: boolean; size?: number; italics?: boolean
 const heading = (t: string) =>
   new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 240, after: 80 }, children: [run(t.toUpperCase(), { bold: true, size: 24 })] });
 
-export function resumeDocxDocument(r: FullResume): Document {
+function photoParagraph(template: string, photo: string | null | undefined): Paragraph[] {
+  const usesPhoto = RESUME_TEMPLATES.find((t) => t.id === template)?.usesPhoto ?? false;
+  const p = usesPhoto ? safePhoto(photo) : null;
+  if (!p) return [];
+  const type = p.startsWith("data:image/png") ? "png" : "jpg";
+  const bin = atob(p.slice(p.indexOf(",") + 1));
+  const data = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return [new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ type, data, transformation: { width: 96, height: 96 }, altText: { title: "Headshot", description: `${"Candidate"} headshot`, name: "photo" } })] })];
+}
+
+export function resumeDocxDocument(r: FullResume, opts: { template?: string; photo?: string | null } = {}): Document {
   const kids: Paragraph[] = [
+    ...photoParagraph(opts.template ?? "classic", opts.photo),
     new Paragraph({ alignment: AlignmentType.CENTER, children: [run(r.name, { bold: true, size: 36 })] }),
     ...(r.title ? [new Paragraph({ alignment: AlignmentType.CENTER, children: [run(r.title, { size: 24 })] })] : []),
     new Paragraph({ alignment: AlignmentType.CENTER, children: [run([r.location, r.email, r.phone].filter(Boolean).join("  |  "), { size: 20 })] }),

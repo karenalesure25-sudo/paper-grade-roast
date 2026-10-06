@@ -22,9 +22,9 @@ export const Route = createFileRoute("/api/public/order-file/$token/$file")({
         const docx = await import("@/lib/fulfillment/docx");
         switch (params.file) {
           case "resume.docx":
-            return new Response(await docx.toDocxBytes(docx.resumeDocxDocument(r)), { headers: head(DOCX, `${slug}-resume.docx`) });
+            return new Response(await docx.toDocxBytes(docx.resumeDocxDocument(r, { template: o.template, photo: o.photo ?? null })), { headers: head(DOCX, `${slug}-resume.docx`) });
           case "resume.html":
-            return new Response(renderResumeDocument(r, o.template), { headers: head("text/html; charset=utf-8", `${slug}-resume.html`) });
+            return new Response(renderResumeDocument(r, o.template, { photo: o.photo ?? null }), { headers: head("text/html; charset=utf-8", `${slug}-resume.html`) });
           case "cover-letter.docx":
             if (!o.result.coverLetter) return nf();
             return new Response(await docx.toDocxBytes(docx.letterDocxDocument(o.result.coverLetter, r)), { headers: head(DOCX, `${slug}-cover-letter.docx`) });
