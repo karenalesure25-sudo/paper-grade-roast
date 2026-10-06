@@ -66,7 +66,8 @@ async function call(model: string, system: string, user: string): Promise<string
       body: JSON.stringify({
         model,
         instructions: system,
-        input: [{ role: "user", content: user }],
+        // The json_object format requires the word "json" in the input itself, not just the instructions.
+        input: [{ role: "user", content: `Respond with a single JSON object.\n\n${user}` }],
         store: false,
         reasoning: { effort: "low" },
         text: { format: { type: "json_object" } },

@@ -1,4 +1,11 @@
-import type { ResumeData, TemplateId } from "./resume-templates";
+import { RESUME_TEMPLATES, type ResumeData, type TemplateId } from "./resume-templates";
+
+type Cert = { name: string; issuer?: string; dates?: string };
+
+/** Only inline PNG/JPEG data URLs are embedded; anything else is dropped. */
+export function safePhoto(photo: string | null | undefined): string | null {
+  return photo && /^data:image\/(png|jpe?g);base64,[A-Za-z0-9+/=]+$/.test(photo) ? photo : null;
+}
 
 function esc(value: string): string {
   return value
@@ -12,7 +19,11 @@ function esc(value: string): string {
  * A self-contained, printable HTML document for the finished résumé.
  * Opens in any browser and prints straight to PDF — no app session needed.
  */
-export function renderResumeDocument(resume: ResumeData, selectedTemplate = "classic"): string {
+export function renderResumeDocument(
+  resume: ResumeData & { certifications?: Cert[] },
+  selectedTemplate = "classic",
+  opts: { photo?: string | null } = {},
+): string {
   const allowedTemplates: TemplateId[] = [
     "sidebar",
     "timeline",
@@ -56,6 +67,13 @@ export function renderResumeDocument(resume: ResumeData, selectedTemplate = "cla
     )
     .join("");
 
+  const certifications = (resume.certifications ?? [])
+    .map((c) => `<li>${esc([c.name, c.issuer, c.dates].filter((x) => x && x.trim()).join(" — "))}</li>`)
+    .join("");
+  const usesPhoto = RESUME_TEMPLATES.find((t) => t.id === template)?.usesPhoto ?? false;
+  const photo = usesPhoto ? safePhoto(opts.photo) : null;
+  const photoTag = photo ? `<img class="photo" src="${photo}" alt="${esc(resume.name || "Candidate")} headshot" />` : "";
+
   const theme =
     template === "timeline-forest"
       ? { band: "#183d35", accent: "#b96f3e", soft: "#f2e3d8" }
@@ -81,6 +99,7 @@ export function renderResumeDocument(resume: ResumeData, selectedTemplate = "cla
   const header = template === "sidebar-teal"
     ? ""
     : `<header>
+        ${photoTag}
         <h1>${esc(resume.name || "")}</h1>
         ${resume.title ? `<p class="title">${esc(resume.title)}</p>` : ""}
         ${contact ? `<p class="contact">${contact}</p>` : ""}
@@ -126,6 +145,8 @@ export function renderResumeDocument(resume: ResumeData, selectedTemplate = "cla
   .sidebar-layout > .main h2 { color: ${theme.accent}; border-bottom: 1px solid ${theme.accent}; padding-left: 0; }
   .sidebar-layout > .main h2:before { display: none; }
   .sidebar-layout > .main .entry { display: block; }
+  header .photo { float: right; width: 84px; height: 84px; object-fit: cover; border-radius: 50%; margin-left: 16px; border: 2px solid ${theme.accent}; }
+  header:after { content: ""; display: block; clear: both; }
   @media print { .sheet { margin: 0; } }
   @media screen and (max-width: 850px) { .sheet { width: 100%; } }
 </style>
@@ -141,6 +162,7 @@ export function renderResumeDocument(resume: ResumeData, selectedTemplate = "cla
         ${resume.skills.length && template !== "sidebar-teal" ? `<h2>Core Competencies</h2><ul class="skills">${skills}</ul>` : ""}
         ${experience ? `<h2>Professional Experience</h2>${experience}` : ""}
         ${education && template !== "sidebar-teal" ? `<h2>Education</h2>${education}` : ""}
+        ${certifications ? `<h2>Certifications</h2><ul class="certs">${certifications}</ul>` : ""}
       </div>
     </div>
   </div>
