@@ -158,8 +158,9 @@ export const liveModels: ModelPort = {
 Compare <output> with <source>. Report any claim in <output> (employer, title, date, degree, certification, tool, skill,
 metric, responsibility, achievement) not supported by <source>; any role/education/certification in <source> missing from <output>;
 any <job> requirement presented as the candidate's own experience; any placeholder or incomplete text.
-Rewording is fine. Reply ONLY JSON: {"approved":true|false,"problems":["..."]}. When unsure, reject.`;
-    const user = `${userBlock(facts)}\n\n<output>\n${strip(JSON.stringify(output))}\n</output>`;
+Rewording is fine. Empty strings or empty arrays mean that optional section is intentionally left out — they are NOT placeholders or incomplete text.
+Naming the target company and job title from <job> in the cover letter is expected, not a false claim. Reply ONLY JSON: {"approved":true|false,"problems":["..."]}. When unsure, reject.`;
+    const user = `${userBlock(facts)}\n\n<output>\n${strip(JSON.stringify(output, (_k, v) => (v === "" || (Array.isArray(v) && v.length === 0) ? undefined : v)))}\n</output>`;
     try {
       const j = parseJson(await call(CHECKER_MODEL, system, user));
       const problems = arr(j["problems"]).map(str).filter(Boolean);
