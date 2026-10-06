@@ -15,6 +15,7 @@ import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RoastRouteImport } from './routes/roast'
 import { Route as OrderTierRouteImport } from './routes/order.$tier'
+import { Route as OrdersTokenRouteImport } from './routes/orders.$token'
 import { Route as ApiPublicFulfillmentTickRouteImport } from './routes/api/public/fulfillment-tick'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as ApiPublicDownloadTokenRouteImport } from './routes/api/public/download.$token'
@@ -50,6 +51,11 @@ const OrderTierRoute = OrderTierRouteImport.update({
   path: '/order/$tier',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrdersTokenRoute = OrdersTokenRouteImport.update({
+  id: '/orders/$token',
+  path: '/orders/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicFulfillmentTickRoute =
   ApiPublicFulfillmentTickRouteImport.update({
     id: '/api/public/fulfillment-tick',
@@ -80,6 +86,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
+  '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
+  '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
@@ -105,6 +113,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
   '/order/$tier': typeof OrderTierRoute
+  '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/roast'
     | '/order/$tier'
+    | '/orders/$token'
     | '/api/public/fulfillment-tick'
     | '/api/public/stripe-webhook'
     | '/api/public/download/$token'
@@ -131,6 +141,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/roast'
     | '/order/$tier'
+    | '/orders/$token'
     | '/api/public/fulfillment-tick'
     | '/api/public/stripe-webhook'
     | '/api/public/download/$token'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/roast'
     | '/order/$tier'
+    | '/orders/$token'
     | '/api/public/fulfillment-tick'
     | '/api/public/stripe-webhook'
     | '/api/public/download/$token'
@@ -156,6 +168,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   RoastRoute: typeof RoastRoute
   OrderTierRoute: typeof OrderTierRoute
+  OrdersTokenRoute: typeof OrdersTokenRoute
   ApiPublicFulfillmentTickRoute: typeof ApiPublicFulfillmentTickRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicDownloadTokenRoute: typeof ApiPublicDownloadTokenRoute
@@ -206,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OrderTierRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/orders/$token': {
+      id: '/orders/$token'
+      path: '/orders/$token'
+      fullPath: '/orders/$token'
+      preLoaderRoute: typeof OrdersTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/fulfillment-tick': {
       id: '/api/public/fulfillment-tick'
       path: '/api/public/fulfillment-tick'
@@ -244,6 +264,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   RoastRoute: RoastRoute,
   OrderTierRoute: OrderTierRoute,
+  OrdersTokenRoute: OrdersTokenRoute,
   ApiPublicFulfillmentTickRoute: ApiPublicFulfillmentTickRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicDownloadTokenRoute: ApiPublicDownloadTokenRoute,

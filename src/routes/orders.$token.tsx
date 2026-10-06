@@ -178,7 +178,7 @@ function OrderStatusPage() {
                   <div className="premium-panel p-6">
                     <h2 className="font-stamp text-xl text-ink">Keyword comparison</h2>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      Estimated coverage: {Math.round(status.keywordReport.estimatedCoverage * 100)}%. {status.keywordReport.note}
+                      Estimated coverage: {status.keywordReport.estimatedCoverage}%. {status.keywordReport.note}
                     </p>
                     <div className="mt-4 overflow-x-auto">
                       <table className="w-full text-left text-sm">
