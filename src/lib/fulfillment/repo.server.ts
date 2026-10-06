@@ -29,9 +29,21 @@ export const supabaseRepo: Repo = {
     }
     return (data as OrderRow | null) ?? null;
   },
+  async finish(id, leaseId, patch) {
+    const db = await admin();
+    const { data, error } = await db.from(T).update(patch as never).eq("id", id).eq("status", "processing").eq("lease_id", leaseId).select("*").maybeSingle();
+    if (error) throw new Error("order update failed");
+    return (data as OrderRow | null) ?? null;
+  },
+  async renew(id, leaseId) {
+    const db = await admin();
+    const { data, error } = await db.rpc("renew_fulfillment_lease" as never, { _order_id: id, _lease_id: leaseId, _lease_seconds: 600 } as never);
+    if (error) throw new Error("lease renew failed");
+    return data === true;
+  },
   async claim(id) {
     const db = await admin();
-    const { data, error } = await db.rpc("claim_fulfillment" as never, { _order_id: id, _lease_seconds: 300 } as never);
+    const { data, error } = await db.rpc("claim_fulfillment" as never, { _order_id: id, _lease_seconds: 600 } as never);
     if (error) throw new Error("claim failed");
     const rows = (data ?? []) as OrderRow[];
     return rows[0] ?? null;
@@ -44,16 +56,17 @@ export const supabaseRepo: Repo = {
   async recordRedemption(sessionId, tier: TierId, email, status) {
     const db = await admin();
     const cents = { revamp: 4000, scratch: 5000, bundle: 6000 }[tier];
-    await db.from("payment_redemptions").upsert(
+    const { error } = await db.from("payment_redemptions").upsert(
       { session_id: sessionId, tier, amount_cents: cents, email: email.toLowerCase(), status, updated_at: new Date().toISOString() },
       { onConflict: "session_id" },
     );
+    if (error) throw new Error("redemption ledger write failed");
   },
 };
 
 export async function orderByToken(token: string): Promise<OrderRow | null> {
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) return null;
   const db = await admin();
-  const { data } = await db.from(T).select("*").eq("access_token", token).maybeSingle();
+  const { data } = await db.from(T).select("*").eq("access_token", token).gt("expires_at", new Date().toISOString()).maybeSingle();
   return (data as OrderRow | null) ?? null;
 }

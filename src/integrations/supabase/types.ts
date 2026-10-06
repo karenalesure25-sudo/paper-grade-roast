@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           access_token: string
           attempts: number
+          checkout_attempt: number
           clarification_request: Json | null
           clarifications: Json
           created_at: string
@@ -28,6 +29,7 @@ export type Database = {
           intake_id: string
           is_test: boolean
           job_text: string | null
+          lease_id: string | null
           locked_until: string | null
           max_attempts: number
           paid_at: string | null
@@ -46,6 +48,7 @@ export type Database = {
         Insert: {
           access_token?: string
           attempts?: number
+          checkout_attempt?: number
           clarification_request?: Json | null
           clarifications?: Json
           created_at?: string
@@ -56,6 +59,7 @@ export type Database = {
           intake_id: string
           is_test?: boolean
           job_text?: string | null
+          lease_id?: string | null
           locked_until?: string | null
           max_attempts?: number
           paid_at?: string | null
@@ -74,6 +78,7 @@ export type Database = {
         Update: {
           access_token?: string
           attempts?: number
+          checkout_attempt?: number
           clarification_request?: Json | null
           clarifications?: Json
           created_at?: string
@@ -84,6 +89,7 @@ export type Database = {
           intake_id?: string
           is_test?: boolean
           job_text?: string | null
+          lease_id?: string | null
           locked_until?: string | null
           max_attempts?: number
           paid_at?: string | null
@@ -252,19 +258,40 @@ export type Database = {
       }
       stripe_events: {
         Row: {
+          attempts: number
           id: string
+          processed_at: string | null
           received_at: string
           type: string
         }
         Insert: {
+          attempts?: number
           id: string
+          processed_at?: string | null
           received_at?: string
           type: string
         }
         Update: {
+          attempts?: number
           id?: string
+          processed_at?: string | null
           received_at?: string
           type?: string
+        }
+        Relationships: []
+      }
+      worker_secrets: {
+        Row: {
+          name: string
+          value: string
+        }
+        Insert: {
+          name: string
+          value?: string
+        }
+        Update: {
+          name?: string
+          value?: string
         }
         Relationships: []
       }
@@ -278,6 +305,7 @@ export type Database = {
         Returns: {
           access_token: string
           attempts: number
+          checkout_attempt: number
           clarification_request: Json | null
           clarifications: Json
           created_at: string
@@ -288,6 +316,7 @@ export type Database = {
           intake_id: string
           is_test: boolean
           job_text: string | null
+          lease_id: string | null
           locked_until: string | null
           max_attempts: number
           paid_at: string | null
@@ -311,6 +340,12 @@ export type Database = {
         }
       }
       due_fulfillments: { Args: { _limit?: number }; Returns: string[] }
+      purge_expired_fulfillments: { Args: never; Returns: number }
+      renew_fulfillment_lease: {
+        Args: { _lease_id: string; _lease_seconds?: number; _order_id: string }
+        Returns: boolean
+      }
+      settle_stale_fulfillments: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never
