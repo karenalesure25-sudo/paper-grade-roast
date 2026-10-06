@@ -179,13 +179,20 @@ export async function handleStripeEvent(evt: { id: string; type: string; data?: 
   const db = await admin();
   const { error } = await db.from("stripe_events" as never).insert({ id: evt.id, type: evt.type } as never);
   if (error?.code === "23505") return "duplicate";
-  if (!["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(evt.type)) return "ignored";
-  const sid = evt.data?.object?.id;
-  if (!sid) return "ignored";
-  const o = await supabaseRepo.bySession(sid);
-  if (!o) return "unknown_session";
-  const after = await confirmPayment(supabaseRepo, getSession, o);
-  return after.status;
+  if (error) throw new Error("event log failed");
+  try {
+    if (!["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(evt.type)) return "ignored";
+    const sid = evt.data?.object?.id;
+    if (!sid) return "ignored";
+    const o = await supabaseRepo.bySession(sid);
+    if (!o) return "unknown_session";
+    const after = await confirmPayment(supabaseRepo, getSession, o);
+    return after.status;
+  } catch (e) {
+    // Forget the event so Stripe's retry is processed instead of being treated as a duplicate.
+    await db.from("stripe_events" as never).delete().eq("id", evt.id);
+    throw e;
+  }
 }
 
 /** Background sweep: confirm pending payments and process due orders. */

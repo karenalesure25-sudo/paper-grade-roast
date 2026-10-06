@@ -15,3 +15,6 @@
 - [x] Stripe hosted Checkout black/gold branding, Affirm exclusion, and three-tier verification
 - [x] Graphite/navy, teal and indigo visual rebrand with matching Stripe Checkout assets
 - [ ] Email sender domain (blocked: user setup)
+- [x] Automatic paid fulfillment: order-bound checkout, private /orders/$token status page, manual "I've paid" path retired, engine tests
+- [ ] Stripe webhook + STRIPE_WEBHOOK_SECRET (blocked: user setup)
+- [ ] Once-a-minute background sweep schedule (blocked: needs publish + scheduler setup)
