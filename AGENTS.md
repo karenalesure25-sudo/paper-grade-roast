@@ -13,3 +13,4 @@
 - Shared branding uses the native ribbon-K SVG emblem and responsive SVG lockup; use the emblem alone at favicon/icon scale so lettering stays legible.
 
 - Paid deliverables require server-side Stripe Checkout Session verification (paid, tier, USD amount, email) plus a one-time redemption row in payment_redemptions — the browser can never unlock delivery.
+- Paid delivery runs only through src/lib/fulfillment (order snapshot before checkout, Stripe-verified, lease-claimed processing); never reintroduce browser-triggered generation — the browser can't be trusted to prove payment.
