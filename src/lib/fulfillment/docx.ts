@@ -51,6 +51,7 @@ export function letterDocxDocument(letter: string, r: FullResume): Document {
   });
 }
 
-export async function toDocxBytes(doc: Document): Promise<Uint8Array> {
-  return new Uint8Array(await Packer.toBuffer(doc));
+export async function toDocxBytes(doc: Document): Promise<ArrayBuffer> {
+  const u = new Uint8Array(await Packer.toBuffer(doc));
+  return u.buffer.slice(u.byteOffset, u.byteOffset + u.byteLength) as ArrayBuffer;
 }
