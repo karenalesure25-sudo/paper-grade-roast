@@ -19,8 +19,13 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
           return new Response("Bad payload", { status: 400 });
         }
         const { handleStripeEvent } = await import("@/lib/fulfillment/service.server");
-        const outcome = await handleStripeEvent(evt);
-        return Response.json({ received: true, outcome });
+        try {
+          const outcome = await handleStripeEvent(evt);
+          return Response.json({ received: true, outcome });
+        } catch {
+          // Non-2xx makes Stripe retry; the event row was released so the retry is processed.
+          return new Response("Temporary failure", { status: 500 });
+        }
       },
     },
   },
