@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 - Free roast grades must pass deterministic grounding checks and an independent model fact-check (fail-closed) before display; overlong text is rejected, never truncated — prevents unbacked or partial grades.
 - Shared brand chrome lives in SiteHeader, SiteFooter, and BrandLogo; keep route business logic independent from presentation so redesigns cannot weaken safeguards.
-- Shared branding uses the native ribbon-K SVG emblem and responsive SVG lockup; use the emblem alone at favicon/icon scale so lettering stays legible.
+- Shared full-logo branding uses the customer's exact, unmodified public/brand/kcs-logo-original.jpeg through BrandLogo. Preserve the complete image, background, and aspect ratio; do not crop, redraw, filter, or re-encode it. The existing emblem remains for favicon/icon scale.
 
 - Paid deliverables require server-side Stripe Checkout Session verification (paid, tier, USD amount, email) plus a one-time redemption row in payment_redemptions — the browser can never unlock delivery.
 - Paid delivery runs only through src/lib/fulfillment (order snapshot before checkout, Stripe-verified, lease-claimed processing); never reintroduce browser-triggered generation — the browser can't be trusted to prove payment.

@@ -9,10 +9,10 @@ export function DocumentCheckIcon({ className }: { className?: string }) {
 export function BrandLogo({ compact = false, className }: { compact?: boolean; className?: string }) {
   return (
     <img
-      src="/brand/kcs-lockup.svg"
+      src="/brand/kcs-logo-original.jpeg"
       alt="Kay's Career Solutions — Career clarity for what's next"
-      width="690"
-      height="160"
+      width="1536"
+      height="512"
       decoding="async"
       className={cn(
         "block h-auto object-contain object-left",

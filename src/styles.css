@@ -313,22 +313,38 @@
 @utility premium-panel {
   border: 1px solid color-mix(in oklab, var(--gold) 32%, var(--border));
   border-radius: 0.75rem;
-  background: linear-gradient(145deg, color-mix(in oklab, var(--card) 92%, var(--highlight) 8%), var(--card));
+  background: linear-gradient(
+    145deg,
+    color-mix(in oklab, var(--card) 92%, var(--highlight) 8%),
+    var(--card)
+  );
   box-shadow: 0 30px 80px -45px color-mix(in oklab, var(--highlight) 35%, transparent);
 }
 
 @utility luxury-hero {
   background:
-    radial-gradient(ellipse at 96% 8%, color-mix(in oklab, var(--highlight) 24%, transparent) 0, transparent 38%),
-    radial-gradient(ellipse at -10% 56%, color-mix(in oklab, var(--gold) 16%, transparent) 0, transparent 35%),
+    radial-gradient(
+      ellipse at 96% 8%,
+      color-mix(in oklab, var(--highlight) 24%, transparent) 0,
+      transparent 38%
+    ),
+    radial-gradient(
+      ellipse at -10% 56%,
+      color-mix(in oklab, var(--gold) 16%, transparent) 0,
+      transparent 35%
+    ),
     linear-gradient(150deg, #0c1730 0%, var(--surface-subtle) 52%, var(--background) 100%);
 }
 
 @utility ivory-band {
   background: linear-gradient(145deg, #101c34, #0b1223 60%, #17142e);
   color: var(--ivory);
-  & .eyebrow { color: var(--gold-light); }
-  & .section-title { color: var(--ivory); }
+  & .eyebrow {
+    color: var(--gold-light);
+  }
+  & .section-title {
+    color: var(--ivory);
+  }
 }
 
 @utility service-card {
@@ -338,7 +354,10 @@
   border-radius: 0.65rem;
   background: var(--card);
   box-shadow: 0 24px 48px -36px rgb(0 0 0 / 0.9);
-  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  transition:
+    border-color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
   &:hover {
     border-color: color-mix(in oklab, var(--gold) 58%, var(--border));
     transform: translateY(-3px);
@@ -363,8 +382,13 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--primary-foreground);
-  transition: transform 180ms ease, background-color 180ms ease;
-  &:hover { background: color-mix(in oklab, var(--primary) 88%, white); transform: translateY(-2px); }
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease;
+  &:hover {
+    background: color-mix(in oklab, var(--primary) 88%, white);
+    transform: translateY(-2px);
+  }
 }
 
 @utility secondary-button {
@@ -379,8 +403,13 @@
   font-size: 0.875rem;
   font-weight: 700;
   color: var(--ivory);
-  transition: background-color 180ms ease, border-color 180ms ease;
-  &:hover { border-color: var(--gold); background: color-mix(in oklab, var(--gold) 8%, transparent); }
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease;
+  &:hover {
+    border-color: var(--gold);
+    background: color-mix(in oklab, var(--gold) 8%, transparent);
+  }
 }
 
 @utility nav-link {
@@ -392,12 +421,18 @@
   font-weight: 600;
   color: var(--ivory-muted);
   transition: color 180ms ease;
-  &:hover { color: var(--gold-light); }
+  &:hover {
+    color: var(--gold-light);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -433,3 +468,943 @@
     transparent
   );
 }
+
+/* Homepage art direction; scoped to keep checkout and paid delivery unchanged. */
+.clarity-home {
+  background:
+    radial-gradient(ellipse at 92% 10%, #242a6840, transparent 32%),
+    radial-gradient(ellipse at 5% 42%, #06557118, transparent 30%), #070e19;
+  color: #f5f2ec;
+  overflow-x: clip;
+}
+.clarity-shell {
+  width: min(1440px, calc(100% - 96px));
+  margin-inline: auto;
+}
+.glass-surface {
+  border: 1px solid #a6bbf335;
+  background: linear-gradient(125deg, #35537642, #111a32bd 52%, #34316636);
+  box-shadow:
+    inset 0 1px 0 #d5e9ff18,
+    inset 0 -1px 0 #9bacff0b,
+    0 24px 55px #0005;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+.clarity-header-wrap {
+  position: relative;
+  z-index: 30;
+  width: min(1480px, calc(100% - 64px));
+  margin: 18px auto 0;
+}
+.clarity-nav {
+  min-height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 8px 18px 8px 12px;
+  border-radius: 26px;
+  background: linear-gradient(105deg, #102136ba, #080f1edf 60%, #232d4fa6);
+}
+.clarity-logo {
+  flex-shrink: 0;
+  width: 228px;
+}
+.clarity-logo img {
+  width: 100%;
+}
+.clarity-desktop-nav {
+  display: flex;
+  gap: clamp(13px, 1.6vw, 27px);
+  align-items: center;
+}
+.clarity-desktop-nav a {
+  font-size: 12px;
+  color: #d9deeb;
+  white-space: nowrap;
+  padding-block: 14px;
+  transition: color 0.2s;
+}
+.clarity-desktop-nav a:hover {
+  color: #70f1f1;
+}
+.clarity-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.clarity-button,
+.clarity-outline,
+.clarity-signin {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+  min-height: 50px;
+  padding: 12px 25px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    transform 0.2s,
+    box-shadow 0.2s;
+  cursor: pointer;
+}
+.clarity-button {
+  color: #071222;
+  border: 1px solid #afcfff66;
+  background: linear-gradient(105deg, #5bfff0 0%, #41ccec 35%, #9096ff 74%, #b791f3);
+  box-shadow:
+    inset 0 1px 0 #ffffff66,
+    0 0 22px #4bafef20,
+    0 8px 25px #080e2966;
+}
+.clarity-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px #6ed8ff42;
+}
+.clarity-outline,
+.clarity-signin {
+  border: 1px solid #a7b7e044;
+  background: #09132144;
+  color: #f5f2ec;
+}
+.clarity-outline:hover,
+.clarity-signin:hover {
+  border-color: #97dfff;
+}
+.clarity-signin {
+  padding-inline: 20px;
+}
+.clarity-menu {
+  display: none;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+.clarity-mobile-nav {
+  display: grid;
+  padding: 16px 24px;
+  border-radius: 20px;
+  margin-top: 10px;
+}
+.clarity-mobile-nav a {
+  padding: 12px 0;
+  font-size: 14px;
+}
+.clarity-eyebrow {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.23em;
+  line-height: 1.9;
+  text-transform: uppercase;
+  color: #b9c9d9;
+}
+.clarity-hero {
+  display: grid;
+  grid-template-columns: 55fr 45fr;
+  align-items: center;
+  min-height: 630px;
+  padding-block: 68px 38px;
+  position: relative;
+}
+.clarity-hero-copy {
+  position: relative;
+  z-index: 2;
+}
+.clarity-hero h1 {
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: clamp(58px, 5.55vw, 88px);
+  line-height: 1.04;
+  letter-spacing: -0.047em;
+  margin-top: 20px;
+}
+.clarity-hero h1 span {
+  background: linear-gradient(100deg, #56efeb, #63cfe9 40%, #9694fa 76%, #bc95ef);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.clarity-intro {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #b9c3d4;
+  max-width: 580px;
+  margin-top: 26px;
+}
+.clarity-hero-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: 30px;
+}
+.clarity-hero-actions > * {
+  min-width: 185px;
+  min-height: 54px;
+}
+.clarity-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 17px;
+  font-size: 11px;
+  color: #c3ccdb;
+  margin-top: 29px;
+}
+.clarity-trust span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.clarity-trust svg {
+  color: #78e3df;
+}
+.clarity-availability {
+  margin-top: 12px;
+  font-size: 11px;
+  color: #8899b1;
+}
+.clarity-product-art {
+  position: relative;
+  min-width: 0;
+  min-height: 490px;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 50px;
+  padding-left: 5px;
+}
+.career-ribbon-art {
+  position: absolute;
+  width: 145%;
+  height: 125%;
+  max-width: none;
+  right: -26%;
+  top: -12%;
+  pointer-events: none;
+  opacity: 0.78;
+  filter: drop-shadow(0 10px 35px #4a62e01a);
+}
+.career-panel {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  padding: 26px;
+  border-radius: 25px;
+  background: linear-gradient(130deg, #354d7c70, #111831c9 60%, #4248766b);
+  border-color: #afb3ff80;
+  box-shadow:
+    inset 0 1px 0 #d3deff55,
+    0 0 25px #6b77df1c,
+    0 30px 70px #0007;
+}
+.clarity-product-art > .career-panel {
+  width: calc(100% - 24px);
+  margin-left: -24px;
+}
+.career-panel-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.career-panel-heading img {
+  width: 36px;
+  height: 44px;
+  object-fit: contain;
+}
+.career-panel h3 {
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: 25px;
+  letter-spacing: -0.025em;
+}
+.career-panel-heading p {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #c4cee1;
+}
+.preview-pill {
+  margin-left: auto;
+  padding: 4px 7px;
+  border: 1px solid #bacaff3b;
+  border-radius: 20px;
+  font-size: 9px;
+  color: #c7c9eb;
+}
+.career-prompt {
+  margin-top: 25px;
+  padding: 17px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid #c3d8fb66;
+  border-radius: 17px;
+  background: linear-gradient(120deg, #99aed029, #8194d815);
+  box-shadow: inset 0 1px 0 #fff2;
+}
+.career-prompt span {
+  font-size: 13px;
+  color: #c8d4e8;
+  line-height: 1.65;
+}
+.career-prompt a {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #92e8f3;
+  color: #102d4c;
+  flex-shrink: 0;
+}
+.career-quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+  margin-top: 16px;
+}
+.career-quick-actions a {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  padding: 12px 10px;
+  border-radius: 50px;
+  border: 1px solid #b3cded40;
+  background: linear-gradient(110deg, #96d8f111, #a185ef1c);
+  transition: background 0.2s;
+}
+.career-quick-actions a:hover {
+  background: #79b8e625;
+}
+.career-quick-actions svg {
+  flex-shrink: 0;
+  color: #b1cbef;
+}
+.career-snapshot {
+  width: 249px;
+  position: absolute;
+  z-index: 2;
+  right: -10px;
+  bottom: -15px;
+  padding: 20px;
+  border-radius: 22px;
+  background: linear-gradient(130deg, #14273ce8, #0c122be8 70%, #332d54ca);
+}
+.career-snapshot > p {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+.career-snapshot > p > span {
+  font-size: 9px;
+  color: #a8b6d2;
+}
+.snapshot-score {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 18px;
+}
+.snapshot-score > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  width: 66px;
+  height: 66px;
+  border: 6px solid #68ede4;
+  border-right-color: #537fa4;
+  border-radius: 50%;
+  transform: rotate(-10deg);
+}
+.snapshot-score > div span {
+  font-size: 14px;
+}
+.snapshot-score p {
+  font-size: 11px;
+}
+.snapshot-score strong {
+  display: block;
+  font-size: 13px;
+  color: #6fece1;
+  margin-top: 4px;
+}
+.career-snapshot ul {
+  display: grid;
+  gap: 10px;
+  margin-top: 19px;
+}
+.career-snapshot li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+}
+.career-snapshot li svg {
+  color: #0a2638;
+  background: #88ebe5;
+  border-radius: 50%;
+  padding: 2px;
+}
+.career-snapshot small {
+  display: block;
+  color: #9bacbf;
+  font-size: 9px;
+  margin-top: 15px;
+}
+.clarity-services {
+  padding-top: 42px;
+}
+.clarity-service-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 17px;
+}
+.clarity-service-card {
+  scroll-margin-top: 30px;
+  min-width: 0;
+  display: flex;
+  gap: 17px;
+  padding: 23px 20px;
+  border-radius: 19px;
+  position: relative;
+  transition:
+    transform 0.25s,
+    border-color 0.25s,
+    box-shadow 0.25s;
+}
+.clarity-service-card:hover {
+  transform: translateY(-5px);
+  border-color: #8ac3e688;
+  box-shadow:
+    0 20px 45px #070a2399,
+    0 0 25px #60abdb14;
+}
+.clarity-service-icon {
+  flex-shrink: 0;
+  width: 52px;
+  height: 58px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #daf4ff;
+  background: radial-gradient(circle at 25% 15%, #6379dd88, #24244d);
+  border: 1px solid #aebcff80;
+  box-shadow:
+    inset 0 1px 12px #90a3ff55,
+    0 0 22px #746cff22;
+}
+.clarity-service-card:nth-child(even) .clarity-service-icon {
+  background: radial-gradient(circle at 25% 15%, #46c4da80, #123143);
+  border-color: #7cdae66b;
+}
+.clarity-service-card h2 {
+  font-family: var(--font-brand);
+  font-size: 19px;
+  line-height: 1.25;
+}
+.clarity-service-card p {
+  font-size: 11px;
+  line-height: 1.8;
+  color: #bbc7d9;
+  margin-top: 8px;
+}
+.service-arrow {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border: 1px solid #adc0df50;
+  border-radius: 50%;
+  margin-top: 10px;
+  margin-left: auto;
+}
+.coming-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  color: #aab8d4;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.clarity-value-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding-block: 44px;
+  border-bottom: 1px solid #aec5eb20;
+}
+.clarity-value-strip > div {
+  padding-inline: 32px;
+  border-left: 1px solid #c3d4f22a;
+}
+.clarity-value-strip > div:first-child {
+  padding-left: 8px;
+  border: 0;
+}
+.clarity-value-strip h3 {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.clarity-value-strip p {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #a6b5ca;
+  margin-top: 9px;
+}
+.clarity-showcase {
+  display: grid;
+  grid-template-columns: 40fr 60fr;
+  gap: 85px;
+  padding-block: 125px;
+  align-items: center;
+}
+.clarity-showcase h2 {
+  font-family: var(--font-brand);
+  font-size: clamp(34px, 3.2vw, 50px);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  margin-top: 20px;
+}
+.clarity-showcase > div > p:not(.clarity-eyebrow) {
+  font-size: 14px;
+  line-height: 1.9;
+  color: #acbcd2;
+  margin-top: 22px;
+}
+.clarity-showcase .clarity-button {
+  margin-top: 30px;
+}
+.career-panel-expanded {
+  padding: 32px;
+  background:
+    radial-gradient(ellipse at 90% 0, #666cba40, transparent 65%),
+    linear-gradient(135deg, #142940bd, #121b2cde);
+}
+.career-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 26px;
+}
+.career-context span {
+  font-size: 10px;
+  display: inline-flex;
+  gap: 7px;
+  padding: 8px 11px;
+  color: #bbd2df;
+  background: #b1d1ed0b;
+  border: 1px solid #b1d1ed21;
+  border-radius: 8px;
+}
+.career-chat {
+  border-block: 1px solid #b1d1ed20;
+  padding-block: 22px;
+  margin-top: 23px;
+}
+.career-chat > p {
+  font-size: 13px;
+  color: #e8edf8;
+  padding: 17px;
+  background: #708ca41c;
+  border-radius: 13px 13px 0 13px;
+  margin: 13px 0 22px 30px;
+}
+.career-chat > div {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  color: #8fe2e5;
+}
+.career-chat > div svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.career-chat > div p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: #c4d0df;
+}
+.career-preview-note {
+  font-size: 10px;
+  color: #a3b5cb;
+  line-height: 1.7;
+  margin-top: 18px;
+}
+.clarity-statement {
+  background: #eaece9;
+  color: #17293b;
+  padding-block: 80px;
+}
+.clarity-statement .clarity-eyebrow {
+  color: #37606d;
+}
+.clarity-statement h2 {
+  font-family: var(--font-brand);
+  font-weight: 400;
+  font-size: clamp(38px, 4.5vw, 66px);
+  line-height: 1.13;
+  letter-spacing: -0.03em;
+  margin-top: 20px;
+}
+.clarity-statement h2 em {
+  color: #49747c;
+  font-style: normal;
+}
+.clarity-statement .clarity-shell > div {
+  display: flex;
+  gap: 35px;
+  align-items: flex-start;
+  margin-top: 30px;
+  margin-left: 40%;
+}
+.statement-line {
+  flex-shrink: 0;
+  width: 70px;
+  height: 1px;
+  background: #537d89;
+  margin-top: 13px;
+}
+.clarity-statement p:not(.clarity-eyebrow) {
+  font-size: 15px;
+  line-height: 1.9;
+  color: #415368;
+}
+.clarity-home #services {
+  background: radial-gradient(ellipse at 80% 50%, #313a811a, transparent 60%);
+}
+.clarity-home #services .service-card {
+  background: linear-gradient(130deg, #23354c88, #121b32b0 65%, #332b501f);
+  border-color: #91b4d943;
+  border-radius: 22px;
+  backdrop-filter: blur(18px);
+}
+.clarity-home .premium-button {
+  background: linear-gradient(110deg, #68eee7, #80b8f0 55%, #aa95eb);
+  border-color: #bcc6fa60;
+  border-radius: 50px;
+  color: #0c192d;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.clarity-home #how {
+  background: linear-gradient(110deg, #111e30, #15192e);
+  border-color: #8397d129;
+}
+.clarity-home #how ol {
+  border: 0;
+  background: transparent;
+  gap: 26px;
+}
+.clarity-home #how li {
+  background: transparent;
+  border-top: 1px solid #859dc150;
+  padding-left: 0;
+  padding-right: 0;
+}
+.clarity-home #how li > p {
+  font-family: var(--font-sans);
+}
+.clarity-home #faq {
+  background: radial-gradient(ellipse at 0 100%, #293b4b44, transparent 55%);
+}
+.clarity-modal {
+  margin: auto;
+  color: #f5f2ec;
+  padding: 35px;
+  width: min(480px, calc(100% - 32px));
+  border-radius: 24px;
+  background: #111c30f5;
+}
+.clarity-modal::backdrop {
+  background: #030816b0;
+  backdrop-filter: blur(8px);
+}
+.clarity-modal h2 {
+  font: 32px/1.2 var(--font-brand);
+  margin-top: 18px;
+}
+.clarity-modal p:not(.clarity-eyebrow) {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #b4c4da;
+  margin: 20px 0;
+}
+.clarity-modal-close {
+  float: right;
+  padding: 8px;
+  margin: -12px -12px 0 0;
+  cursor: pointer;
+}
+@media (min-width: 1600px) {
+  .clarity-hero {
+    min-height: 690px;
+  }
+}
+@media (max-width: 1250px) {
+  .clarity-desktop-nav {
+    display: none;
+  }
+  .clarity-menu {
+    display: flex;
+  }
+  .clarity-hero h1 {
+    font-size: clamp(50px, 5.6vw, 72px);
+  }
+  .clarity-product-art {
+    padding-top: 40px;
+  }
+  .career-panel {
+    padding: 20px;
+  }
+  .career-panel h3 {
+    font-size: 21px;
+  }
+  .career-snapshot {
+    right: -15px;
+    bottom: -25px;
+  }
+  .clarity-service-card {
+    display: block;
+  }
+  .clarity-service-icon {
+    margin-bottom: 15px;
+  }
+  .clarity-showcase {
+    gap: 45px;
+  }
+}
+@media (max-width: 950px) {
+  .clarity-shell {
+    width: calc(100% - 48px);
+  }
+  .clarity-hero {
+    grid-template-columns: 1fr;
+    gap: 35px;
+    padding-block: 50px 30px;
+  }
+  .clarity-hero h1 {
+    font-size: clamp(52px, 8.8vw, 80px);
+  }
+  .clarity-intro {
+    max-width: 650px;
+  }
+  .clarity-product-art {
+    max-width: 620px;
+    width: 100%;
+    margin: auto;
+    min-height: 470px;
+    padding-left: 24px;
+  }
+  .career-snapshot {
+    right: 0;
+    bottom: 0;
+  }
+  .clarity-service-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .clarity-service-card {
+    display: flex;
+  }
+  .clarity-service-icon {
+    margin: 0;
+  }
+  .clarity-showcase {
+    grid-template-columns: 1fr;
+    padding-block: 75px;
+  }
+  .clarity-showcase > div:first-child {
+    max-width: 630px;
+  }
+  .clarity-statement .clarity-shell > div {
+    margin-left: 15%;
+  }
+}
+@media (max-width: 600px) {
+  .clarity-header-wrap {
+    width: calc(100% - 24px);
+    margin-top: 12px;
+  }
+  .clarity-nav {
+    border-radius: 20px;
+    gap: 8px;
+    padding: 6px 10px;
+    min-height: 72px;
+  }
+  .clarity-logo {
+    width: 165px;
+  }
+  .clarity-nav-actions {
+    gap: 5px;
+  }
+  .clarity-nav-actions .clarity-button {
+    display: none;
+  }
+  .clarity-signin {
+    padding: 10px 8px;
+    min-height: 44px;
+    font-size: 11px;
+    border: 0;
+    background: transparent;
+  }
+  .clarity-shell {
+    width: calc(100% - 36px);
+  }
+  .clarity-eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.19em;
+  }
+  .clarity-hero {
+    padding-top: 40px;
+    gap: 20px;
+  }
+  .clarity-hero h1 {
+    font-size: clamp(39px, 10.5vw, 62px);
+    line-height: 1.08;
+  }
+  .clarity-intro {
+    font-size: 15px;
+    line-height: 1.8;
+    margin-top: 23px;
+  }
+  .clarity-hero-actions {
+    gap: 9px;
+  }
+  .clarity-hero-actions > * {
+    min-width: 0;
+    padding: 12px 18px;
+    font-size: 12px;
+    flex: 1;
+  }
+  .clarity-trust {
+    gap: 10px;
+    font-size: 10px;
+  }
+  .clarity-availability {
+    font-size: 10px;
+  }
+  .clarity-product-art {
+    min-height: 560px;
+    padding-top: 30px;
+    padding-left: 0;
+    display: block;
+  }
+  .clarity-product-art > .career-panel {
+    width: 100%;
+    margin: 0;
+  }
+  .career-panel {
+    padding: 21px 17px;
+    border-radius: 20px;
+  }
+  .career-panel h3 {
+    font-size: 21px;
+  }
+  .career-panel-heading {
+    gap: 9px;
+  }
+  .career-panel-heading img {
+    width: 30px;
+  }
+  .career-panel-heading p {
+    font-size: 10px;
+  }
+  .career-quick-actions a {
+    font-size: 9px;
+    padding: 12px 8px;
+  }
+  .career-snapshot {
+    bottom: 4px;
+    right: 0;
+    width: 235px;
+  }
+  .clarity-services {
+    padding-top: 20px;
+  }
+  .clarity-service-grid {
+    gap: 12px;
+  }
+  .clarity-service-card {
+    display: block;
+    padding: 19px 15px;
+  }
+  .clarity-service-icon {
+    width: 43px;
+    height: 47px;
+    margin-bottom: 15px;
+  }
+  .clarity-service-card h2 {
+    font-size: 18px;
+  }
+  .clarity-service-card p {
+    font-size: 11px;
+  }
+  .clarity-value-strip {
+    grid-template-columns: 1fr;
+    padding-block: 28px;
+    gap: 20px;
+  }
+  .clarity-value-strip > div,
+  .clarity-value-strip > div:first-child {
+    padding: 0 0 0 15px;
+    border-left: 1px solid #c3d4f22a;
+  }
+  .clarity-showcase {
+    gap: 32px;
+    padding-block: 65px;
+  }
+  .clarity-showcase h2 {
+    font-size: 36px;
+  }
+  .career-panel-expanded {
+    padding: 23px 17px;
+  }
+  .career-context {
+    gap: 5px;
+  }
+  .career-context span {
+    padding: 7px;
+    font-size: 9px;
+  }
+  .clarity-statement {
+    padding-block: 55px;
+  }
+  .clarity-statement h2 {
+    font-size: 37px;
+  }
+  .clarity-statement .clarity-shell > div {
+    margin-left: 0;
+    gap: 16px;
+  }
+  .statement-line {
+    width: 30px;
+  }
+}
+.clarity-home {
+  --redpen: #8f9dff;
+  --redpen-text: #8de6e3;
+  --redpen-deep: #465a9e;
+}
+.clarity-home #services a {
+  border-radius: 99px;
+  background: linear-gradient(110deg, #68eee7, #80b8f0 55%, #aa95eb);
+  color: #0c192d;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.clarity-home #services .service-card {
+  overflow: visible;
+}
+.clarity-home #services .service-card > div:first-child {
+  inset-inline: 16px;
+  border-radius: 0 0 4px 4px;
+}
+/* Keep the floating snapshot clear of the usable quick actions. */
+.clarity-product-art { display: block; }
+.clarity-product-art .career-snapshot { position: relative; right: auto; bottom: auto; margin: -10px -10px 0 auto; }
+@media (max-width: 600px) { .clarity-product-art .career-snapshot { margin-right: 0; } }
