@@ -83,7 +83,7 @@ function goodResume(tier: TierId): Omit<FullResume, "name" | "email" | "phone"> 
   };
 }
 
-const LETTER = "Dear Hiring Manager,\n\n" + "At Northwind Logistics I coordinated inbound freight schedules for twelve regional carriers using SAP, and I trained four new hires on warehouse safety. ".repeat(3) +
+const LETTER = "Dear Hiring Manager,\n\n" + "At Northwind Logistics I coordinated inbound freight schedules for twelve regional carriers using SAP, and I trained four new hires on warehouse safety. ".repeat(10) +
   "\n\nAt Bluepeak Retail I supervised a team of eight associates. I would welcome the chance to bring this scheduling experience to Acme as Logistics Lead.\n\nSincerely,\nAvery Stone";
 
 function models(script: Array<"good" | "bad" | "ask" | "throw">, checker: boolean[] = []): ModelPort & { writes: number } {
