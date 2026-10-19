@@ -66,6 +66,7 @@ function OrderPage() {
   const [guided, setGuided] = useState(false);
   const [guide, setGuide] = useState<ServiceAnswers | undefined>();
   const [recovering, setRecovering] = useState(true);
+  const [previous, setPrevious] = useState<{ token: string; tier: string } | null>(null);
   useEffect(() => {
     let active = true;
     setIntakeId(null);
@@ -73,10 +74,13 @@ function OrderPage() {
     setPhoto(null);
     setTemplate("sidebar");
     setRecovering(true);
+    setPrevious(null);
     recover({ data: { tier: tierId as "revamp" | "scratch" | "bundle" } }).then(async (saved) => {
       if (!active || !saved) return;
-      if (saved.token) await navigate({ to: "/orders/$token", params: { token: saved.token } });
-      else if (saved.intakeId) setIntakeId(saved.intakeId);
+      setPrevious(saved.previous);
+      // Saved unpaid intake: stay here so the layout/photo can still be reviewed before paying.
+      if (saved.intakeId) setIntakeId(saved.intakeId);
+      else if (saved.token) await navigate({ to: "/orders/$token", params: { token: saved.token } });
     }).catch(() => { if (active) setError("Saved progress couldn’t be checked. Please try refreshing before starting again."); }).finally(() => { if (active) setRecovering(false); });
     return () => { active = false; };
   }, [tierId, recover, navigate]);
@@ -143,6 +147,13 @@ function OrderPage() {
           <ol aria-label="Order steps" className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
             <li className={!guided && !intakeId ? "text-gold" : ""}>01 · Service</li><li className={guided && !intakeId ? "text-gold" : ""}>02 · Intake & review</li><li className={intakeId ? "text-gold" : ""}>03 · Layout & checkout</li>
           </ol>
+          {previous && (
+            <p role="status" className="mt-6 border-l-2 border-gold pl-3 text-sm text-muted-foreground">
+              You have an earlier order.{" "}
+              <Link to="/orders/$token" params={{ token: previous.token }} className="text-gold underline underline-offset-4">View that order</Link>
+              {" "}— or continue below to start a new one.
+            </p>
+          )}
           {recovering ? <p role="status" className="mt-8 text-muted-foreground">Checking your saved progress…</p> : intakeId ? (
             <section className="mt-12 space-y-8">
               <div>

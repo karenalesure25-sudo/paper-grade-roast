@@ -339,4 +339,16 @@ describe("regressions: entailment, counts, presence", () => {
     expect(parseVerdict(JSON.stringify({ approved: false, reasons: [] })).approved).toBe(false);
     expect(parseVerdict(JSON.stringify({ approved: true, reasons: [] })).approved).toBe(true);
   });
+
+  test("fenced verifier reply is read, but approval with objections still fails closed", () => {
+    expect(parseVerdict('```json\n{"approved":true,"reasons":[]}\n```').approved).toBe(true);
+    expect(parseVerdict('```json\n{"approved":true,"reasons":["metric not in résumé"]}\n```').approved).toBe(false);
+  });
+
+  test("schema rejection names the overlong field instead of truncating", () => {
+    const long = "x".repeat(400);
+    const r = checkModelOutput(JSON.stringify({ is_resume: true, rubric: { clarity: 3, impact: 3, specificity: 3, structure: 3, completeness: 3 }, strengths: [], weaknesses: [], roast: long, tip: "t", tip_quote: null }), "src", "text");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.feedback).toContain("roast too_big");
+  });
 });

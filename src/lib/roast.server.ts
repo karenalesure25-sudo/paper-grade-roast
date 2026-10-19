@@ -261,7 +261,11 @@ export function checkModelOutput(raw: string, source: string, kind: SourceKind):
   }
 
   const validated = OutputSchema.safeParse(value);
-  if (!validated.success) return { ok: false, feedback: "output schema incomplete, malformed or overlong" };
+  if (!validated.success) {
+    // Name the failing fields so a retry can fix them; content is still rejected, never truncated.
+    const where = validated.error.issues.slice(0, 4).map((i) => `${i.path.join(".") || "root"} ${i.code}${"maximum" in i ? ` max ${String(i.maximum)}` : ""}`).join(", ");
+    return { ok: false, feedback: `output schema incomplete, malformed or overlong (${where})` };
+  }
   const parsed = validated.data;
 
   const normalizedSource = normalize(source);
@@ -371,7 +375,8 @@ export type Verdict = { approved: true } | { approved: false; reasons: string[] 
 /** Strictly parse a verifier reply. Anything malformed fails closed. Exported for tests. */
 export function parseVerdict(raw: string): Verdict {
   try {
-    const v = JSON.parse(raw) as { approved?: unknown; reasons?: unknown };
+    const body = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+    const v = JSON.parse(body) as { approved?: unknown; reasons?: unknown };
     if (typeof v.approved !== "boolean" || !Array.isArray(v.reasons) || v.reasons.some((r) => typeof r !== "string") || (v.approved && v.reasons.length > 0)) {
       return { approved: false, reasons: ["verifier reply malformed"] };
     }
@@ -403,8 +408,13 @@ export async function verifyOutcome(
     `<feedback>\n${JSON.stringify(feedback).replace(/<\/?(resume|feedback)>/gi, "")}\n</feedback>`,
   ].join("\n\n");
   try {
-    const raw = await callGateway(apiKey, VERIFIER_PROMPT, user, "verdict", VERIFIER_SCHEMA, VERIFY_TIMEOUT_MS);
-    return parseVerdict(raw);
+    // A garbled verifier reply is re-asked once; it never counts as approval (fail-closed).
+    let verdict: Verdict = { approved: false, reasons: ["verifier reply malformed"] };
+    for (let i = 0; i < 2; i++) {
+      verdict = parseVerdict(await callGateway(apiKey, VERIFIER_PROMPT, user, "verdict", VERIFIER_SCHEMA, VERIFY_TIMEOUT_MS));
+      if (verdict.approved || verdict.reasons[0] !== "verifier reply malformed") break;
+    }
+    return verdict;
   } catch (error) {
     const status = (error as { status?: number }).status;
     console.error("roast verifier failed", { status: status ?? "network/timeout" });
@@ -434,7 +444,7 @@ export async function gradeResumeText(source: string, kind: SourceKind): Promise
     }
     const checked = checkModelOutput(raw, source, kind);
     if (!checked.ok) {
-      console.warn("roast rejected by evidence check", { attempt });
+      console.warn("roast rejected by evidence check", { attempt, feedback: checked.feedback });
       feedback = checked.feedback;
       continue;
     }
