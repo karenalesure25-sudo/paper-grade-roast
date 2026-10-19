@@ -58,6 +58,17 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
   if (ex && ex.status !== "awaiting_payment") return { already: true as const, token: ex.access_token };
 
   let order = ex;
+  if (order) {
+    // Unpaid: the layout/photo shown on screen must be the one charged and delivered.
+    const photo = layout.usesPhoto ? input.photo ?? null : null;
+    if (order.template !== input.template || (order.photo ?? null) !== photo) {
+      const { data: synced, error } = await db.from("fulfillment_orders" as never)
+        .update({ template: input.template, photo } as never)
+        .eq("id", order.id).eq("status", "awaiting_payment").is("paid_at", null).select("*").maybeSingle();
+      if (error || !synced) throw new Error("Your saved order changed. Reopen your order page.");
+      order = synced as OrderRow;
+    }
+  }
   if (!order) {
     let extracted: string | null = null;
     if (row.tier !== "scratch") {
@@ -128,17 +139,25 @@ export async function resumeCheckout(token: string, origin: string) {
   return checkoutForOrder(order, origin);
 }
 
+/**
+ * Only an UNPAID order resumes into checkout. A paid/finished order is offered as a
+ * link, never forced, so repeat customers can always start a new order.
+ */
 export async function recoverProgress(tier?: TierId, intakeId?: string, token?: string) {
+  let previous: { token: string; tier: TierId } | null = null;
   if (token) {
     const order = await orderByToken(token);
-    if (order && (!tier || order.tier === tier)) return { intakeId: null, token: order.access_token, tier: order.tier };
+    if (order && order.status !== "awaiting_payment") previous = { token: order.access_token, tier: order.tier };
+    else if (order && (!tier || order.tier === tier)) return { intakeId: null, token: order.access_token, tier: order.tier, previous: null };
   }
-  if (!tier || !intakeId || !/^[0-9a-f-]{36}$/i.test(intakeId)) return null;
+  if (!tier || !intakeId || !/^[0-9a-f-]{36}$/i.test(intakeId)) return previous ? { intakeId: null, token: null, tier, previous } : null;
   const db = await admin();
   const { data } = await db.from("intakes" as never).select("id,tier").eq("id", intakeId).eq("tier", tier).gt("created_at", new Date(Date.now() - 86400000).toISOString()).maybeSingle();
-  if (!data) return null;
-  const { data: saved } = await db.from("fulfillment_orders" as never).select("access_token").eq("intake_id", intakeId).gt("expires_at", new Date().toISOString()).maybeSingle();
-  return { intakeId, token: (saved as { access_token: string } | null)?.access_token ?? null, tier };
+  if (!data) return previous ? { intakeId: null, token: null, tier, previous } : null;
+  const { data: saved } = await db.from("fulfillment_orders" as never).select("access_token,status").eq("intake_id", intakeId).gt("expires_at", new Date().toISOString()).maybeSingle();
+  const s = saved as { access_token: string; status: string } | null;
+  if (s && s.status !== "awaiting_payment") return { intakeId: null, token: null, tier, previous: previous ?? { token: s.access_token, tier } };
+  return { intakeId, token: s?.access_token ?? null, tier, previous };
 }
 
 export type PublicStatus = {
