@@ -68,6 +68,10 @@ function OrderPage() {
   const [recovering, setRecovering] = useState(true);
   useEffect(() => {
     let active = true;
+    setIntakeId(null);
+    setError(null);
+    setPhoto(null);
+    setTemplate("sidebar");
     setRecovering(true);
     recover({ data: { tier: tierId as "revamp" | "scratch" | "bundle" } }).then(async (saved) => {
       if (!active || !saved) return;
@@ -183,7 +187,7 @@ function OrderPage() {
               <IntakeFlow key={tier.id} tier={tier} initialAnswers={{ targetJobTitle: guide?.targetRole ?? "", specificJobTitle: guide?.targetRole ?? "", jobDescription: guide?.jobDescription ?? "" }} onSubmitted={handleIntake} />
             </>
           ) : (
-            <ServiceQuestionnaire tier={tier} initial={guide} onContinue={async (answers, selected) => {
+            <ServiceQuestionnaire key={tier.id} tier={tier} {...(guide ? { initial: guide } : {})} onContinue={async (answers, selected) => {
               setGuide(answers);
               if (selected !== tier.id) await navigate({ to: "/order/$tier", params: { tier: selected } });
               setGuided(true);
