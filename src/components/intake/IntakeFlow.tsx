@@ -61,12 +61,14 @@ function FieldError({ id, msg }: { id: string; msg?: string | undefined }) {
 export function IntakeFlow({
   tier,
   onSubmitted,
+  initialAnswers,
 }: {
   tier: Tier;
+  initialAnswers?: Partial<IntakeAnswers>;
   onSubmitted: (intake: SubmittedIntake) => void;
 }) {
   const submit = useServerFn(submitIntake);
-  const [a, setA] = useState<IntakeAnswers>(emptyAnswers);
+  const [a, setA] = useState<IntakeAnswers>(() => ({ ...emptyAnswers(), ...initialAnswers }));
   const [resume, setResume] = useState<File | null>(null);
   const [jobFile, setJobFile] = useState<File | null>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -172,7 +174,8 @@ export function IntakeFlow({
     if (!confirmed) next["confirm"] = "Check the confirmation box to continue.";
     setErrors(next);
     if (Object.keys(next).length) {
-      const first = Object.keys(next)[0]!;
+      const first = Object.keys(next)[0];
+      if (!first) return;
       const el =
         document.getElementById(`f-${first}`) ??
         document.getElementById(`f-${first.replace(/\.(\d+)\./, "-$1-")}`);
