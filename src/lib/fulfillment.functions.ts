@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequest } from "@tanstack/react-start/server";
+import { getCookie, getRequest, setCookie, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
 const Token = z.string().uuid();
@@ -12,7 +12,25 @@ export const startOrderCheckout = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { createOrderCheckout } = await import("./fulfillment/service.server");
     const origin = new URL(getRequest().url).origin;
-    return createOrderCheckout({ ...data, origin });
+    const result = await createOrderCheckout({ ...data, origin });
+    setCookie("kcs-order", result.token, { httpOnly: true, secure: origin.startsWith("https:"), sameSite: "lax", path: "/", maxAge: 86400 });
+    return result;
+  });
+
+/** Opaque HttpOnly capabilities only; never persist résumé/photo in browser storage. */
+export const recoverOrderProgress = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ tier: z.enum(["revamp", "scratch", "bundle"]).optional() }).parse(i))
+  .handler(async ({ data }) => {
+    setResponseHeader("Cache-Control", "no-store");
+    const { recoverProgress } = await import("./fulfillment/service.server");
+    return recoverProgress(data.tier, data.tier ? getCookie(`kcs-intake-${data.tier}`) : undefined, getCookie("kcs-order"));
+  });
+
+export const resumeOrderCheckout = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ token: Token }).parse(i))
+  .handler(async ({ data }) => {
+    const { resumeCheckout } = await import("./fulfillment/service.server");
+    return resumeCheckout(data.token, new URL(getRequest().url).origin);
   });
 
 export const getOrderStatus = createServerFn({ method: "POST" })

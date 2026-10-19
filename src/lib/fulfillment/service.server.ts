@@ -8,6 +8,7 @@ import { extractDocumentText } from "./extract.server";
 import { orderByToken, supabaseRepo } from "./repo.server";
 import { buildSnapshotSource } from "./snapshot";
 import { liveModels } from "./writer.server";
+import { RESUME_TEMPLATES } from "../resume-templates";
 
 const BUCKET = "intake-uploads";
 
@@ -39,6 +40,9 @@ async function sha256(text: string): Promise<string> {
  * the intake id, template and optional photo is trusted.
  */
 export async function createOrderCheckout(input: { intakeId: string; template: string; photo?: string | undefined; origin: string }) {
+  const layout = RESUME_TEMPLATES.find((t) => t.id === input.template);
+  if (!layout) throw new Error("Choose one of the available layouts.");
+  if (layout.usesPhoto && !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(input.photo ?? "")) throw new Error("Confirm a valid photo for this layout before paying.");
   const db = await admin();
   const { data: intake } = await db.from("intakes" as never).select("*").eq("id", input.intakeId).maybeSingle();
   const row = intake as null | {
@@ -49,8 +53,8 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
   if (!row || !row.confirmed) throw new Error("We couldn't find your submitted intake. Please submit it again.");
   if (Date.now() - new Date(row.created_at).getTime() > 24 * 3600_000) throw new Error("This intake is over a day old. Please submit it again.");
 
-  const { data: existing } = await db.from("fulfillment_orders" as never).select("id, status, access_token, stripe_session_id").eq("intake_id", row.id).maybeSingle();
-  const ex = existing as null | { id: string; status: string; access_token: string; stripe_session_id: string | null };
+  const { data: existing } = await db.from("fulfillment_orders" as never).select("*").eq("intake_id", row.id).gt("expires_at", new Date().toISOString()).maybeSingle();
+  const ex = existing as OrderRow | null;
   if (ex && ex.status !== "awaiting_payment") return { already: true as const, token: ex.access_token };
 
   let order = ex;
@@ -79,29 +83,62 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
     const { data: created, error } = await db.from("fulfillment_orders" as never).insert({
       intake_id: row.id, tier: row.tier, email: snapshot.email, template: input.template,
       snapshot, source_text: sourceText, job_text: jobText, source_sha256: await sha256(sourceText + "\n" + (jobText ?? "")), photo,
-    } as never).select("id, status, access_token, stripe_session_id").single();
-    if (error || !created) throw new Error("We couldn't save your order. Try again.");
-    order = created as typeof ex & object;
+    } as never).select("*").single();
+    if (error?.code === "23505") {
+      const { data: raced } = await db.from("fulfillment_orders" as never).select("*").eq("intake_id", row.id).gt("expires_at", new Date().toISOString()).maybeSingle();
+      order = raced as OrderRow | null;
+    } else if (error || !created) throw new Error("We couldn't save your order. Try again.");
+    else order = created as OrderRow;
   }
+  if (!order) throw new Error("We couldn't save your order. Try again.");
+  return checkoutForOrder(order, input.origin);
+}
 
-  const { createCheckoutSession, expireCheckoutSession } = await import("../stripe.server");
-  if (order!.stripe_session_id) {
-    // An earlier unpaid session exists. Reuse it if still open.
-    const prev = await getSession(order!.stripe_session_id);
-    if (prev.payment_status === "paid") return { already: true as const, token: order!.access_token };
-    if (prev.status === "open") return { already: false as const, token: order!.access_token, url: (prev as unknown as { url: string }).url };
-    throw new Error("Your previous checkout expired. Please submit the intake again to start a new one.");
+async function checkoutForOrder(order: OrderRow, origin: string) {
+  const db = await admin();
+  const { createCheckoutSession, getCheckoutSession } = await import("../stripe.server");
+  if (order.status !== "awaiting_payment") return { already: true as const, token: order.access_token };
+  let attempt = order.checkout_attempt ?? 0;
+  if (order.stripe_session_id) {
+    const prev = await getCheckoutSession(order.stripe_session_id);
+    if (prev.payment_status === "paid" || prev.status === "complete") return { already: true as const, token: order.access_token };
+    if (prev.status === "open" && prev.url) return { already: false as const, token: order.access_token, url: prev.url };
+    if (prev.status !== "expired") throw new Error("Stripe is still confirming this checkout. Try again shortly.");
+    attempt += 1;
   }
   const s = await createCheckoutSession({
-    tier: row.tier, email: (row.answers["email"] as string).trim().toLowerCase(), origin: input.origin,
-    orderId: order!.id, successPath: `/orders/${order!.access_token}`,
+    tier: order.tier, email: order.email, origin,
+    orderId: order.id, successPath: `/orders/${order.access_token}`, checkoutAttempt: attempt,
   });
-  const linked = await supabaseRepo.transition(order!.id, ["awaiting_payment"], { stripe_session_id: s.id });
-  if (!linked || !s.url) {
-    await expireCheckoutSession(s.id).catch(() => undefined);
-    throw new Error("Checkout couldn't start. Try again.");
+  let query = db.from("fulfillment_orders" as never).update({ stripe_session_id: s.id, checkout_attempt: attempt } as never).eq("id", order.id).eq("status", "awaiting_payment").eq("checkout_attempt", order.checkout_attempt ?? 0);
+  query = order.stripe_session_id ? query.eq("stripe_session_id", order.stripe_session_id) : query.is("stripe_session_id", null);
+  const { data: linked, error } = await query.select("id").maybeSingle();
+  if (error) throw new Error("Checkout couldn't be linked. Try again; your saved order is safe.");
+  if (!linked) {
+    const latest = await supabaseRepo.byId(order.id);
+    if (!latest || latest.stripe_session_id !== s.id) throw new Error("Your checkout changed. Reopen your order page.");
   }
-  return { already: false as const, token: order!.access_token, url: s.url };
+  if (!s.url) throw new Error("Checkout couldn't start. Try again.");
+  return { already: false as const, token: order.access_token, url: s.url };
+}
+
+export async function resumeCheckout(token: string, origin: string) {
+  const order = await orderByToken(token);
+  if (!order) throw new Error("This order link has expired.");
+  return checkoutForOrder(order, origin);
+}
+
+export async function recoverProgress(tier?: TierId, intakeId?: string, token?: string) {
+  if (token) {
+    const order = await orderByToken(token);
+    if (order && (!tier || order.tier === tier)) return { intakeId: null, token: order.access_token, tier: order.tier };
+  }
+  if (!tier || !intakeId || !/^[0-9a-f-]{36}$/i.test(intakeId)) return null;
+  const db = await admin();
+  const { data } = await db.from("intakes" as never).select("id,tier").eq("id", intakeId).eq("tier", tier).gt("created_at", new Date(Date.now() - 86400000).toISOString()).maybeSingle();
+  if (!data) return null;
+  const { data: saved } = await db.from("fulfillment_orders" as never).select("access_token").eq("intake_id", intakeId).gt("expires_at", new Date().toISOString()).maybeSingle();
+  return { intakeId, token: (saved as { access_token: string } | null)?.access_token ?? null, tier };
 }
 
 export type PublicStatus = {
@@ -115,6 +152,8 @@ export type PublicStatus = {
   keywordReport?: NonNullable<OrderRow["result"]>["keywordReport"];
   checks?: NonNullable<OrderRow["result"]>["checks"];
   emailed: false;
+  paidAt: string | null;
+  expiresAt: string | null;
 };
 
 function toPublic(o: OrderRow): PublicStatus {
@@ -140,6 +179,7 @@ function toPublic(o: OrderRow): PublicStatus {
     ...(o.status === "ready" && o.result?.keywordReport ? { keywordReport: o.result.keywordReport } : {}),
     ...(o.status === "ready" && o.result ? { checks: o.result.checks } : {}),
     emailed: false,
+    paidAt: o.paid_at, expiresAt: o.expires_at ?? null,
   };
 }
 
