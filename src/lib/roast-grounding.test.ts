@@ -347,7 +347,7 @@ describe("regressions: entailment, counts, presence", () => {
 
   test("schema rejection names the overlong field instead of truncating", () => {
     const long = "x".repeat(400);
-    const r = checkModelOutput(JSON.stringify({ is_resume: true, rubric: { clarity: 3, impact: 3, specificity: 3, structure: 3, completeness: 3 }, strengths: [], weaknesses: [], roast: long, tip: "t", tip_quote: null }), "src", "resume");
+    const r = checkModelOutput(JSON.stringify({ is_resume: true, rubric: { clarity: 3, impact: 3, specificity: 3, structure: 3, completeness: 3 }, strengths: [], weaknesses: [], roast: long, tip: "t", tip_quote: null }), "src", "text");
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.feedback).toContain("roast too_big");
   });
