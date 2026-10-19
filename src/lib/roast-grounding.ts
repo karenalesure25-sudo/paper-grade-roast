@@ -99,7 +99,7 @@ export function detectSections(text: string): Record<SectionId, boolean> {
     contact_phone: /(\+?\d[\d\s().-]{8,}\d)/.test(n),
     summary: /\b(summary|profile|objective|about me|overview|introduction|personal statement)\b/.test(n),
     experience:
-      /\b(experience|employment|work history|career history|professional background|career|positions held|work)\b/.test(n) ||
+      /\b(experience|employment|work history|career history|professional background|career|positions held|work|projects?|volunteer(?:ing)?|internships?|community service|relevant activities|leadership)\b/.test(n) ||
       /\b(19|20)\d{2}\s?-\s?((19|20)\d{2}|present|current|now)\b/.test(n),
     education:
       /\b(education|academic|university|universit[a-z]+|college|school|institute|academy|polytechnic|degree|diploma|bachelor'?s?|master'?s?|doctorate|ph\.?\s?d|mba|ged|high school|associate'?s? (degree|of)|b\.?\s?(s|a|sc|tech|e|eng|com|ba)\b\.?|m\.?\s?(s|a|sc|tech|e|eng|ba)\b\.?|a\.?a\.?s\b|bsn|msn|coursework|graduated|graduate|alumn[a-z]*|certificate program|vocational)\b/.test(n),

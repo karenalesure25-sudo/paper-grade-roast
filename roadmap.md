@@ -2,6 +2,11 @@
 - [x] Metallic-logo signature homepage revision and responsive cross-route verification
 # Roadmap
 
+- [ ] Scoped order questionnaire with explicit recommendations and answer carry-over
+- [ ] Secure saved-intake/checkout recovery and truthful payment-return pages
+- [ ] Strict roast rubric validation, anchored feedback and fail-closed verifier
+- [ ] Central Time displays with DST tests; scoped automated/browser verification
+
 - [x] Customer intake forms ($40/$50/$60) + review/submit, saved to backend
 - [x] Prelaunch audit: grounded roast safeguards
 - [x] Roast UI: paste text input, stale-result clearing, aria-live, session clear control

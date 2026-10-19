@@ -81,7 +81,8 @@ function RoastPage() {
         }
         payload = { source: "text", text: pasted };
       } else {
-        const prepared = await prepareUpload(selected!);
+        if (!selected) return;
+        const prepared = await prepareUpload(selected);
         payload =
           prepared.kind === "pdf"
             ? { source: "pdf", filename: prepared.filename, dataBase64: prepared.dataBase64 }
@@ -128,6 +129,8 @@ function RoastPage() {
             AI service to be graded; results stay in this browser tab. See our{" "}
             <Link to="/privacy" className="underline underline-offset-4">privacy page</Link>.
           </p>
+
+          <p className="mt-3 max-w-xl text-sm text-muted-foreground">An evidence-based writing assessment, not an employer’s ATS score or a hiring guarantee.</p>
 
           <form onSubmit={submit} className="premium-panel mt-10 p-6 sm:p-8" aria-busy={pending}>
             <div role="tablist" aria-label="How to send your résumé" className="flex gap-3">

@@ -4,7 +4,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { SiteHeader } from "@/components/SiteHeader";
 import { SiteFooter } from "@/components/SiteFooter";
 import { StampButton } from "@/components/StampButton";
-import { answerOrderQuestions, getOrderStatus, nudgeOrder, retryOrder } from "@/lib/fulfillment.functions";
+import { answerOrderQuestions, getOrderStatus, nudgeOrder, retryOrder, resumeOrderCheckout } from "@/lib/fulfillment.functions";
+import { formatCustomerTime } from "@/lib/customer-time";
+import { getTier } from "@/lib/products";
 
 export const Route = createFileRoute("/orders/$token")({
   head: () => ({
@@ -25,8 +27,8 @@ export const Route = createFileRoute("/orders/$token")({
 type Status = Awaited<ReturnType<typeof getOrderStatus>>;
 
 const COPY: Record<string, { title: string; body: string }> = {
-  awaiting_payment: { title: "Confirming your payment", body: "We’re waiting for Stripe to confirm your payment. This usually takes a few seconds." },
-  queued: { title: "Payment confirmed", body: "Your package is next in line. Writing starts automatically — you can close this page and come back with the same link." },
+  awaiting_payment: { title: "Payment not yet confirmed", body: "Your order is saved. Stripe hasn’t confirmed payment yet; a canceled or expired checkout does not unlock delivery." },
+  queued: { title: "Payment confirmed", body: "Your package is next in line. Keep this private link to return to your order." },
   processing: { title: "Writing and fact-checking", body: "We’re writing your package from your own facts, then checking every detail before release. This can take a few minutes." },
   needs_information: { title: "We need a few details", body: "We won’t guess at your facts. Answer the questions below and writing resumes automatically." },
   ready: { title: "Your package is ready", body: "Every file passed our accuracy checks. Download them below." },
@@ -39,6 +41,7 @@ function OrderStatusPage() {
   const nudge = useServerFn(nudgeOrder);
   const answer = useServerFn(answerOrderQuestions);
   const retry = useServerFn(retryOrder);
+  const resumeCheckout = useServerFn(resumeOrderCheckout);
   const [status, setStatus] = useState<Status | undefined>(undefined);
   const [loadError, setLoadError] = useState(false);
   const [text, setText] = useState("");
@@ -92,9 +95,22 @@ function OrderStatusPage() {
       const s = await retry({ data: { token } });
       if (s) setStatus(s);
       void refresh();
+    } catch {
+      setMsg("We couldn’t restart your order. Try again.");
     } finally {
       setBusy(false);
     }
+  }
+
+  async function reopenCheckout() {
+    setBusy(true); setMsg(null);
+    try {
+      const result = await resumeCheckout({ data: { token } });
+      if (result.already) await refresh();
+      else window.location.assign(result.url);
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : "Checkout couldn’t open. Try again.");
+    } finally { setBusy(false); }
   }
 
   const c = status ? COPY[status.status] : undefined;
@@ -132,6 +148,11 @@ function OrderStatusPage() {
             <p className="mt-6 border-l-2 border-gold pl-3 text-[0.9rem] text-muted-foreground">
               Bookmark this page. Email delivery isn’t set up yet, so nothing is emailed — this private link is how you reach your files.
             </p>
+            <p className="mt-4 text-sm text-muted-foreground">{getTier(status.tier)?.name} · ${getTier(status.tier)?.price} USD · One-time payment</p>
+            {status.paidAt && <p className="mt-2 text-sm text-muted-foreground">Payment confirmed: {formatCustomerTime(status.paidAt)}</p>}
+            {status.expiresAt && <p className="mt-2 text-sm text-muted-foreground">Private link expires: {formatCustomerTime(status.expiresAt)}</p>}
+            {status.status === "awaiting_payment" && <StampButton type="button" disabled={busy} onClick={reopenCheckout} className="mt-6">{busy ? "Opening checkout…" : "Reopen secure checkout"}</StampButton>}
+            {msg && status.status !== "needs_information" && <p role="alert" className="mt-3 text-redpen-text">{msg}</p>}
 
             {status.status === "needs_information" && (
               <form onSubmit={submitAnswers} className="premium-panel mt-8 p-6">

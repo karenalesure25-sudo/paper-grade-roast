@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -8,7 +8,10 @@ import { TemplatePicker } from "@/components/TemplatePicker";
 import { PhotoCropper } from "@/components/PhotoCropper";
 import { IntakeFlow, type SubmittedIntake } from "@/components/intake/IntakeFlow";
 import { getTier, TIERS } from "@/lib/products";
-import { startOrderCheckout } from "@/lib/fulfillment.functions";
+import { recoverOrderProgress, startOrderCheckout } from "@/lib/fulfillment.functions";
+import { ServiceQuestionnaire } from "@/components/intake/ServiceQuestionnaire";
+import { Button } from "@/components/ui/button";
+import type { ServiceAnswers } from "@/lib/service-recommendation";
 import {
   PHOTO_LAYOUT_COUNT,
   RESUME_TEMPLATES,
@@ -51,15 +54,30 @@ function SectionLabel({ step, children }: { step: number; children: React.ReactN
 
 function OrderPage() {
   const { tier: tierId } = Route.useParams();
-  const tier = getTier(tierId)!;
+  const tier = getTier(tierId);
   const checkout = useServerFn(startOrderCheckout);
+  const recover = useServerFn(recoverOrderProgress);
   const navigate = useNavigate();
   const [intakeId, setIntakeId] = useState<string | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [template, setTemplate] = useState<TemplateId>("sidebar");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [guided, setGuided] = useState(false);
+  const [guide, setGuide] = useState<ServiceAnswers | undefined>();
+  const [recovering, setRecovering] = useState(true);
+  useEffect(() => {
+    let active = true;
+    setRecovering(true);
+    recover({ data: { tier: tierId as "revamp" | "scratch" | "bundle" } }).then(async (saved) => {
+      if (!active || !saved) return;
+      if (saved.token) await navigate({ to: "/orders/$token", params: { token: saved.token } });
+      else if (saved.intakeId) setIntakeId(saved.intakeId);
+    }).catch(() => { if (active) setError("Saved progress couldn’t be checked. Please try refreshing before starting again."); }).finally(() => { if (active) setRecovering(false); });
+    return () => { active = false; };
+  }, [tierId, recover, navigate]);
   const templateUsesPhoto = RESUME_TEMPLATES.find((t) => t.id === template)?.usesPhoto ?? false;
+  if (!tier) return null;
   const layoutStep = tier.id === "bundle" ? 3 : 2;
 
   function handleIntake(intake: SubmittedIntake) {
@@ -118,7 +136,10 @@ function OrderPage() {
             </nav>
           )}
 
-          {intakeId ? (
+          <ol aria-label="Order steps" className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+            <li className={!guided && !intakeId ? "text-gold" : ""}>01 · Service</li><li className={guided && !intakeId ? "text-gold" : ""}>02 · Intake & review</li><li className={intakeId ? "text-gold" : ""}>03 · Layout & checkout</li>
+          </ol>
+          {recovering ? <p role="status" className="mt-8 text-muted-foreground">Checking your saved progress…</p> : intakeId ? (
             <section className="mt-12 space-y-8">
               <div>
                 <SectionLabel step={layoutStep}>Pick your layout</SectionLabel>
@@ -156,9 +177,19 @@ function OrderPage() {
                 )}
               </div>
             </section>
+          ) : guided ? (
+            <>
+              <Button type="button" variant="link" className="mt-6" onClick={() => setGuided(false)}>Edit service answers</Button>
+              <IntakeFlow key={tier.id} tier={tier} initialAnswers={{ targetJobTitle: guide?.targetRole ?? "", specificJobTitle: guide?.targetRole ?? "", jobDescription: guide?.jobDescription ?? "" }} onSubmitted={handleIntake} />
+            </>
           ) : (
-            <IntakeFlow tier={tier} onSubmitted={handleIntake} />
+            <ServiceQuestionnaire tier={tier} initial={guide} onContinue={async (answers, selected) => {
+              setGuide(answers);
+              if (selected !== tier.id) await navigate({ to: "/order/$tier", params: { tier: selected } });
+              setGuided(true);
+            }} />
           )}
+          {!intakeId && <p className="mt-5 text-sm text-muted-foreground">Your intake is saved when you submit it. Unsubmitted answers and photos stay on this page only.</p>}
         </div>
       </main>
       <SiteFooter />

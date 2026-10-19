@@ -16,11 +16,12 @@ function key(): string {
   return k;
 }
 
-async function stripe<T>(path: string, init?: { method?: string; form?: URLSearchParams }): Promise<T> {
+async function stripe<T>(path: string, init?: { method?: string; form?: URLSearchParams; idempotencyKey?: string }): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     method: init?.method ?? "GET",
     headers: {
       Authorization: `Bearer ${key()}`,
+      ...(init?.idempotencyKey ? { "Idempotency-Key": init.idempotencyKey } : {}),
       ...(init?.form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
     },
     ...(init?.form ? { body: init.form.toString() } : {}),
@@ -64,6 +65,7 @@ export async function createCheckoutSession(opts: {
   /** Server-owned fulfillment order this session pays for. */
   orderId?: string;
   successPath?: string;
+  checkoutAttempt?: number;
 }): Promise<StripeSession> {
   const p = TIER_PRICING[opts.tier];
   const f = new URLSearchParams();
@@ -98,8 +100,8 @@ export async function createCheckoutSession(opts: {
   // Keep Stripe's dynamic payment methods, excluding only Affirm for this project.
   f.append("excluded_payment_method_types[]", "affirm");
   f.set("success_url", `${opts.origin}${opts.successPath ?? "/payment-success"}${(opts.successPath ?? "").includes("?") ? "&" : "?"}session_id={CHECKOUT_SESSION_ID}`);
-  f.set("cancel_url", `${opts.origin}/payment-canceled`);
-  return stripe<StripeSession>("/checkout/sessions", { method: "POST", form: f });
+  f.set("cancel_url", `${opts.origin}${opts.orderId && opts.successPath ? opts.successPath : "/payment-canceled"}`);
+  return stripe<StripeSession>("/checkout/sessions", { method: "POST", form: f, ...(opts.orderId ? { idempotencyKey: `kcs-${opts.orderId}-${opts.checkoutAttempt ?? 0}` } : {}) });
 }
 
 export async function getCheckoutSession(id: string): Promise<StripeSession> {
