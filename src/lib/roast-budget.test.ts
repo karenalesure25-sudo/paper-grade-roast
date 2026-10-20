@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
 import { gradeResumeText, TOTAL_BUDGET_MS } from "./roast.server";
 
 const RESUME = `Jordan Rivera
@@ -14,7 +14,7 @@ Scheduling, inventory control, vendor communication, Excel, process documentatio
 
 /** fetch that never answers until the caller aborts it — simulates a hung model call. */
 function hangingFetch() {
-  return vi.fn((_url: string, init?: RequestInit) =>
+  return mock((_url: string, init?: RequestInit) =>
     new Promise<Response>((_, reject) => {
       init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
     }),
@@ -22,28 +22,31 @@ function hangingFetch() {
 }
 
 describe("roast grading time budget", () => {
+  // Simulated clock: each timer fires at once and moves "now" forward by its delay.
+  let now = 0;
+  const realSetTimeout = globalThis.setTimeout;
+  const realFetch = globalThis.fetch;
   beforeEach(() => {
-    vi.useFakeTimers();
-    vi.stubEnv("LOVABLE_API_KEY", "test-key");
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    now = 1_000_000;
+    process.env["LOVABLE_API_KEY"] = "test-key";
+    spyOn(console, "error").mockImplementation(() => {});
+    spyOn(Date, "now").mockImplementation(() => now);
+    globalThis.setTimeout = ((cb: () => void, ms = 0) => realSetTimeout(() => { now += ms; cb(); }, 0)) as typeof setTimeout;
   });
   afterEach(() => {
-    vi.useRealTimers();
-    vi.unstubAllEnvs();
-    vi.unstubAllGlobals();
-    vi.restoreAllMocks();
+    globalThis.setTimeout = realSetTimeout;
+    globalThis.fetch = realFetch;
+    delete process.env["LOVABLE_API_KEY"];
+    mock.restore();
   });
 
   it("gives up within the total budget when every model call hangs, and shows no grade", async () => {
     const fetchMock = hangingFetch();
-    vi.stubGlobal("fetch", fetchMock);
-    const start = Date.now();
-    let settledAt = 0;
-    const result = gradeResumeText(RESUME, "text").then((r) => ((settledAt = Date.now()), r));
-    await vi.advanceTimersByTimeAsync(TOTAL_BUDGET_MS + 5_000);
-    const outcome = await result;
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    const start = now;
+    const outcome = await gradeResumeText(RESUME, "text");
     expect(outcome.status).toBe("unavailable");
-    expect(settledAt - start).toBeLessThanOrEqual(TOTAL_BUDGET_MS);
+    expect(now - start).toBeLessThanOrEqual(TOTAL_BUDGET_MS);
     expect(fetchMock).toHaveBeenCalled();
   });
 
