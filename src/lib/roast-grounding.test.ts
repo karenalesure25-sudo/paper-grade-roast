@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { GRADES, isLetterGrade, type Rubric } from "./roast-grounding";
 import { checkReadable, detectSections, gradeFromRubric, normalize, quoteInSource, verifyEvidence, hasUnsupportedClaim } from "./roast-grounding";
 import { checkModelOutput, parseVerdict } from "./roast.server";
 import { checkLength, cleanSource, pointContradictsQuote, unsupportedNumbers, MAX_SOURCE_CHARS } from "./roast-grounding";
@@ -35,7 +36,8 @@ Associate, Another Store, 2018 - 2020
 const item = (point: string, quote: string | null, missing: string | null = null) => ({ point, quote, missing });
 
 function output(o: Record<string, unknown>) {
-  return JSON.stringify({ is_resume: true, tip_quote: null, strengths: [], weaknesses: [], ...o });
+  const tq = (o["tip_quote"] as string | null | undefined) ?? null;
+  return JSON.stringify({ is_resume: true, tip_quote: null, roast_quote: tq, strengths: [], weaknesses: [], ...o });
 }
 
 describe("readability vs quality", () => {
@@ -350,5 +352,52 @@ describe("regressions: entailment, counts, presence", () => {
     const r = checkModelOutput(JSON.stringify({ is_resume: true, rubric: { clarity: 3, impact: 3, specificity: 3, structure: 3, completeness: 3 }, strengths: [], weaknesses: [], roast: long, tip: "t", tip_quote: null }), "src", "text");
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.feedback).toContain("roast too_big");
+  });
+});
+
+describe("exact A–F grade scale", () => {
+  test("every possible rubric maps to exactly one of A/B/C/D/F, monotonic, F at the bottom", () => {
+    expect([...GRADES]).toEqual(["A", "B", "C", "D", "F"]);
+    let prev = 4;
+    for (let total = 0; total <= 20; total++) {
+      const per = [0, 0, 0, 0, 0].map((_, i) => Math.floor(total / 5) + (i < total % 5 ? 1 : 0));
+      const r: Rubric = { clarity: per[0]!, impact: per[1]!, specificity: per[2]!, structure: per[3]!, completeness: per[4]! };
+      const g = gradeFromRubric(r);
+      expect(isLetterGrade(g)).toBe(true);
+      const idx = GRADES.indexOf(g);
+      expect(idx).toBeLessThanOrEqual(prev);
+      prev = idx;
+    }
+    expect(gradeFromRubric({ clarity: 0, impact: 0, specificity: 0, structure: 0, completeness: 0 })).toBe("F");
+    expect(gradeFromRubric({ clarity: 4, impact: 4, specificity: 4, structure: 4, completeness: 4 })).toBe("A");
+  });
+  test("plus/minus grades are not valid", () => {
+    for (const g of ["A+", "A-", "B+", "C-", "E", "a", ""]) expect(isLetterGrade(g)).toBe(false);
+  });
+  test("a model-supplied grade field is rejected (grade only comes from the rubric)", () => {
+    const r = checkModelOutput(output({ grade: "A+", rubric: { clarity: 4, impact: 4, specificity: 4, structure: 4, completeness: 4 }, strengths: [item("Leads with results", "Reduced order fulfillment time by 32%")], roast: "Damn, this slaps.", tip: "Optional: lead with the turnover win.", tip_quote: "turnover fell from 41% to 18%" }), STRONG, "text");
+    expect(r.ok).toBe(false);
+  });
+});
+
+describe("roast tone and anchoring", () => {
+  const strong = (o: Record<string, unknown>) => checkModelOutput(output({ rubric: { clarity: 4, impact: 4, specificity: 4, structure: 4, completeness: 4 }, strengths: [item("Leads with results", "Reduced order fulfillment time by 32%")], tip: "Optional: lead with the turnover win.", tip_quote: "turnover fell from 41% to 18%", ...o }), STRONG, "text");
+  test("playful profanity aimed at the writing passes for a strong résumé", () => {
+    expect(strong({ roast: "Damn. \"Reduced order fulfillment time by 32%\" is the kind of shit recruiters frame." }).ok).toBe(true);
+  });
+  test("insulting the person is rejected", () => {
+    expect(strong({ roast: "You're an idiot with good numbers." }).ok).toBe(false);
+    expect(strong({ roast: "Nobody will hire this, damn." }).ok).toBe(false);
+  });
+  test("roast quote must be verbatim from the résumé", () => {
+    expect(strong({ roast: "Damn, nice.", roast_quote: "Led a team of 900 astronauts" }).ok).toBe(false);
+  });
+  test("profanity in the tip, or hiring guarantees, are rejected", () => {
+    expect(strong({ roast: "Damn, nice.", tip: "Shit, lead with the turnover win." }).ok).toBe(false);
+    expect(strong({ roast: "This will get you hired, guaranteed." }).ok).toBe(false);
+  });
+  test("glowing roast cannot sit on a D/F grade", () => {
+    const r = checkModelOutput(output({ rubric: { clarity: 1, impact: 1, specificity: 1, structure: 1, completeness: 1 }, weaknesses: [item("Duty, not result", "Responsible for helping customers"), item("Vague", "Did a variety of things for the team")], roast: "Flawless, chef's kiss.", tip: "Rewrite as an action with a real result, only if accurate.", tip_quote: "Responsible for helping customers" }), VAGUE, "text");
+    expect(r.ok).toBe(false);
   });
 });
