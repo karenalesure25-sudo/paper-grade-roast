@@ -6,6 +6,8 @@ import {
   detectSections,
   gradeFromRubric,
   hasUnsupportedClaim,
+  PERSONAL_ATTACK,
+  OUTCOME_CLAIM,
   normalize,
   quoteInSource,
   SEVERE_NEGATIVE,
@@ -71,16 +73,34 @@ Pair the quoted issue with a specific truthful improvement, not generic repeated
 When suggesting quantification, explicitly say "only if accurate"; never supply a number.
 Writing grades do not guarantee hiring. No forced negative reviews to sell services.
 
-TONE: witty, dry, warm. Jokes target the WRITING, never the person, their background, gaps,
-age, or school. No forced negativity: an excellent résumé gets an affectionate, mostly
-complimentary roast. Roast 1–2 sentences, at most 280 characters, consistent with the rubric.
+TONE: a hilarious, sharp human reaction — like a blunt friend who edits résumés for a living.
+Casual profanity is welcome in natural moderation ("damn", "shit", the occasional "fuck"; at most two
+swears total, never in the tip). React freshly to THIS résumé: build the joke on an exact phrase from
+it (put that phrase in roast_quote, copied verbatim) or on a verified omission. No stock catchphrases,
+no recycled lines like "fortune cookie", "duty list", "LinkedIn bingo" or "corporate word salad".
+Jokes target the WRITING only — never the person's identity, intelligence, background, age, gaps,
+school, demographics, worth or chances of being hired. Severity must match the grade:
+- A: sincere, playful praise ("damn, this actually slaps"); any nitpick is clearly minor.
+- B: mostly positive with one pointed jab.
+- C: mixed — credit what works, roast the main weakness.
+- D/F: blunt about the writing, still constructive, never cruel to the person.
+Never invent defects to make a grade worse; a strong résumé is not a sales opportunity.
+Roast 1–2 sentences, at most 280 characters.
+
+TIP: exactly ONE, on the single biggest evidenced weakness (for an A, a modest polish framed as
+optional). Quote the original phrase in tip_quote and say concretely how to rewrite it. Only
+suggest numbers the candidate can verify ("only if accurate"); never invent achievements.
+
+SCOPE: judge only text-observable clarity, structure (section order), achievements, errors and
+relevant content. No job description is supplied, so never judge fit to a specific job. Missing
+numbers alone never sink a grade — scope, projects, coursework, volunteer and transferable evidence count.
 
 If the text is clearly not a résumé (recipe, essay, random text), set is_resume false.`;
 
 const SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["is_resume", "rubric", "strengths", "weaknesses", "roast", "tip", "tip_quote"],
+  required: ["is_resume", "rubric", "strengths", "weaknesses", "roast", "roast_quote", "tip", "tip_quote"],
   properties: {
     is_resume: { type: "boolean" },
     rubric: {
@@ -98,6 +118,7 @@ const SCHEMA = {
     strengths: { type: "array", items: { $ref: "#/$defs/item" } },
     weaknesses: { type: "array", items: { $ref: "#/$defs/item" } },
     roast: { type: "string" },
+    roast_quote: { type: ["string", "null"] },
     tip: { type: "string" },
     tip_quote: { type: ["string", "null"] },
   },
@@ -152,7 +173,8 @@ const OutputSchema = z.object({
   is_resume: z.literal(true),
   rubric: z.object({ clarity: Score, impact: Score, specificity: Score, structure: Score, completeness: Score }).strict(),
   strengths: z.array(EvidenceSchema).max(3), weaknesses: z.array(EvidenceSchema).max(3),
-  roast: z.string().trim().min(1).max(280), tip: z.string().trim().min(1).max(280),
+  roast: z.string().trim().min(1).max(280),
+  roast_quote: z.string().trim().min(6).max(120).nullable(), tip: z.string().trim().min(1).max(280),
   tip_quote: z.string().trim().min(6).max(120).nullable(),
 }).strict();
 
@@ -310,6 +332,13 @@ export function checkModelOutput(raw: string, source: string, kind: SourceKind):
     const nums = unsupportedNumbers(t, source);
     if (nums.length) problems.push(`${label} states numbers/counts not in the résumé: ${nums.slice(0, 3).join(", ")}`);
   }
+  const roastQuote = parsed.roast_quote;
+  if (roastQuote && !quoteInSource(roastQuote, normalizedSource)) problems.push("roast_quote not found in résumé");
+  if (!roastQuote && !weaknesses.kept.some((w) => w.missing)) problems.push("roast must be anchored to a verbatim roast_quote or a verified missing item");
+  if (PERSONAL_ATTACK.test(roast)) problems.push("roast attacks the person instead of the writing");
+  if (PERSONAL_ATTACK.test(tip) || /\b(fuck|shit|damn)/i.test(tip)) problems.push("tip must be plain, constructive language");
+  if (OUTCOME_CLAIM.test(roast) || OUTCOME_CLAIM.test(tip)) problems.push("hiring outcome claim");
+  if ((roast.match(/\b(fuck\w*|shit\w*|damn\w*|hell|ass)\b/gi) ?? []).length > 2) problems.push("too much profanity; at most two swears");
   if (tipQuote && !quoteInSource(tipQuote, normalizedSource)) problems.push("tip_quote not found in résumé");
   if (!tipQuote && !weaknesses.kept.some((w) => w.missing)) {
     problems.push("tip_quote is null but no verified missing item backs the tip");
@@ -321,6 +350,9 @@ export function checkModelOutput(raw: string, source: string, kind: SourceKind):
   if (grade === "A" || grade === "B") {
     if (SEVERE_NEGATIVE.test(roast)) problems.push("harsh roast contradicts an A/B grade");
     if (weaknesses.kept.some((w) => w.missing === "summary")) problems.push("missing summary is not a weakness for a strong résumé");
+  }
+  if (grade === "D" || grade === "F") {
+    if (/\b(slaps|flawless|perfect|nailed it|chef'?s kiss|masterpiece|impeccable)\b/i.test(roast)) problems.push("glowing roast contradicts a D/F grade");
   }
   if (weaknesses.kept.length === 0 && grade !== "A") problems.push("no verifiable weaknesses");
   if ((grade === "A" || grade === "B") && strengths.kept.length === 0) problems.push("high grade with no verified strengths");
@@ -360,7 +392,13 @@ Check every factual statement in: the roast, each strength and weakness point (w
 - a point contradicts its own quote (e.g. "no metrics" paired with a line containing a percentage)
 - a "missing" claim is false — the item exists anywhere, under any heading or wording
 - the tip recommends fixing something that isn't actually a problem in the résumé
-- the grade is A or B but the commentary is severely negative, or the grade is D/F but commentary is glowing
+- the roast's severity does not match the grade (A = sincere praise, B mostly positive, C mixed,
+  D/F blunt) or the rubric scores don't fit the commentary
+- the roast attacks the person (identity, intelligence, background, demographics, worth, hiring
+  chances) rather than the writing; casual profanity aimed at the writing is allowed
+- the roast invents a defect, or its joke is not based on the résumé's actual words or a real omission
+- there is not exactly one tip, or it does not target the biggest evidenced weakness
+- anything judges fit to a specific job (no job description was supplied) or promises hiring outcomes
 - a comment is about fonts, colours, layout, or page count (only text was available)
 Opinions about writing quality are allowed if they're reasonable given the text. Do not reject for
 tone alone. Be strict about facts. Give short reasons (no résumé quotes longer than 10 words).`;

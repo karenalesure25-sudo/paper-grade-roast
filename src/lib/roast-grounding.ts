@@ -154,8 +154,15 @@ export function clampRubric(r: Partial<Record<keyof Rubric, unknown>>): Rubric {
   };
 }
 
+/** The only grades that exist: no plus/minus, F means fail. */
+export const GRADES = ["A", "B", "C", "D", "F"] as const;
+export type LetterGrade = (typeof GRADES)[number];
+export function isLetterGrade(v: unknown): v is LetterGrade {
+  return typeof v === "string" && (GRADES as readonly string[]).includes(v);
+}
+
 /** Grade is derived from the rubric, never chosen freely. Total is 0–20. */
-export function gradeFromRubric(r: Rubric): "A" | "B" | "C" | "D" | "F" {
+export function gradeFromRubric(r: Rubric): LetterGrade {
   const total = r.clarity + r.impact + r.specificity + r.structure + r.completeness;
   if (total >= 17) return "A";
   if (total >= 13) return "B";
@@ -308,3 +315,10 @@ export function unsupportedNumbers(prose: string, source: string): string[] {
 /** Harsh language that can't sit next to an A or B. */
 export const SEVERE_NEGATIVE =
   /\b(disaster|terrible|awful|dreadful|trainwreck|train wreck|mess|hopeless|zero (results|outcomes|impact)|nothing (of value|here)|worst|embarrassing|painful|fortune cookie|duty list|generic|forgettable|unreadable|weak|vague)\b/i;
+
+/** Roasts mock the writing, never the person. Profanity is allowed; insults about the candidate are not. */
+export const PERSONAL_ATTACK =
+  /\b(you('| a)?re|you are|this (person|candidate|guy|girl|woman|man)( is)?|candidate is)\s+(an? )?(stupid|dumb|idiot|moron|loser|lazy|worthless|pathetic|unemployable|incompetent|useless|clueless|ugly|old|too old|too young)\b|\b(unemployable|nobody will (ever )?hire|never (get|be) hired|no one will hire|give up|retard\w*|dumbass|dipshit|fuck (you|off)|piece of shit)\b/i;
+
+/** Hiring-outcome promises or threats we can't back. */
+export const OUTCOME_CLAIM = /\b(guarantee[ds]?|will (get|land) (you )?(hired|the job|interviews?)|(will|won'?t) get (you )?(hired|interviews?|callbacks?))\b/i;
