@@ -81,10 +81,11 @@ function OrderPage() {
       if (!active || !saved) return;
       setPrevious(saved.previous);
       if ("selection" in saved && saved.selection) {
-        const layout = RESUME_TEMPLATES.find((t) => t.id === saved.selection.template);
+        const selection = saved.selection;
+        const layout = RESUME_TEMPLATES.find((t) => t.id === selection.template);
         if (!layout) throw new Error("Saved layout unavailable.");
         setTemplate(layout.id);
-        setPhoto(saved.selection.photo);
+        setPhoto(selection.photo);
         setSelectionLocked(true);
       }
       // Recover the exact purchase snapshot, never a fresh default layout/photo.
@@ -173,7 +174,10 @@ function OrderPage() {
                   confirms your payment.
                 </p>
               </div>
-              {selectionLocked && <p role="status" className="text-sm text-muted-foreground">This saved order keeps the layout and photo you chose before checkout. A different layout needs a new intake.</p>}
+              {selectionLocked && <div>
+                <p role="status" className="text-sm text-muted-foreground">This saved order keeps the layout and photo you chose before checkout. A different layout needs a new intake.</p>
+                <Button type="button" variant="link" disabled={pending} onClick={() => { setIntakeId(null); setSelectionLocked(false); setTemplate("sidebar"); setPhoto(null); setError(null); setGuided(true); }}>Start a new intake</Button>
+              </div>}
               <fieldset disabled={selectionLocked || pending}>
                 <legend className="sr-only">Résumé layout</legend>
                 <TemplatePicker value={template} onChange={setTemplate} unlocked={false} />
@@ -218,6 +222,7 @@ function OrderPage() {
             }} />
           )}
           {!intakeId && <p className="mt-5 text-sm text-muted-foreground">Your intake is saved when you submit it. Unsubmitted answers and photos stay on this page only.</p>}
+          {!intakeId && error && <p role="alert" className="mt-5 text-redpen-text">{error}</p>}
         </div>
       </main>
       <SiteFooter />
