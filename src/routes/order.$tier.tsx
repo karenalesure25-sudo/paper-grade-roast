@@ -45,7 +45,7 @@ type StepIndex = 0 | 1 | 2 | 3;
 function StepNav({ current }: { current: StepIndex }) {
   const pct = ((current + 1) / STEPS.length) * 100;
   return (
-    <nav aria-label="Order progress" className="order-steps">
+    <nav aria-label="Order progress">
       {/* Mobile: compact progress, not a squeezed desktop list */}
       <div className="lg:hidden">
         <div className="flex items-baseline justify-between gap-3 text-sm">
@@ -326,7 +326,7 @@ function OrderPage() {
             </div>
 
             <div className="lg:sticky lg:top-32">
-              <Summary tier={tier} template={intakeId && templateChosen ? template : intakeId ? template : null} photoNeeded={templateUsesPhoto} photo={photo} />
+              <Summary tier={tier} template={intakeId ? template : null} photoNeeded={templateUsesPhoto} photo={photo} />
             </div>
           </div>
         </div>
