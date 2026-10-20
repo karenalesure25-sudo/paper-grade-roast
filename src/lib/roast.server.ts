@@ -74,8 +74,8 @@ When suggesting quantification, explicitly say "only if accurate"; never supply 
 Writing grades do not guarantee hiring. No forced negative reviews to sell services.
 
 TONE: a hilarious, sharp human reaction — like a blunt friend who edits résumés for a living.
-Casual profanity is welcome in natural moderation ("damn", "shit", the occasional "fuck"; at most two
-swears total, never in the tip). React freshly to THIS résumé: build the joke on an exact phrase from
+REQUIRED: the roast must contain 1–2 naturally placed swear words ("damn", "shit", "hell" or "fuck"),
+aimed at the document/writing (e.g. praise: "that line is damn good"), never at the person, and never in the tip. React freshly to THIS résumé: build the joke on an exact phrase from
 it (put that phrase in roast_quote, copied verbatim) or on a verified omission. No stock catchphrases,
 no recycled lines like "fortune cookie", "duty list", "LinkedIn bingo", "corporate word salad",
 "brought receipts", "receipts", "witness protection" or "chef's kiss".
@@ -340,11 +340,13 @@ export function checkModelOutput(raw: string, source: string, kind: SourceKind):
   if (roastQuote && !quoteInSource(roastQuote, normalizedSource)) problems.push("roast_quote not found in résumé");
   if (!roastQuote && !weaknesses.kept.some((w) => w.missing)) problems.push("roast must be anchored to a verbatim roast_quote or a verified missing item");
   if (PERSONAL_ATTACK.test(roast)) problems.push("roast attacks the person instead of the writing");
-  if (PERSONAL_ATTACK.test(tip) || /\b(fuck|shit|damn)/i.test(tip)) problems.push("tip must be plain, constructive language");
+  if (PERSONAL_ATTACK.test(tip) || /\b(fuck|shit|damn|hell)\b/i.test(tip)) problems.push("tip must be plain, constructive language");
   if (OUTCOME_CLAIM.test(roast) || OUTCOME_CLAIM.test(tip)) problems.push("hiring outcome claim");
   if (/^\W*(damn|shit|fuck\w*|wow|okay|ok|well|oof|yikes)\b/i.test(roast)) problems.push("roast opens with a generic interjection; start with a résumé-specific detail");
   if (/\b(receipts|witness protection|fortune cookie|duty list|linkedin bingo|word salad|chef'?s kiss)\b/i.test(roast)) problems.push("stock catchphrase in roast; write an original line");
-  if ((roast.match(/\b(fuck\w*|shit\w*|damn\w*|hell|ass)\b/gi) ?? []).length > 2) problems.push("too much profanity; at most two swears");
+  const swears = (roast.match(/\b(fuck\w*|shit\w*|damn\w*|hell|ass)\b/gi) ?? []).length;
+  if (swears > 2) problems.push("too much profanity; at most two swears");
+  if (swears < 1) problems.push("roast needs 1–2 natural swear words (damn, shit, hell or fuck) about the writing");
   if (tipQuote && !quoteInSource(tipQuote, normalizedSource)) problems.push("tip_quote not found in résumé");
   if (!tipQuote && !weaknesses.kept.some((w) => w.missing)) {
     problems.push("tip_quote is null but no verified missing item backs the tip");
