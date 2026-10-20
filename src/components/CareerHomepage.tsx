@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "@tanstack/react-router";
+import founderPortrait from "@/assets/karena-founder.png.asset.json";
 import {
   ArrowRight,
   Check,
@@ -392,6 +393,19 @@ export function CareerStatement() {
           <br />
           <em>Let’s make it clear.</em>
         </h2>
+        <figure className="founder-portrait">
+          <img
+            src={founderPortrait.url}
+            alt="Karena, founder of Kay’s Career Solutions"
+            width={1122}
+            height={1402}
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>
+            <strong>Meet Karena</strong>, founder of Kay’s Career Solutions.
+          </figcaption>
+        </figure>
         <div>
           <span className="statement-line" />
           <p>
