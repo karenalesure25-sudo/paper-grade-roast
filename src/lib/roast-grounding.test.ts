@@ -100,7 +100,7 @@ describe("full output check", () => {
         rubric: { clarity: 4, impact: 4, specificity: 4, structure: 4, completeness: 4 },
         strengths: [item("Leads with real results", "Reduced order fulfillment time by 32%")],
         weaknesses: [],
-        roast: "Annoyingly good. Numbers everywhere, and they're doing the talking.",
+        roast: "Annoyingly good. Numbers everywhere, and they're doing the damn talking.",
         tip: "Move the turnover win higher; it's your most human result.",
         tip_quote: "turnover fell from 41% to 18%",
       }),
@@ -148,7 +148,7 @@ describe("full output check", () => {
           item("Cliché objective", "Hard working team player"),
           item("No education", null, "education"),
         ],
-        roast: "Two jobs, zero outcomes, and an objective that could apply to anyone.",
+        roast: "Two jobs, zero outcomes, and an objective that could apply to any damn job.",
         tip: "Rewrite this as what you achieved for customers.",
         tip_quote: "Responsible for helping customers",
       }),
@@ -237,7 +237,7 @@ describe("regressions: entailment, counts, presence", () => {
         rubric: { clarity: 3, impact: 2, specificity: 2, structure: 3, completeness: 3 },
         strengths: [item("Clear title", "Operations Manager, Northwind Logistics")],
         weaknesses: [item("No metrics", "Reduced order fulfillment time by 32%"), item("Duty-heavy", "Managed inventory accuracy program")],
-        roast: "Solid, but it hides its wins.",
+        roast: "Solid as hell, but it hides its wins.",
         tip: "Lead with the result.",
         tip_quote: "Managed inventory accuracy program",
       }),
@@ -385,6 +385,10 @@ describe("roast tone and anchoring", () => {
   test("playful profanity aimed at the writing passes for a strong résumé", () => {
     expect(strong({ roast: "\"Reduced order fulfillment time by 32%\" is the kind of shit recruiters frame." }).ok).toBe(true);
   });
+  test("a swear-free roast is rejected so the grader retries in the requested style", () => {
+    expect(strong({ roast: "\"Reduced order fulfillment time by 32%\" is the kind of line recruiters frame." }).ok).toBe(false);
+    expect(strong({ roast: "\"Reduced order fulfillment time by 32%\" is damn good writing." }).ok).toBe(true);
+  });
   test("generic swear-first openers and stock catchphrases are rejected", () => {
     expect(strong({ roast: "Damn, this is strong writing." }).ok).toBe(false);
     expect(strong({ roast: "The bullets brought receipts." }).ok).toBe(false);
@@ -398,7 +402,7 @@ describe("roast tone and anchoring", () => {
     expect(strong({ roast: "The turnover line is nice.", roast_quote: "Led a team of 900 astronauts" }).ok).toBe(false);
   });
   test("profanity in the tip, or hiring guarantees, are rejected", () => {
-    expect(strong({ roast: "The turnover line is nice.", tip: "Shit, lead with the turnover win." }).ok).toBe(false);
+    expect(strong({ roast: "The turnover line is damn nice.", tip: "Shit, lead with the turnover win." }).ok).toBe(false);
     expect(strong({ roast: "This will get you hired, guaranteed." }).ok).toBe(false);
   });
   test("glowing roast cannot sit on a D/F grade", () => {
