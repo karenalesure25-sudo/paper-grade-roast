@@ -24,14 +24,14 @@ export function ServiceQuestionnaire({ tier, initial, onContinue }: {
         <input type="radio" name={label} checked={value === v} onChange={() => change(v)} className="accent-accent" />{text}
       </label>)}</div></fieldset>;
   }
-  return <form className="mt-10 space-y-8" onSubmit={(e) => {
+  return <form className="space-y-6" onSubmit={(e) => {
     e.preventDefault();
     if (!recommendation || hasResume === undefined || goal === undefined || coverLetter === undefined) return setError("Answer each question to continue.");
     if ((choice === "scratch" || choice === "bundle") && !targetRole.trim()) return setError("Add your target role to continue.");
     onContinue({ hasResume, goal, coverLetter, targetRole, jobDescription }, choice);
   }}>
-    <section className="premium-panel space-y-7 p-6 sm:p-8">
-      <div><p className="eyebrow">01 · Find your service</p><h2 className="mt-3 font-brand text-3xl text-ivory">What’s next for your résumé?</h2></div>
+    <section className="premium-panel space-y-7 p-5 sm:p-7">
+      <div><p className="eyebrow">Step 1 · Find your service</p><h2 className="mt-3 font-brand text-[1.7rem] leading-tight text-ivory sm:text-3xl">What’s next for your résumé?</h2></div>
       {options("Do you have an existing résumé?", hasResume, [[true, "Yes"], [false, "Not yet"]], setHasResume)}
       {options("What would you like help with?", goal, [["polish", "General polish"], ["target", "A specific job"]], setGoal)}
       {options("Do you need a cover letter?", coverLetter, [[true, "Yes"], [false, "No"]], setCoverLetter)}
@@ -49,17 +49,17 @@ export function ServiceQuestionnaire({ tier, initial, onContinue }: {
       <p className="mt-3 text-muted-foreground">{recommendation.reason}</p>
       <Button type="button" variant="outline" className="mt-4" onClick={() => setChoice(recommendation.tier)}>Choose recommended service</Button>
     </section>}
-    <section className="premium-panel p-6 sm:p-8">
+    <section className="premium-panel p-5 sm:p-7">
       <label htmlFor="guide-service" className="font-semibold text-ivory">Your selected service</label>
       <select id="guide-service" value={choice} onChange={(e) => setChoice(e.target.value as TierId)} className="mt-3 min-h-12 w-full rounded-md border border-border bg-paper-shade p-3 text-ivory">
         {TIERS.map((t) => <option key={t.id} value={t.id}>{t.name} — ${t.price}</option>)}
       </select>
       <p className="mt-4 font-semibold text-ivory">${selected.price} USD · One-time payment</p>
       <ul className="mt-4 space-y-2 text-muted-foreground">{selected.includes.map((item) => <li key={item}>✓ {item}</li>)}</ul>
-      <p className="mt-4 text-sm text-muted-foreground">Your selection stays unchanged unless you choose another service. Review your answers before Stripe Checkout.</p>
+      <p className="mt-4 text-sm text-muted-foreground">Your selection stays unchanged unless you choose another service. You’ll review service, price and template before secure Stripe Checkout.</p>
       {choice === "bundle" && <p className="mt-3 text-sm text-muted-foreground">A current résumé and one full job posting are required.</p>}
       {choice === "revamp" && hasResume === false && <p className="mt-3 text-redpen-text">This service requires an existing résumé.</p>}
-      <StampButton type="submit" className="mt-6">Continue to intake</StampButton>
+      <StampButton type="submit" className="mt-6">Continue to your details</StampButton>
       {error && <p role="alert" className="mt-3 text-redpen-text">{error}</p>}
     </section>
   </form>;
