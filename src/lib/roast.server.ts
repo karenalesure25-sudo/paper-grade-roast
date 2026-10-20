@@ -23,6 +23,10 @@ const MODEL = "openai/gpt-6-astra";
 const ATTEMPTS = 2;
 const ATTEMPT_TIMEOUT_MS = 45_000;
 const VERIFY_TIMEOUT_MS = 30_000;
+/** Whole-request budget so a slow chain of retries ends with a clear message instead of an endless wait. */
+export const TOTAL_BUDGET_MS = 100_000;
+const MIN_STEP_MS = 8_000;
+const remaining = (deadline: number) => deadline - Date.now();
 
 const SYSTEM_PROMPT = `You grade résumés for "Kay's Career Solutions".
 
@@ -157,6 +161,7 @@ async function callModel(
   apiKey: string,
   resume: string,
   feedback: string | null,
+  timeoutMs = ATTEMPT_TIMEOUT_MS,
 ): Promise<string> {
   const user = [
     "Grade this résumé. Reply as json matching the schema.",
@@ -165,7 +170,7 @@ async function callModel(
   ]
     .filter(Boolean)
     .join("\n\n");
-  return callGateway(apiKey, SYSTEM_PROMPT, user, "roast", SCHEMA, ATTEMPT_TIMEOUT_MS);
+  return callGateway(apiKey, SYSTEM_PROMPT, user, "roast", SCHEMA, timeoutMs);
 }
 
 async function callGateway(
@@ -392,6 +397,7 @@ export async function verifyOutcome(
   apiKey: string,
   source: string,
   outcome: Extract<RoastOutcome, { status: "graded" }>,
+  deadline = Date.now() + 2 * VERIFY_TIMEOUT_MS,
 ): Promise<Verdict> {
   const feedback = {
     grade: outcome.grade,
@@ -411,7 +417,8 @@ export async function verifyOutcome(
     // A garbled verifier reply is re-asked once; it never counts as approval (fail-closed).
     let verdict: Verdict = { approved: false, reasons: ["verifier reply malformed"] };
     for (let i = 0; i < 2; i++) {
-      verdict = parseVerdict(await callGateway(apiKey, VERIFIER_PROMPT, user, "verdict", VERIFIER_SCHEMA, VERIFY_TIMEOUT_MS));
+      if (remaining(deadline) < MIN_STEP_MS) return { approved: false, reasons: ["verifier unavailable"] };
+      verdict = parseVerdict(await callGateway(apiKey, VERIFIER_PROMPT, user, "verdict", VERIFIER_SCHEMA, Math.min(VERIFY_TIMEOUT_MS, remaining(deadline))));
       if (verdict.approved || verdict.reasons[0] !== "verifier reply malformed") break;
     }
     return verdict;
@@ -430,11 +437,14 @@ export async function gradeResumeText(source: string, kind: SourceKind): Promise
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { status: "unavailable", message: "Grading isn't configured right now." };
 
+  const deadline = Date.now() + TOTAL_BUDGET_MS;
   let feedback: string | null = null;
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
+    // Leave room for the independent fact-check; never show a grade it didn't approve.
+    if (remaining(deadline) < MIN_STEP_MS * 3) break;
     let raw: string;
     try {
-      raw = await callModel(apiKey, source, feedback);
+      raw = await callModel(apiKey, source, feedback, Math.min(ATTEMPT_TIMEOUT_MS, remaining(deadline) - MIN_STEP_MS * 2));
     } catch (error) {
       const status = (error as { status?: number }).status;
       console.error("roast attempt failed", { attempt, status: status ?? "network/timeout" });
@@ -450,7 +460,7 @@ export async function gradeResumeText(source: string, kind: SourceKind): Promise
     }
     if (checked.outcome.status !== "graded") return checked.outcome;
     // Independent semantic check before any grade is shown. Fails closed.
-    const verdict = await verifyOutcome(apiKey, source, checked.outcome);
+    const verdict = await verifyOutcome(apiKey, source, checked.outcome, deadline);
     if (verdict.approved) return checked.outcome;
     console.warn("roast rejected by verifier", { attempt, reasons: verdict.reasons.length });
     if (verdict.reasons[0] === "verifier unavailable") break;
@@ -458,7 +468,7 @@ export async function gradeResumeText(source: string, kind: SourceKind): Promise
   }
   return {
     status: "unavailable",
-    message: "We couldn't produce a grade we could back up with your résumé's own words. Please try again.",
+    message: "We couldn't produce a grade we could back up with your résumé's own words in time. No grade was given — please try again.",
   };
 }
 
