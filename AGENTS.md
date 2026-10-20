@@ -15,5 +15,6 @@
 - Paid deliverables require server-side Stripe Checkout Session verification (paid, tier, USD amount, email) plus a one-time redemption row in payment_redemptions — the browser can never unlock delivery.
 - Paid delivery runs only through src/lib/fulfillment (order snapshot before checkout, Stripe-verified, lease-claimed processing); never reintroduce browser-triggered generation — the browser can't be trusted to prove payment.
 - Order recovery uses expiring HttpOnly same-site capability cookies and immutable server snapshots; never put customer answers or photos in browser storage, because device storage is readable by client scripts.
+- Purchase layout/photo are immutable from initial order insertion, including unpaid orders; recovery returns that exact selection because an open Checkout Session can be paid concurrently and a replacement snapshot would misrepresent the purchase.
 - Service recommendations are pure rules independent of roast grades and require explicit selection, because a recommendation must never silently change a purchase.
 - Customer timestamps use the shared America/Chicago Intl formatter while persisted timestamps remain UTC, because daylight saving offsets vary.
