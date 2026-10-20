@@ -148,7 +148,7 @@ describe("full output check", () => {
           item("Cliché objective", "Hard working team player"),
           item("No education", null, "education"),
         ],
-        roast: "Two jobs, zero outcomes, and the objective is a fortune cookie.",
+        roast: "Two jobs, zero outcomes, and an objective that could apply to anyone.",
         tip: "Rewrite this as what you achieved for customers.",
         tip_quote: "Responsible for helping customers",
       }),
