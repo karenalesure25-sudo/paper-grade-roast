@@ -1408,3 +1408,16 @@
 .clarity-product-art { display: block; }
 .clarity-product-art .career-snapshot { position: relative; right: auto; bottom: auto; margin: -10px -10px 0 auto; }
 @media (max-width: 600px) { .clarity-product-art .career-snapshot { margin-right: 0; } }
+
+/* Homepage: single Career Clarity AI preview (in the showcase); hero keeps only the illustrative snapshot. */
+.clarity-hero { overflow: clip; }
+.clarity-product-art { min-height: 0; display: grid; place-items: center; padding: 40px 0; }
+.career-snapshot.career-snapshot-hero {
+  position: relative; inset: auto; width: min(320px, 100%); margin-inline: auto;
+}
+.clarity-showcase { position: relative; z-index: 1; overflow: clip; }
+.clarity-showcase > * { min-width: 0; }
+@media (max-width: 600px) {
+  .clarity-product-art { min-height: 0; padding: 16px 0 8px; display: grid; }
+  .career-snapshot.career-snapshot-hero { width: 100%; max-width: 320px; }
+}

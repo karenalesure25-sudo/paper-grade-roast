@@ -257,8 +257,7 @@ export function ClarityHero() {
             strokeWidth="1.5"
           />
         </svg>
-        <CareerPanel />
-        <div className="career-snapshot glass-surface">
+        <div className="career-snapshot career-snapshot-hero glass-surface">
           <p>
             Your Career Snapshot <span>Example</span>
           </p>
