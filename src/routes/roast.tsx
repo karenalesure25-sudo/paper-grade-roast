@@ -31,6 +31,9 @@ export const Route = createFileRoute("/roast")({
 });
 
 const MAX_PASTE = 24000;
+/** Slightly above the server's own grading budget; past this we stop waiting and say so. */
+const CLIENT_WAIT_MS = 130_000;
+type Stage = "reading" | "grading";
 
 function RoastPage() {
   const grade = useServerFn(roastResume);
@@ -46,6 +49,22 @@ function RoastPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const resultRef = useRef<HTMLHeadingElement>(null);
   const [announce, setAnnounce] = useState("");
+  const [stage, setStage] = useState<Stage>("reading");
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!pending) return;
+    const started = Date.now();
+    setElapsed(0);
+    const t = setInterval(() => setElapsed(Math.round((Date.now() - started) / 1000)), 1000);
+    return () => clearInterval(t);
+  }, [pending]);
+
+  function cancel() {
+    requestId.current++;
+    setPending(false);
+    setError("Grading canceled. No grade was given — you can try again.");
+  }
 
   useEffect(() => setHistory(readRoasts()), []);
 
@@ -70,6 +89,7 @@ function RoastPage() {
       return setError("Paste your full résumé text (at least a few lines).");
 
     setPending(true);
+    setStage("reading");
     try {
       let payload:
         | { source: "pdf"; filename: string; dataBase64: string }
@@ -88,7 +108,15 @@ function RoastPage() {
             ? { source: "pdf", filename: prepared.filename, dataBase64: prepared.dataBase64 }
             : { source: "docx", filename: prepared.filename, text: prepared.text };
       }
-      const result = await grade({ data: payload });
+      if (id !== requestId.current) return;
+      setStage("grading");
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const result = await Promise.race([
+        grade({ data: payload }),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(() => reject(new Error("Grading is taking much longer than usual, so we stopped waiting. No grade was given — please try again.")), CLIENT_WAIT_MS);
+        }),
+      ]).finally(() => clearTimeout(timer));
       if (id !== requestId.current) return; // input changed while we waited
       if (result.status !== "graded") {
         setError(result.message);
@@ -102,7 +130,7 @@ function RoastPage() {
     } catch (cause) {
       if (id !== requestId.current) return;
       setError(
-        cause instanceof Error && cause.message && cause.message.length < 200
+        cause instanceof Error && cause.message && cause.message.length < 220
           ? cause.message
           : "Something went wrong reaching the grader. Try again.",
       );
@@ -188,7 +216,16 @@ function RoastPage() {
             </div>
 
             <div role="status" aria-live="polite" className="mt-5">
-              {pending && <p className="font-sans text-[0.95rem] text-muted-foreground">Reading, grading and fact-checking your résumé…</p>}
+              {pending && (
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-sans text-[0.95rem] text-muted-foreground">
+                  <p>
+                    {stage === "reading" ? "Step 1 of 2 · Reading your file…" : "Step 2 of 2 · Grading and fact-checking against your résumé…"}{" "}
+                    <span className="tabular-nums">{elapsed}s</span>
+                    {stage === "grading" && elapsed < 60 ? " · usually 20–60 seconds" : stage === "grading" ? " · still working, up to about 2 minutes" : ""}
+                  </p>
+                  <button type="button" onClick={cancel} className="underline underline-offset-4 hover:text-ink">Cancel</button>
+                </div>
+              )}
               {!pending && announce && <p className="sr-only">{announce}</p>}
             </div>
             <div role="alert" aria-live="assertive">

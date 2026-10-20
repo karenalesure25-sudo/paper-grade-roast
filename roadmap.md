@@ -6,6 +6,9 @@
 - [x] Saved-intake recovery: paid/finished orders never block new orders. Purchase layout/photo are now immutable from order creation, including concurrent insert winners; recovery restores the exact selection. Three isolated regression tests added; real paid return remains unverified (live keys only).
 - [x] Strict roast rubric validation, anchored feedback and fail-closed verifier (live AI 2026-10-19: strong A, weak C, early-career B, injection C with injection flagged)
 - [x] Central Time displays with DST tests; 83 tests + typecheck pass
+- [x] Homepage: single Career Clarity AI preview, no hero card overlap (360/390/1280 no horizontal overflow)
+- [x] Order dashboard: Service → Details → Template → Review & pay; order snapshot created only on final "Place order & pay" (browser-verified 1280 full flow, 360/390 service→details)
+- [x] Roast: 100s server budget, client 130s stop, stage feedback + cancel/retry (live PDF/DOCX/text graded in 24–29s)
 
 - [x] Customer intake forms ($40/$50/$60) + review/submit, saved to backend
 - [x] Prelaunch audit: grounded roast safeguards
