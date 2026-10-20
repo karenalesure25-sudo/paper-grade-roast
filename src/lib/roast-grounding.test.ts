@@ -148,7 +148,7 @@ describe("full output check", () => {
           item("Cliché objective", "Hard working team player"),
           item("No education", null, "education"),
         ],
-        roast: "Two jobs, zero outcomes, and the objective is a fortune cookie.",
+        roast: "Two jobs, zero outcomes, and an objective that could apply to anyone.",
         tip: "Rewrite this as what you achieved for customers.",
         tip_quote: "Responsible for helping customers",
       }),
@@ -383,17 +383,22 @@ describe("exact A–F grade scale", () => {
 describe("roast tone and anchoring", () => {
   const strong = (o: Record<string, unknown>) => checkModelOutput(output({ rubric: { clarity: 4, impact: 4, specificity: 4, structure: 4, completeness: 4 }, strengths: [item("Leads with results", "Reduced order fulfillment time by 32%")], tip: "Optional: lead with the turnover win.", tip_quote: "turnover fell from 41% to 18%", ...o }), STRONG, "text");
   test("playful profanity aimed at the writing passes for a strong résumé", () => {
-    expect(strong({ roast: "Damn. \"Reduced order fulfillment time by 32%\" is the kind of shit recruiters frame." }).ok).toBe(true);
+    expect(strong({ roast: "\"Reduced order fulfillment time by 32%\" is the kind of shit recruiters frame." }).ok).toBe(true);
+  });
+  test("generic swear-first openers and stock catchphrases are rejected", () => {
+    expect(strong({ roast: "Damn, this is strong writing." }).ok).toBe(false);
+    expect(strong({ roast: "The bullets brought receipts." }).ok).toBe(false);
+    expect(strong({ roast: "Your duties entered witness protection." }).ok).toBe(false);
   });
   test("insulting the person is rejected", () => {
     expect(strong({ roast: "You're an idiot with good numbers." }).ok).toBe(false);
     expect(strong({ roast: "Nobody will hire this, damn." }).ok).toBe(false);
   });
   test("roast quote must be verbatim from the résumé", () => {
-    expect(strong({ roast: "Damn, nice.", roast_quote: "Led a team of 900 astronauts" }).ok).toBe(false);
+    expect(strong({ roast: "The turnover line is nice.", roast_quote: "Led a team of 900 astronauts" }).ok).toBe(false);
   });
   test("profanity in the tip, or hiring guarantees, are rejected", () => {
-    expect(strong({ roast: "Damn, nice.", tip: "Shit, lead with the turnover win." }).ok).toBe(false);
+    expect(strong({ roast: "The turnover line is nice.", tip: "Shit, lead with the turnover win." }).ok).toBe(false);
     expect(strong({ roast: "This will get you hired, guaranteed." }).ok).toBe(false);
   });
   test("glowing roast cannot sit on a D/F grade", () => {

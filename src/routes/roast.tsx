@@ -258,10 +258,10 @@ function RoastPage() {
 
               <section className="mt-16">
                 <h2 className="font-stamp text-2xl text-ink sm:text-3xl">
-                  {current.grade === "A" ? "Already sharp? Kay can still polish it." : "Want Kay to clean this up?"}
+                  {current.grade === "A" ? "Already sharp? There’s still room to polish." : "Ready to clean this up?"}
                 </h2>
                 <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-                  Free roast’s on us. If you’d rather hand the rewrite to a human, pick a service below — one flat price, no promises about who hires you, just better writing. {RESUME_TEMPLATES.length} layouts are shown as blurred samples with placeholder details.
+                  Free roast’s on us. Want a rewrite built from your actual experience? Choose a service below — one flat price, no hiring promises. {RESUME_TEMPLATES.length} layouts are shown as blurred samples with placeholder details.
                 </p>
                 <div className="mt-8">
                   <TemplatePicker value={preview} onChange={setPreview} unlocked={false} />
