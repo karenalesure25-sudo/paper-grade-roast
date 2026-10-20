@@ -67,6 +67,7 @@ function OrderPage() {
   const [guide, setGuide] = useState<ServiceAnswers | undefined>();
   const [recovering, setRecovering] = useState(true);
   const [previous, setPrevious] = useState<{ token: string; tier: string } | null>(null);
+  const [selectionLocked, setSelectionLocked] = useState(false);
   useEffect(() => {
     let active = true;
     setIntakeId(null);
@@ -75,10 +76,19 @@ function OrderPage() {
     setTemplate("sidebar");
     setRecovering(true);
     setPrevious(null);
+    setSelectionLocked(false);
     recover({ data: { tier: tierId as "revamp" | "scratch" | "bundle" } }).then(async (saved) => {
       if (!active || !saved) return;
       setPrevious(saved.previous);
-      // Saved unpaid intake: stay here so the layout/photo can still be reviewed before paying.
+      if ("selection" in saved && saved.selection) {
+        const selection = saved.selection;
+        const layout = RESUME_TEMPLATES.find((t) => t.id === selection.template);
+        if (!layout) throw new Error("Saved layout unavailable.");
+        setTemplate(layout.id);
+        setPhoto(selection.photo);
+        setSelectionLocked(true);
+      }
+      // Recover the exact purchase snapshot, never a fresh default layout/photo.
       if (saved.intakeId) setIntakeId(saved.intakeId);
       else if (saved.token) await navigate({ to: "/orders/$token", params: { token: saved.token } });
     }).catch(() => { if (active) setError("Saved progress couldn’t be checked. Please try refreshing before starting again."); }).finally(() => { if (active) setRecovering(false); });
@@ -159,17 +169,24 @@ function OrderPage() {
               <div>
                 <SectionLabel step={layoutStep}>Pick your layout</SectionLabel>
                 <p className="mt-3 max-w-2xl font-sans text-[0.95rem] text-muted-foreground">
-                  Your intake was saved. Preview the {RESUME_TEMPLATES.length} layouts ({PHOTO_LAYOUT_COUNT} use a
+                  Your intake was saved. Review the {RESUME_TEMPLATES.length} layouts ({PHOTO_LAYOUT_COUNT} use a
                   photo), then pay ${tier.price} securely with Stripe. Writing starts automatically once Stripe
                   confirms your payment.
                 </p>
               </div>
-              <TemplatePicker value={template} onChange={setTemplate} unlocked={false} />
+              {selectionLocked && <div>
+                <p role="status" className="text-sm text-muted-foreground">This saved order keeps the layout and photo you chose before checkout. A different layout needs a new intake.</p>
+                <Button type="button" variant="link" disabled={pending} onClick={() => { setIntakeId(null); setSelectionLocked(false); setTemplate("sidebar"); setPhoto(null); setError(null); setGuided(true); }}>Start a new intake</Button>
+              </div>}
+              <fieldset disabled={selectionLocked || pending}>
+                <legend className="sr-only">Résumé layout</legend>
+                <TemplatePicker value={template} onChange={setTemplate} unlocked={false} />
+              </fieldset>
               {templateUsesPhoto ? (
                 <div>
                   <SectionLabel step={layoutStep + 1}>Your photo</SectionLabel>
                   <div className="mt-5">
-                    <PhotoCropper round={template === "sidebar"} value={photo} onConfirm={setPhoto} />
+                    {selectionLocked && photo ? <img src={photo} alt="Your saved order photo" className="h-40 w-40 rounded-lg object-cover" /> : <PhotoCropper round={template === "sidebar"} value={photo} onConfirm={setPhoto} />}
                   </div>
                 </div>
               ) : (
@@ -205,6 +222,7 @@ function OrderPage() {
             }} />
           )}
           {!intakeId && <p className="mt-5 text-sm text-muted-foreground">Your intake is saved when you submit it. Unsubmitted answers and photos stay on this page only.</p>}
+          {!intakeId && error && <p role="alert" className="mt-5 text-redpen-text">{error}</p>}
         </div>
       </main>
       <SiteFooter />

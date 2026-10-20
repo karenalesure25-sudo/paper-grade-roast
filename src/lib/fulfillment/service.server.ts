@@ -9,6 +9,7 @@ import { orderByToken, supabaseRepo } from "./repo.server";
 import { buildSnapshotSource } from "./snapshot";
 import { liveModels } from "./writer.server";
 import { RESUME_TEMPLATES } from "../resume-templates";
+import { assertPurchaseSelection } from "./purchase-selection";
 
 const BUCKET = "intake-uploads";
 
@@ -58,17 +59,6 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
   if (ex && ex.status !== "awaiting_payment") return { already: true as const, token: ex.access_token };
 
   let order = ex;
-  if (order) {
-    // Unpaid: the layout/photo shown on screen must be the one charged and delivered.
-    const photo = layout.usesPhoto ? input.photo ?? null : null;
-    if (order.template !== input.template || (order.photo ?? null) !== photo) {
-      const { data: synced, error } = await db.from("fulfillment_orders" as never)
-        .update({ template: input.template, photo } as never)
-        .eq("id", order.id).eq("status", "awaiting_payment").is("paid_at", null).select("*").maybeSingle();
-      if (error || !synced) throw new Error("Your saved order changed. Reopen your order page.");
-      order = synced as OrderRow;
-    }
-  }
   if (!order) {
     let extracted: string | null = null;
     if (row.tier !== "scratch") {
@@ -90,7 +80,7 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
     }
     const { snapshot, sourceText } = buildSnapshotSource(row.tier, row.answers, extracted, row.resume_filename ?? "your intake answers");
     if (sourceText.length > 40_000) throw new Error("Your résumé is too long for us to process in full. Please shorten it to under ~6 pages.");
-    const photo = input.photo && input.photo.startsWith("data:image/") && input.photo.length < 900_000 ? input.photo : null;
+    const photo = layout.usesPhoto ? input.photo ?? null : null;
     const { data: created, error } = await db.from("fulfillment_orders" as never).insert({
       intake_id: row.id, tier: row.tier, email: snapshot.email, template: input.template,
       snapshot, source_text: sourceText, job_text: jobText, source_sha256: await sha256(sourceText + "\n" + (jobText ?? "")), photo,
@@ -102,6 +92,9 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
     else order = created as OrderRow;
   }
   if (!order) throw new Error("We couldn't save your order. Try again.");
+  // Also checks the winning snapshot after a concurrent insert. Never change a
+  // selection while another tab may create or pay an existing Stripe session.
+  assertPurchaseSelection(order, { template: input.template, photo: layout.usesPhoto ? input.photo ?? null : null });
   return checkoutForOrder(order, input.origin);
 }
 
@@ -148,16 +141,20 @@ export async function recoverProgress(tier?: TierId, intakeId?: string, token?: 
   if (token) {
     const order = await orderByToken(token);
     if (order && order.status !== "awaiting_payment") previous = { token: order.access_token, tier: order.tier };
-    else if (order && (!tier || order.tier === tier)) return { intakeId: null, token: order.access_token, tier: order.tier, previous: null };
+    else if (order && (!tier || order.tier === tier)) {
+      const { data } = await (await admin()).from("fulfillment_orders" as never).select("intake_id").eq("id", order.id).maybeSingle();
+      const saved = data as { intake_id: string } | null;
+      return { intakeId: saved?.intake_id ?? null, token: order.access_token, tier: order.tier, previous: null, selection: { template: order.template, photo: order.photo ?? null } };
+    }
   }
   if (!tier || !intakeId || !/^[0-9a-f-]{36}$/i.test(intakeId)) return previous ? { intakeId: null, token: null, tier, previous } : null;
   const db = await admin();
   const { data } = await db.from("intakes" as never).select("id,tier").eq("id", intakeId).eq("tier", tier).gt("created_at", new Date(Date.now() - 86400000).toISOString()).maybeSingle();
   if (!data) return previous ? { intakeId: null, token: null, tier, previous } : null;
-  const { data: saved } = await db.from("fulfillment_orders" as never).select("access_token,status").eq("intake_id", intakeId).gt("expires_at", new Date().toISOString()).maybeSingle();
-  const s = saved as { access_token: string; status: string } | null;
+  const { data: saved } = await db.from("fulfillment_orders" as never).select("access_token,status,template,photo").eq("intake_id", intakeId).gt("expires_at", new Date().toISOString()).maybeSingle();
+  const s = saved as { access_token: string; status: string; template: string; photo: string | null } | null;
   if (s && s.status !== "awaiting_payment") return { intakeId: null, token: null, tier, previous: previous ?? { token: s.access_token, tier } };
-  return { intakeId, token: s?.access_token ?? null, tier, previous };
+  return { intakeId, token: s?.access_token ?? null, tier, previous, ...(s ? { selection: { template: s.template, photo: s.photo } } : {}) };
 }
 
 export type PublicStatus = {
