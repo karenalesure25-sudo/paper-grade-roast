@@ -342,6 +342,8 @@ export function checkModelOutput(raw: string, source: string, kind: SourceKind):
   if (PERSONAL_ATTACK.test(roast)) problems.push("roast attacks the person instead of the writing");
   if (PERSONAL_ATTACK.test(tip) || /\b(fuck|shit|damn)/i.test(tip)) problems.push("tip must be plain, constructive language");
   if (OUTCOME_CLAIM.test(roast) || OUTCOME_CLAIM.test(tip)) problems.push("hiring outcome claim");
+  if (/^\W*(damn|shit|fuck\w*|wow|okay|ok|well|oof|yikes)\b/i.test(roast)) problems.push("roast opens with a generic interjection; start with a résumé-specific detail");
+  if (/\b(receipts|witness protection|fortune cookie|duty list|linkedin bingo|word salad|chef'?s kiss)\b/i.test(roast)) problems.push("stock catchphrase in roast; write an original line");
   if ((roast.match(/\b(fuck\w*|shit\w*|damn\w*|hell|ass)\b/gi) ?? []).length > 2) problems.push("too much profanity; at most two swears");
   if (tipQuote && !quoteInSource(tipQuote, normalizedSource)) problems.push("tip_quote not found in résumé");
   if (!tipQuote && !weaknesses.kept.some((w) => w.missing)) {
