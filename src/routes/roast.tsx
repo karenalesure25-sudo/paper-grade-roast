@@ -215,15 +215,27 @@ function RoastPage() {
               <StampButton type="submit" disabled={pending}>{pending ? "Grading..." : "Grade it"}</StampButton>
             </div>
 
+            {/* Stage changes are announced; the seconds counter is aria-hidden so it isn't read every second. */}
             <div role="status" aria-live="polite" className="mt-5">
               {pending && (
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 font-sans text-[0.95rem] text-muted-foreground">
-                  <p>
-                    {stage === "reading" ? "Step 1 of 2 · Reading your file…" : "Step 2 of 2 · Grading and fact-checking against your résumé…"}{" "}
-                    <span className="tabular-nums">{elapsed}s</span>
-                    {stage === "grading" && elapsed < 60 ? " · usually 20–60 seconds" : stage === "grading" ? " · still working, up to about 2 minutes" : ""}
-                  </p>
-                  <button type="button" onClick={cancel} className="underline underline-offset-4 hover:text-ink">Cancel</button>
+                <div className="premium-panel flex flex-col items-center gap-5 px-5 py-8 text-center sm:flex-row sm:items-center sm:gap-7 sm:px-8 sm:text-left">
+                  <div className="roast-wheel shrink-0" aria-hidden="true" />
+                  <div className="min-w-0">
+                    <p className="font-brand text-2xl text-ivory sm:text-3xl">Roasting your résumé…</p>
+                    <p className="mt-2 font-sans text-[0.95rem] leading-relaxed text-ink">
+                      Please stay on this page. Don’t refresh or go back while your roast is loading.
+                    </p>
+                    <p className="mt-3 font-sans text-[0.9rem] text-muted-foreground">
+                      {stage === "reading" ? "Step 1 of 2 · Reading your file" : "Step 2 of 2 · Grading and fact-checking against your résumé"}
+                      <span aria-hidden="true">
+                        {" · "}<span className="tabular-nums">{elapsed}s</span>
+                        {stage === "grading" && elapsed < 60 ? " · usually 20–60 seconds" : stage === "grading" ? " · still working, up to about 2 minutes" : ""}
+                      </span>
+                    </p>
+                    <button type="button" onClick={cancel} className="mt-4 rounded-md border border-border px-4 py-2 font-sans text-[0.9rem] text-ink hover:border-primary">
+                      Cancel roast
+                    </button>
+                  </div>
                 </div>
               )}
               {!pending && announce && <p className="sr-only">{announce}</p>}
@@ -245,9 +257,11 @@ function RoastPage() {
               </section>
 
               <section className="mt-16">
-                <h2 className="font-stamp text-2xl text-ink sm:text-3xl">Want Kay to fix it?</h2>
+                <h2 className="font-stamp text-2xl text-ink sm:text-3xl">
+                  {current.grade === "A" ? "Already sharp? Kay can still polish it." : "Want Kay to clean this up?"}
+                </h2>
                 <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-                  {RESUME_TEMPLATES.length} layouts, shown as blurred samples with placeholder details.
+                  Free roast’s on us. If you’d rather hand the rewrite to a human, pick a service below — one flat price, no promises about who hires you, just better writing. {RESUME_TEMPLATES.length} layouts are shown as blurred samples with placeholder details.
                 </p>
                 <div className="mt-8">
                   <TemplatePicker value={preview} onChange={setPreview} unlocked={false} />
