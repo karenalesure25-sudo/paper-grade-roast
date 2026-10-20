@@ -42,8 +42,8 @@ async function filePayload(file: File) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="premium-panel p-6 sm:p-8">
-      <h2 className="font-brand text-2xl text-ivory sm:text-3xl">{title}</h2>
+    <section className="premium-panel p-5 sm:p-7">
+      <h2 className="font-brand text-2xl text-ivory sm:text-[1.7rem]">{title}</h2>
       <div className="mt-6 space-y-6">{children}</div>
     </section>
   );
@@ -56,6 +56,51 @@ function FieldError({ id, msg }: { id: string; msg?: string | undefined }) {
       {msg}
     </p>
   );
+}
+
+
+/** Rows for the final order review; built from the saved intake answers. */
+export function intakeSummaryRows(tier: Tier, a: IntakeAnswers, resume: File | null, jobFile: File | null): Array<[string, string]> {
+  const isScratch = tier.id === "scratch";
+  const isBundle = tier.id === "bundle";
+    const rows: Array<[string, string]> = [
+      ["Name", a.fullName],
+      ["Email", a.email],
+      ["Phone", a.phone],
+    ];
+    if (!isScratch) rows.push(["Current résumé", resume?.name ?? ""]);
+    if (isScratch || isBundle) {
+      rows.push(["Target job title", a.targetJobTitle], ["Target career field", a.careerField]);
+    }
+    if (isScratch) {
+      rows.push(
+        [
+          "Work history",
+          a.workHistory
+            .map((w) => `${w.title} — ${w.employer} (${w.dates})\n${w.details}`)
+            .join("\n\n"),
+        ],
+        [
+          "Education",
+          a.education.map((e) => `${e.credential} — ${e.school}${e.dates ? ` (${e.dates})` : ""}`).join("\n"),
+        ],
+        ["Skills", a.skills],
+        ["Certifications", a.certifications],
+        ["Additional professional experience", a.additionalExperience],
+      );
+    }
+    if (isBundle) {
+      rows.push(
+        ["Company name", a.companyName],
+        ["Specific job title", a.specificJobTitle],
+        ["Job posting URL", a.jobUrl],
+        ["Full job description", a.jobDescription],
+        ["Job posting upload", jobFile?.name ?? ""],
+      );
+    }
+    rows.push(["Additional information", a.additionalInfo]);
+
+  return rows;
 }
 
 export function IntakeFlow({
@@ -73,7 +118,6 @@ export function IntakeFlow({
   const [jobFile, setJobFile] = useState<File | null>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [step, setStep] = useState<"form" | "review">("form");
   const [pending, setPending] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const resumeRef = useRef<HTMLInputElement>(null);
@@ -185,11 +229,10 @@ export function IntakeFlow({
     }
     setResume(r);
     setJobFile(j);
-    setStep("review");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    void saveDetails(r, j);
   }
 
-  async function finalSubmit() {
+  async function saveDetails(resume: File | null, jobFile: File | null) {
     if (pending) return;
     setPending(true);
     setSubmitError(null);
@@ -208,93 +251,17 @@ export function IntakeFlow({
     } catch (cause) {
       console.error("intake submit failed");
       setSubmitError(
-        cause instanceof Error && cause.message ? cause.message : "We couldn't submit your order. Try again.",
+        cause instanceof Error && cause.message ? cause.message : "We couldn't save your details. Nothing was charged — try again.",
       );
     } finally {
       setPending(false);
     }
   }
 
-  if (step === "review") {
-    const rows: Array<[string, string]> = [
-      ["Service", `${tier.name} — $${tier.price}`],
-      ["Name", a.fullName],
-      ["Email", a.email],
-      ["Phone", a.phone],
-    ];
-    if (!isScratch) rows.push(["Current résumé", resume?.name ?? ""]);
-    if (isScratch || isBundle) {
-      rows.push(["Target job title", a.targetJobTitle], ["Target career field", a.careerField]);
-    }
-    if (isScratch) {
-      rows.push(
-        [
-          "Work history",
-          a.workHistory
-            .map((w) => `${w.title} — ${w.employer} (${w.dates})\n${w.details}`)
-            .join("\n\n"),
-        ],
-        [
-          "Education",
-          a.education.map((e) => `${e.credential} — ${e.school}${e.dates ? ` (${e.dates})` : ""}`).join("\n"),
-        ],
-        ["Skills", a.skills],
-        ["Certifications", a.certifications],
-        ["Additional professional experience", a.additionalExperience],
-      );
-    }
-    if (isBundle) {
-      rows.push(
-        ["Company name", a.companyName],
-        ["Specific job title", a.specificJobTitle],
-        ["Job posting URL", a.jobUrl],
-        ["Full job description", a.jobDescription],
-        ["Job posting upload", jobFile?.name ?? ""],
-      );
-    }
-    rows.push(["Additional information", a.additionalInfo]);
-
-    return (
-      <div className="mt-12 space-y-8">
-        <Card title="Review your order">
-          <p className="font-sans text-[0.95rem] text-muted-foreground">
-            Check everything below. Go back to edit anything before you submit.
-          </p>
-          <dl className="divide-y divide-border">
-            {rows.map(([k, v]) => (
-              <div key={k} className="py-4">
-                <dt className="font-typewriter text-xs tracking-[0.24em] text-muted-foreground uppercase">{k}</dt>
-                <dd className="mt-2 max-h-64 overflow-y-auto font-sans text-[0.95rem] break-words whitespace-pre-wrap text-ink">
-                  {v.trim() ? v : <span className="text-muted-foreground">Not provided</span>}
-                </dd>
-              </div>
-            ))}
-          </dl>
-        </Card>
-        <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() => setStep("form")}
-            className="font-sans text-[0.95rem] text-ink underline decoration-ink-soft decoration-2 underline-offset-4"
-          >
-            Edit answers
-          </button>
-          <StampButton type="button" onClick={finalSubmit} disabled={pending}>
-            {pending ? "Submitting..." : "SUBMIT ORDER"}
-          </StampButton>
-        </div>
-        <div aria-live="polite">
-          {submitError && <p className="font-sans text-[0.95rem] text-redpen-text">{submitError}</p>}
-        </div>
-      </div>
-    );
-  }
-
   const errCount = Object.keys(errors).length;
 
   return (
-    <form onSubmit={review} noValidate className="mt-12 space-y-8">
+    <form onSubmit={review} noValidate className="space-y-6" aria-busy={pending}>
       {isBundle && (
         <p className="rounded-r-lg border-l-4 border-accent bg-card p-5 font-sans text-[1rem] font-semibold text-ink">
           This package includes tailoring your resume to ONE specific job posting.
@@ -489,9 +456,11 @@ export function IntakeFlow({
         </label>
         <FieldError id="f-confirm" msg={errors["confirm"]} />
         <div className="mt-6">
-          <StampButton type="submit">REVIEW ORDER</StampButton>
+          <StampButton type="submit" disabled={pending}>{pending ? "Saving details…" : "Save details & choose template"}</StampButton>
         </div>
+        <p className="mt-3 font-sans text-[0.85rem] text-muted-foreground">This saves your details only. You’ll pick a template and review everything before any order is placed or payment is taken.</p>
         <div aria-live="polite">
+          {submitError && <p role="alert" className="mt-4 font-sans text-[0.95rem] text-redpen-text">{submitError}</p>}
           {errCount > 0 && (
             <p className="mt-4 font-sans text-[0.95rem] text-redpen-text">
               Please fix the {errCount === 1 ? "highlighted field" : `${errCount} highlighted fields`} above.
