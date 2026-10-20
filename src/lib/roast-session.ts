@@ -1,10 +1,12 @@
 import type { RoastResult } from "./roast.functions";
+import { isLetterGrade } from "./roast-grounding";
 
 /**
  * Roasts live in sessionStorage only — they disappear when the tab closes and
  * resume content is never persisted server-side. Accounts would replace this.
  */
 const KEY = "kcs.roasts.v2";
+// Older entries with any grade outside A/B/C/D/F (e.g. plus/minus) are dropped on read.
 
 export type GradedRoast = Extract<RoastResult, { status: "graded" }>;
 export type StoredRoast = GradedRoast & { id: string; createdAt: number };
@@ -20,7 +22,7 @@ export function readRoasts(): StoredRoast[] {
     if (!raw) return [];
     const parsed: unknown = JSON.parse(raw);
     return Array.isArray(parsed)
-      ? (parsed as StoredRoast[]).filter((r) => r && r.status === "graded" && Array.isArray(r.notes))
+      ? (parsed as StoredRoast[]).filter((r) => r && r.status === "graded" && isLetterGrade(r.grade) && Array.isArray(r.notes))
       : [];
   } catch {
     return [];

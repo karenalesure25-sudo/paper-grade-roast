@@ -349,6 +349,9 @@ export function checkModelOutput(raw: string, source: string, kind: SourceKind):
   }
   if (grade === "A" || grade === "B") {
     if (SEVERE_NEGATIVE.test(roast)) problems.push("harsh roast contradicts an A/B grade");
+  }
+  if (grade === "D" || grade === "F") {
+    if (/\b(slaps|flawless|perfect|nailed it|chef'?s kiss|masterpiece|impeccable)\b/i.test(roast)) problems.push("glowing roast contradicts a D/F grade");
     if (weaknesses.kept.some((w) => w.missing === "summary")) problems.push("missing summary is not a weakness for a strong résumé");
   }
   if (weaknesses.kept.length === 0 && grade !== "A") problems.push("no verifiable weaknesses");
