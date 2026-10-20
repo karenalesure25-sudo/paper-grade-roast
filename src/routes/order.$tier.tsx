@@ -259,7 +259,7 @@ function OrderPage() {
                       Your details are saved (no order yet). Choose one of {RESUME_TEMPLATES.length} templates — {PHOTO_LAYOUT_COUNT} use a photo.
                     </p>
                   </div>
-                  <fieldset disabled={pending}>
+                  <fieldset disabled={pending} className="min-w-0">
                     <legend className="sr-only">Résumé template</legend>
                     <TemplatePicker value={template} onChange={(id) => { setTemplate(id); setError(null); }} unlocked={false} />
                   </fieldset>

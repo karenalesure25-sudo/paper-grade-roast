@@ -15,7 +15,7 @@ export function TemplatePicker({
   unlocked: boolean;
 }) {
   return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {RESUME_TEMPLATES.map((template) => {
         const selected = template.id === value;
         return (
