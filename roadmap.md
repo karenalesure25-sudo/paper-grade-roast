@@ -2,7 +2,7 @@
 - [x] Metallic-logo signature homepage revision and responsive cross-route verification
 # Roadmap
 
-- [ ] Responsive visual audit and scoped fixes: homepage, roast, and order dashboard at 1440/1280/1024/390/360; before/after evidence, anchors, assets, and no-payment fixture validation.
+- [x] Responsive visual audit and scoped fixes: homepage, roast, and order dashboard at 1440/1280/1024/390/360; before/after evidence, anchors, loaded logo/portrait, and browser-only template/review fixtures verified without checkout calls. Evidence: /tmp/browser/responsive-audit/. No production publish.
 
 - [x] Scoped order questionnaire with explicit recommendations and answer carry-over (browser-verified 1280px + 390px: no résumé→Scratch, targeted job→Bundle, explicit accept, role/job text carried, answers kept on edit)
 - [x] Saved-intake recovery: paid/finished orders never block new orders. Purchase layout/photo are now immutable from order creation, including concurrent insert winners; recovery restores the exact selection. Three isolated regression tests added; real paid return remains unverified (live keys only).
