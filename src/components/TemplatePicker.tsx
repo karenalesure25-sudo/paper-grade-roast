@@ -15,7 +15,8 @@ export function TemplatePicker({
   unlocked: boolean;
 }) {
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="@container min-w-0">
+    <div className="grid min-w-0 grid-cols-1 gap-6 @min-[480px]:grid-cols-2 @min-[760px]:grid-cols-3">
       {RESUME_TEMPLATES.map((template) => {
         const selected = template.id === value;
         return (
@@ -24,7 +25,7 @@ export function TemplatePicker({
             type="button"
             aria-pressed={selected}
             onClick={() => onChange(template.id)}
-            className={`group block min-h-11 text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            className={`group block min-h-11 min-w-0 text-left transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
               selected ? "" : "opacity-90"
             }`}
           >
@@ -75,6 +76,7 @@ export function TemplatePicker({
           </button>
         );
       })}
+    </div>
     </div>
   );
 }

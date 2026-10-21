@@ -47,9 +47,9 @@ function StepNav({ current }: { current: StepIndex }) {
   return (
     <nav aria-label="Order progress">
       {/* Mobile: compact progress, not a squeezed desktop list */}
-      <div className="lg:hidden">
-        <div className="flex items-baseline justify-between gap-3 text-sm">
-          <span className="font-semibold text-ivory">
+      <div className="xl:hidden">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-3 text-sm">
+          <span className="min-w-0 font-semibold text-ivory">
             Step {current + 1} of {STEPS.length} · {STEPS[current]}
           </span>
           {current < 3 && <span className="shrink-0 text-muted-foreground">Next: {STEPS[current + 1]}</span>}
@@ -58,7 +58,7 @@ function StepNav({ current }: { current: StepIndex }) {
           <div className="h-full rounded-full bg-gradient-to-r from-accent to-gold transition-[width]" style={{ width: `${pct}%` }} />
         </div>
       </div>
-      <ol className="hidden space-y-1 lg:block">
+      <ol className="hidden space-y-1 xl:block">
         {STEPS.map((label, i) => {
           const state = i < current ? "done" : i === current ? "current" : "todo";
           return (
@@ -220,8 +220,8 @@ function OrderPage() {
             </p>
           )}
 
-          <div className="mt-8 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)_260px] lg:items-start">
-            <div className="lg:sticky lg:top-32"><StepNav current={step} /></div>
+          <div className="mt-8 grid gap-6 xl:grid-cols-[220px_minmax(0,1fr)_260px] xl:items-start">
+            <div className="xl:sticky xl:top-32"><StepNav current={step} /></div>
 
             <div ref={workspace} className="min-w-0 scroll-mt-28 sm:scroll-mt-32">
               {recovering ? (
@@ -244,9 +244,9 @@ function OrderPage() {
                 </>
               ) : step === 1 ? (
                 <>
-                  <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-                    <h2 className="font-brand text-2xl text-ivory sm:text-3xl">Your résumé & details</h2>
-                    <Button type="button" variant="outline" size="sm" onClick={() => { setGuided(false); toTop(); }}>← Back to service</Button>
+                  <div className="mb-5 grid items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+                    <h2 className="min-w-0 font-brand text-2xl text-ivory sm:text-3xl">Your résumé & details</h2>
+                    <Button type="button" variant="outline" size="sm" className="justify-self-start sm:justify-self-end" onClick={() => { setGuided(false); toTop(); }}>← Back to service</Button>
                   </div>
                   <IntakeFlow key={tier.id} tier={tier} initialAnswers={{ targetJobTitle: guide?.targetRole ?? "", specificJobTitle: guide?.targetRole ?? "", jobDescription: guide?.jobDescription ?? "" }} onSubmitted={handleIntake} />
                 </>
@@ -325,7 +325,7 @@ function OrderPage() {
               {!intakeId && error && <p role="alert" className="mt-5 text-redpen-text">{error}</p>}
             </div>
 
-            <div className="lg:sticky lg:top-32">
+            <div className="xl:sticky xl:top-32">
               <Summary tier={tier} template={intakeId ? template : null} photoNeeded={templateUsesPhoto} photo={photo} />
             </div>
           </div>
