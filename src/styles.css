@@ -520,7 +520,8 @@
 }
 .clarity-nav {
   min-height: 88px;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 228px) minmax(0, 1fr) auto;
   align-items: center;
   justify-content: space-between;
   gap: 20px;
@@ -530,13 +531,16 @@
 }
 .clarity-logo {
   flex-shrink: 0;
-  width: 228px;
+  min-width: 0;
+  width: 100%;
 }
 .clarity-logo img {
   width: 100%;
 }
 .clarity-desktop-nav {
   display: flex;
+  justify-content: center;
+  min-width: 0;
   gap: clamp(13px, 1.6vw, 27px);
   align-items: center;
 }
@@ -552,6 +556,7 @@
 }
 .clarity-nav-actions {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 10px;
 }
@@ -626,13 +631,14 @@
 }
 .clarity-hero {
   display: grid;
-  grid-template-columns: 55fr 45fr;
+  grid-template-columns: minmax(0, 55fr) minmax(0, 45fr);
   align-items: center;
-  min-height: 630px;
-  padding-block: 68px 38px;
+  min-height: 560px;
+  padding-block: 48px 30px;
   position: relative;
 }
 .clarity-hero-copy {
+  min-width: 0;
   position: relative;
   z-index: 2;
 }
@@ -725,7 +731,8 @@
   margin-left: -24px;
 }
 .career-panel-heading {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 13px;
 }
@@ -733,6 +740,9 @@
   width: 36px;
   height: 44px;
   object-fit: contain;
+}
+.career-panel-heading > div {
+  min-width: 0;
 }
 .career-panel h3 {
   font-family: var(--font-brand);
@@ -781,7 +791,7 @@
 }
 .career-quick-actions {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 9px;
   margin-top: 16px;
 }
@@ -896,6 +906,9 @@
     border-color 0.25s,
     box-shadow 0.25s;
 }
+.clarity-service-card > div:last-child {
+  min-width: 0;
+}
 .clarity-service-card:hover {
   transform: translateY(-5px);
   border-color: #8ac3e688;
@@ -980,10 +993,10 @@
 }
 .clarity-showcase {
   display: grid;
-  grid-template-columns: 40fr 60fr;
+  grid-template-columns: minmax(0, 40fr) minmax(0, 60fr);
   gap: 85px;
-  padding-block: 125px;
-  align-items: center;
+  padding-block: 80px;
+  align-items: start;
 }
 .clarity-showcase h2 {
   font-family: var(--font-brand);
@@ -1079,22 +1092,22 @@
 }
 .clarity-statement .clarity-shell {
   display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
   column-gap: clamp(40px, 6vw, 96px);
   align-items: start;
 }
 .clarity-statement .clarity-eyebrow {
-  grid-column: 1 / -1;
+  grid-column: 1;
   grid-row: 1;
 }
 .clarity-statement h2 {
-  grid-column: 1 / -1;
+  grid-column: 1;
   grid-row: 2;
 }
 .founder-portrait {
-  grid-column: 1;
-  grid-row: 3;
-  margin: 30px 0 0;
+  grid-column: 2;
+  grid-row: 1 / 4;
+  margin: 0;
   max-width: 300px;
 }
 .founder-portrait img {
@@ -1116,7 +1129,7 @@
   font-weight: 600;
 }
 .clarity-statement .clarity-shell > div {
-  grid-column: 2;
+  grid-column: 1;
   grid-row: 3;
   display: flex;
   gap: 35px;
@@ -1207,6 +1220,9 @@
   }
 }
 @media (max-width: 1250px) {
+  .clarity-nav {
+    grid-template-columns: minmax(0, 228px) auto;
+  }
   .clarity-desktop-nav {
     display: none;
   }
@@ -1282,6 +1298,7 @@
     max-width: 630px;
   }
   .clarity-statement .clarity-shell {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 240px);
     column-gap: clamp(28px, 5vw, 48px);
   }
   .founder-portrait {
@@ -1294,13 +1311,14 @@
     margin-top: 12px;
   }
   .clarity-nav {
+    grid-template-columns: minmax(0, 165px) auto;
     border-radius: 20px;
     gap: 8px;
     padding: 6px 10px;
     min-height: 72px;
   }
   .clarity-logo {
-    width: 165px;
+    max-width: 165px;
   }
   .clarity-nav-actions {
     gap: 5px;

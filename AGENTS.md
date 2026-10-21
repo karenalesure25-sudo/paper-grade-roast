@@ -18,3 +18,5 @@
 - Purchase layout/photo are immutable from initial order insertion, including unpaid orders; recovery returns that exact selection because an open Checkout Session can be paid concurrently and a replacement snapshot would misrepresent the purchase.
 - Service recommendations are pure rules independent of roast grades and require explicit selection, because a recommendation must never silently change a purchase.
 - Customer timestamps use the shared America/Chicago Intl formatter while persisted timestamps remain UTC, because daylight saving offsets vary.
+
+- Size template picker columns by their own container, and show the three-column order dashboard only at xl; nested workspace width, not viewport width, determines usable preview sizes.
