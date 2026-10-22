@@ -324,6 +324,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admit_recovery_request: {
+        Args: {
+          _email_hash: string
+          _ip_hash: string
+          _per_email: number
+          _per_ip: number
+        }
+        Returns: boolean
+      }
       claim_fulfillment: {
         Args: { _lease_seconds?: number; _order_id: string }
         Returns: {
@@ -368,6 +377,10 @@ export type Database = {
         Args: { _kind: string; _lease_seconds?: number; _order_id: string }
         Returns: boolean
       }
+      claim_notification_fenced: {
+        Args: { _kind: string; _lease_seconds?: number; _order_id: string }
+        Returns: string
+      }
       due_fulfillments: { Args: { _limit?: number }; Returns: string[] }
       due_notifications: {
         Args: { _limit?: number }
@@ -379,6 +392,10 @@ export type Database = {
       finish_notification: {
         Args: { _kind: string; _order_id: string; _patch: Json }
         Returns: undefined
+      }
+      finish_notification_fenced: {
+        Args: { _kind: string; _order_id: string; _patch: Json; _token: string }
+        Returns: boolean
       }
       purge_expired_fulfillments: { Args: never; Returns: number }
       renew_fulfillment_lease: {
