@@ -5,6 +5,7 @@
  */
 import type { Certification, FullResume, SourceFacts, Violation } from "./validate";
 import type { Classification, RevisionInput, RevisionModelPort } from "./revision";
+import type { Package } from "./validate";
 
 const RESPONSES_URL = "https://ai.gateway.lovable.dev/v1/responses";
 const WRITER_MODEL = "openai/gpt-6-astra";
@@ -234,4 +235,20 @@ Reply with ONLY JSON in this shape:\n${SHAPE}`;
     return parseWriterOutput(parseJson(await call(WRITER_MODEL, system, revisionBlock(i) + fix)));
   },
   check: (facts, output) => liveModels.check(facts, output),
+  async scopeCheck(i, revised) {
+    const system = `You are an independent change reviewer for Kay's Career Solutions. ${GUARD}\n${REQUEST_GUARD}
+Compare <delivered> (the version the customer asked to edit) with <revised>. Approve ONLY if <revised> applies what <request> asks
+and every other line is preserved in meaning and wording (trivial consistency fixes are fine). Reject unrequested rewrites, dropped
+content, reordered sections the request didn't ask for, or a revision that does not apply the request.
+Reply ONLY JSON: {"approved":true|false,"problems":["..."]}.`;
+    try {
+      const out = { resume: revised.resume, ...(revised.coverLetter ? { coverLetter: revised.coverLetter } : {}) };
+      const j = parseJson(await call(CHECKER_MODEL, system, `${revisionBlock(i)}\n\n<revised>\n${strip(JSON.stringify(out))}\n</revised>`));
+      const problems = Array.isArray(j["problems"]) ? (j["problems"] as unknown[]).filter((p): p is string => typeof p === "string" && p.trim().length > 0) : null;
+      if (typeof j["approved"] !== "boolean" || !problems) return { approved: false, problems: ["Invalid scope verdict"] };
+      return { approved: j["approved"] === true && problems.length === 0, problems: problems.length || j["approved"] ? problems : ["Scope reviewer rejected without explanation"] };
+    } catch {
+      return { approved: false, problems: ["Scope reviewer unavailable"] };
+    }
+  },
 };

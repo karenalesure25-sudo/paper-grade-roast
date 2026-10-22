@@ -1,7 +1,7 @@
 /** Supabase-backed repository for fulfillment orders (service role, server-only). */
 import type { TierId } from "../products";
 import type { OrderRow, OrderStatus, Repo } from "./engine";
-import type { RevisionRepo, RevisionRow } from "./revision";
+import { MAX_REVISION_RETRIES, type RetryOutcome, type RevisionRepo, type RevisionRow } from "./revision";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -124,5 +124,17 @@ export const revisionRepo: RevisionRepo = {
     if (error) throw new Error("revision version read failed");
     const top = ((data ?? []) as Array<{ version: number }>)[0]?.version ?? 1;
     return Math.max(1, top) + 1;
+  },
+  async retry(id) {
+    const db = await admin();
+    const { data, error } = await db.rpc("retry_order_revision" as never, { _id: id, _max_rounds: MAX_REVISION_RETRIES } as never);
+    if (error) throw new Error("revision retry failed");
+    return ((data as { outcome?: RetryOutcome } | null)?.outcome ?? "not_found") as RetryOutcome;
+  },
+  async settleStale(id, lease, reason) {
+    const db = await admin();
+    const { data, error } = await db.rpc("settle_stale_revision" as never, { _id: id, _lease: lease, _reason: reason } as never);
+    if (error) throw new Error("revision settle failed");
+    return data === true;
   },
 };
