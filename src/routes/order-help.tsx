@@ -52,7 +52,7 @@ function OrderHelp() {
       <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
         <h1 className="font-display text-4xl text-ink uppercase sm:text-5xl">Order help</h1>
         <section className="mt-8 space-y-3 font-sans leading-relaxed text-muted-foreground">
-          <p>After checkout, Stripe sends you back to your private order page. That page shows progress, any questions we need answered, and your downloads. Your package keeps processing even if you close the tab.</p>
+          <p>After checkout, Stripe sends you back to your private order page. That page shows progress, any questions we need answered, and your downloads.</p>
           <p>On the same device and browser you ordered from, starting the same package again also brings you back to your saved order.</p>
         </section>
 
