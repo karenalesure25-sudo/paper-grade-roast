@@ -19,6 +19,7 @@ import { deliverNotification, type NotificationKind, type NotificationState, typ
 import { RECOVERY_LIMITS, requestOrderLinks } from "./recovery";
 import { productionEmailPort } from "./email-transport.server";
 import { PUBLIC_SITE_ORIGIN } from "../site";
+import { livemodeMatches, modeOf, type StripeMode } from "./stripe-mode";
 
 const BUCKET = "intake-uploads";
 
@@ -27,9 +28,14 @@ async function admin() {
   return supabaseAdmin;
 }
 
-async function getSession(id: string): Promise<StripeSessionView> {
+async function getSession(id: string, mode: StripeMode): Promise<StripeSessionView> {
   const { getCheckoutSession } = await import("../stripe.server");
-  return (await getCheckoutSession(id)) as unknown as StripeSessionView;
+  return (await getCheckoutSession(id, mode)) as unknown as StripeSessionView;
+}
+
+/** Re-read a session with the order's own Stripe mode/key. */
+function confirm(o: OrderRow) {
+  return confirmPayment(supabaseRepo, (id) => getSession(id, modeOf(o)), o);
 }
 
 async function readStored(path: string, filename: string): Promise<{ ok: true; text: string } | { ok: false; reason: string }> {
@@ -49,7 +55,7 @@ async function sha256(text: string): Promise<string> {
  * order row, then open a Stripe session bound to it. Nothing from the browser except
  * the intake id, template and optional photo is trusted.
  */
-export async function createOrderCheckout(input: { intakeId: string; template: string; photo?: string | undefined; origin: string }) {
+export async function createOrderCheckout(input: { intakeId: string; template: string; photo?: string | undefined; origin: string; mode: StripeMode }) {
   const layout = RESUME_TEMPLATES.find((t) => t.id === input.template);
   if (!layout) throw new Error("Choose one of the available layouts.");
   if (layout.usesPhoto && !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(input.photo ?? "")) throw new Error("Confirm a valid photo for this layout before paying.");
@@ -66,6 +72,7 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
   const { data: existing } = await db.from("fulfillment_orders" as never).select("*").eq("intake_id", row.id).gt("expires_at", new Date().toISOString()).maybeSingle();
   const ex = existing as OrderRow | null;
   if (ex && ex.status !== "awaiting_payment") return { already: true as const, token: ex.access_token };
+  if (ex && modeOf(ex) !== input.mode) throw new Error("This order was started elsewhere. Reopen it from its order page.");
 
   let order = ex;
   if (!order) {
@@ -93,6 +100,7 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
     const { data: created, error } = await db.from("fulfillment_orders" as never).insert({
       intake_id: row.id, tier: row.tier, email: snapshot.email, template: input.template,
       snapshot, source_text: sourceText, job_text: jobText, source_sha256: await sha256(sourceText + "\n" + (jobText ?? "")), photo,
+      stripe_mode: input.mode,
     } as never).select("*").single();
     if (error?.code === "23505") {
       const { data: raced } = await db.from("fulfillment_orders" as never).select("*").eq("intake_id", row.id).gt("expires_at", new Date().toISOString()).maybeSingle();
@@ -113,14 +121,14 @@ async function checkoutForOrder(order: OrderRow, origin: string) {
   if (order.status !== "awaiting_payment") return { already: true as const, token: order.access_token };
   let attempt = order.checkout_attempt ?? 0;
   if (order.stripe_session_id) {
-    const prev = await getCheckoutSession(order.stripe_session_id);
+    const prev = await getCheckoutSession(order.stripe_session_id, modeOf(order));
     if (prev.payment_status === "paid" || prev.status === "complete") return { already: true as const, token: order.access_token };
     if (prev.status === "open" && prev.url) return { already: false as const, token: order.access_token, url: prev.url };
     if (prev.status !== "expired") throw new Error("Stripe is still confirming this checkout. Try again shortly.");
     attempt += 1;
   }
   const s = await createCheckoutSession({
-    tier: order.tier, email: order.email, origin,
+    tier: order.tier, email: order.email, origin, mode: modeOf(order),
     orderId: order.id, successPath: `/orders/${order.access_token}`, checkoutAttempt: attempt,
   });
   let query = db.from("fulfillment_orders" as never).update({ stripe_session_id: s.id, checkout_attempt: attempt } as never).eq("id", order.id).eq("status", "awaiting_payment").eq("checkout_attempt", order.checkout_attempt ?? 0);
@@ -179,6 +187,8 @@ export type PublicStatus = {
   /** True only after the managed sender accepted the "ready" email. */
   emailed: boolean;
   emailActive: boolean;
+  /** Stripe test-mode order: no real charge, no customer email. */
+  testMode: boolean;
   paidAt: string | null;
   expiresAt: string | null;
   /** When files first became available (starts the minor-revision window). */
@@ -231,7 +241,8 @@ function toPublic(o: OrderRow, revisions: RevisionRow[] = []): PublicStatus {
     ...(o.status === "ready" && o.result?.keywordReport ? { keywordReport: o.result.keywordReport } : {}),
     ...(o.status === "ready" && o.result ? { checks: o.result.checks } : {}),
     emailed: ((o as OrderRow & { notifications?: Record<string, NotificationState> }).notifications?.["ready"]?.outcome) === "sent",
-    emailActive: productionEmailPort.available(),
+    emailActive: modeOf(o) === "live" && productionEmailPort.available(),
+    testMode: modeOf(o) === "test",
     paidAt: o.paid_at, expiresAt: o.expires_at ?? null,
     deliveredAt: o.delivered_at ?? null,
     deliveryDeadline: !ready && start && o.status !== "needs_information" ? addEligibleHours(start, DELIVERY_WINDOW_HOURS.max).toISOString() : null,
@@ -259,7 +270,7 @@ async function revisionsFor(o: OrderRow): Promise<RevisionRow[]> {
 export async function statusByToken(token: string): Promise<PublicStatus | null> {
   let o = await orderByToken(token);
   if (!o) return null;
-  o = await confirmPayment(supabaseRepo, getSession, o);
+  o = await confirm(o);
   o = await settleStale(supabaseRepo, o);
   return toPublic(o, await revisionsFor(o));
 }
@@ -322,9 +333,11 @@ export async function retryByToken(token: string) {
 }
 
 /** Webhook entry: idempotent per event id; verifies the session with Stripe again. */
-export async function handleStripeEvent(evt: { id: string; type: string; data?: { object?: { id?: string } } }) {
+export async function handleStripeEvent(evt: { id: string; type: string; livemode?: boolean; data?: { object?: { id?: string } } }, mode: StripeMode) {
+  // Each route accepts only its own mode's events; a test event never touches a live order.
+  if (!livemodeMatches(mode, evt.livemode)) return "mode_mismatch";
   const db = await admin();
-  const { error } = await db.from("stripe_events" as never).insert({ id: evt.id, type: evt.type } as never);
+  const { error } = await db.from("stripe_events" as never).insert({ id: evt.id, type: evt.type, stripe_mode: mode } as never);
   if (error?.code === "23505") return "duplicate";
   if (error) throw new Error("event log failed");
   try {
@@ -333,7 +346,8 @@ export async function handleStripeEvent(evt: { id: string; type: string; data?: 
     if (!sid) return "ignored";
     const o = await supabaseRepo.bySession(sid);
     if (!o) return "unknown_session";
-    const after = await confirmPayment(supabaseRepo, getSession, o);
+    if (modeOf(o) !== mode) return "mode_mismatch";
+    const after = await confirm(o);
     return after.status;
   } catch (e) {
     // Forget the event so Stripe's retry is processed instead of being treated as a duplicate.
@@ -370,6 +384,9 @@ export async function sweepNotifications(limit = 10) {
   const { data: revs } = await db.rpc("due_revision_notifications" as never, { _limit: limit } as never);
   const out: string[] = [];
   for (const r of [...((data ?? []) as Array<{ order_id: string; kind: NotificationKind }>), ...((revs ?? []) as Array<{ order_id: string; kind: NotificationKind }>)]) {
+    // Test-mode orders never send customer email.
+    const o = await supabaseRepo.byId(r.order_id);
+    if (!o || modeOf(o) === "test") continue;
     out.push(await deliverNotification(notifyRepo, productionEmailPort, r.order_id, r.kind, PUBLIC_SITE_ORIGIN).catch(() => "retry" as const));
   }
   return out;
@@ -392,7 +409,7 @@ export async function recoverOrderLinks(email: string, ip: string) {
     },
     async ordersFor(e) {
       const { data, error } = await db.from("fulfillment_orders" as never).select("access_token,tier,status")
-        .ilike("email", e.replace(/[\\%_]/g, (c) => `\\${c}`)).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(5);
+        .ilike("email", e.replace(/[\\%_]/g, (c) => `\\${c}`)).eq("stripe_mode", "live").gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(5);
       if (error) throw new Error("recovery lookup failed");
       return (data ?? []) as Array<{ access_token: string; tier: string; status: string }>;
     },
@@ -411,7 +428,7 @@ export async function sweep(limit = 2) {
   const { data: pending } = await db.from("fulfillment_orders" as never).select("*")
     .eq("status", "awaiting_payment").not("stripe_session_id", "is", null)
     .gt("created_at", new Date(Date.now() - 2 * 24 * 3600_000).toISOString()).limit(10);
-  for (const o of (pending ?? []) as OrderRow[]) await confirmPayment(supabaseRepo, getSession, o).catch(() => undefined);
+  for (const o of (pending ?? []) as OrderRow[]) await confirm(o).catch(() => undefined);
   const ids = await supabaseRepo.due(limit);
   const results: string[] = [];
   for (const id of ids) results.push(await processOrder(supabaseRepo, liveModels, id));

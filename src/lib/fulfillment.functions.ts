@@ -11,8 +11,12 @@ export const startOrderCheckout = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }) => {
     const { createOrderCheckout } = await import("./fulfillment/service.server");
-    const origin = new URL(getRequest().url).origin;
-    const result = await createOrderCheckout({ ...data, origin });
+    const url = new URL(getRequest().url);
+    const origin = url.origin;
+    const { checkoutModeFor } = await import("./fulfillment/stripe-mode");
+    // Preview hosts with a test key use Stripe test mode; the published site is always live.
+    const mode = checkoutModeFor(url.host, Boolean(process.env["STRIPE_TEST_SECRET_KEY"]));
+    const result = await createOrderCheckout({ ...data, origin, mode });
     setCookie("kcs-order", result.token, { httpOnly: true, secure: origin.startsWith("https:"), sameSite: "lax", path: "/", maxAge: 86400 });
     return result;
   });

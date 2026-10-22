@@ -1,3 +1,4 @@
+import { livemodeMatches, modeOf } from "./stripe-mode";
 /**
  * Fulfillment state machine. I/O is injected (repo, Stripe reader, models) so the
  * exact production logic is exercised by tests with isolated fakes.
@@ -25,6 +26,8 @@ export type OrderStatus = "awaiting_payment" | "queued" | "processing" | "needs_
 
 export type OrderRow = {
   id: string;
+  /** Fixed at creation; selects Stripe key/webhook and must match the session's livemode. */
+  stripe_mode?: "live" | "test" | null;
   access_token: string;
   tier: TierId;
   email: string;
@@ -83,6 +86,7 @@ export type StripeSessionView = {
   currency_conversion?: { amount_total: number; source_currency: string } | null;
   metadata?: Record<string, string> | null;
   client_reference_id?: string | null;
+  livemode?: boolean;
 };
 
 export type Repo = {
@@ -102,8 +106,9 @@ export type Repo = {
 };
 
 /** Pure: does this Stripe session pay for exactly this order? */
-export function sessionPaysOrder(order: Pick<OrderRow, "id" | "tier" | "email" | "stripe_session_id">, s: StripeSessionView): { ok: true } | { ok: false; reason: string } {
+export function sessionPaysOrder(order: Pick<OrderRow, "id" | "tier" | "email" | "stripe_session_id" | "stripe_mode">, s: StripeSessionView): { ok: true } | { ok: false; reason: string } {
   if (!order.stripe_session_id || s.id !== order.stripe_session_id) return { ok: false, reason: "session_mismatch" };
+  if (!livemodeMatches(modeOf(order), s.livemode)) return { ok: false, reason: "mode_mismatch" };
   if (s.mode !== "payment" || s.status !== "complete" || s.payment_status !== "paid") return { ok: false, reason: "unpaid" };
   const usd = s.currency_conversion?.source_currency === "usd" ? s.currency_conversion.amount_total : s.currency === "usd" ? s.amount_total : null;
   if (usd !== TIER_CENTS[order.tier]) return { ok: false, reason: "amount_mismatch" };

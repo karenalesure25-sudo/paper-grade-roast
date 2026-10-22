@@ -1,3 +1,4 @@
+import { sessionIdMode } from "./stripe-mode";
 /** Supabase-backed repository for fulfillment orders (service role, server-only). */
 import type { TierId } from "../products";
 import type { OrderRow, OrderStatus, Repo } from "./engine";
@@ -58,7 +59,7 @@ export const supabaseRepo: Repo = {
     const db = await admin();
     const cents = { revamp: 4000, scratch: 5000, bundle: 6000 }[tier];
     const { error } = await db.from("payment_redemptions").upsert(
-      { session_id: sessionId, tier, amount_cents: cents, email: email.toLowerCase(), status, updated_at: new Date().toISOString() },
+      { session_id: sessionId, tier, amount_cents: cents, email: email.toLowerCase(), status, stripe_mode: sessionIdMode(sessionId), updated_at: new Date().toISOString() },
       { onConflict: "session_id" },
     );
     if (error) throw new Error("redemption ledger write failed");

@@ -28,6 +28,7 @@ export async function verifyPayment(input: {
     ? s.currency_conversion.amount_total
     : s.currency === "usd" ? s.amount_total : null;
   const paid =
+    s.livemode === true &&
     s.mode === "payment" &&
     s.status === "complete" &&
     s.payment_status === "paid" &&
