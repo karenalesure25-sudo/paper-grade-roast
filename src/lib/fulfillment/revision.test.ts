@@ -355,10 +355,11 @@ describe("revision base, retry and stale fencing (review follow-up)", () => {
   test("correction after a ready minor builds on v2, fixes a v2-introduced error, and keeps v2 changes in v3", async () => {
     const o = order(); const { repo, rows } = memRepo(o);
     const a = await reserve(repo, o); if (!a.ok) throw new Error("reserve");
-    // v2: requested bullet rewording, but it also introduced a wrong title.
-    const v2m = models({ edit: (r) => { r.experience[0]!.bullets[0] = "Scheduled inbound freight for twelve regional carriers and kept dispatch records in SAP."; r.experience[0]!.role = "Operations Manager"; return r; } });
-    expect(await processRevision(repo, v2m, a.id)).toBe("ready");
+    // v2 delivered: the requested bullet rewording, plus a wrong title that slipped through (an error WE introduced in v2).
+    expect(await processRevision(repo, models(), a.id)).toBe("ready");
+    rows.get(a.id)!.result!.resume.experience[0]!.role = "Operations Manager";
     const v2 = structuredClone(rows.get(a.id)!);
+    expect(v2.result!.resume.experience[0]!.bullets[0]).toContain("Scheduled inbound freight");
     expect(v2.version).toBe(2);
 
     const c = await reserve(repo, o, "correction", "My Northwind title now shows Operations Manager but I was Operations Coordinator.", "key-00000002");
