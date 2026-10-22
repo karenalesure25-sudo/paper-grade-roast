@@ -2,6 +2,10 @@
 - [x] Metallic-logo signature homepage revision and responsive cross-route verification
 # Roadmap
 
+## Customer-facing copy cleanup
+- [ ] Remove public AI wording across pages, errors, email copy, accessibility text, metadata and static assets; preserve internal identifiers and all safeguards.
+- [ ] Verify source sweep and desktop/mobile rendered screens without customer operations; report saved revision and Git sync visibility.
+
 ## Launch readiness
 - [x] Authenticated background worker (DB-held token). Schedule `kcs-fulfillment-sweep` every 2 min targets paper-grade-roast.lovable.app, PAUSED until publish.
 - [x] Automated minor revisions + delivery/revision policy (order page, worker, emails, terms). Synthetic tests only.

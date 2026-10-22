@@ -319,7 +319,7 @@ export async function writeResume(
   content: ContentBlock[],
 ): Promise<WrittenOrder> {
   const apiKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey) throw new Error("AI is not configured for this project.");
+  if (!apiKey) throw new Error("Résumé writing is temporarily unavailable. Please try again later.");
 
   const response = await fetch(GATEWAY_URL, {
     method: "POST",
@@ -341,7 +341,7 @@ export async function writeResume(
       throw new Error("The writers' room is swamped. Try again in a moment.");
     }
     if (response.status === 402) {
-      throw new Error("This project is out of AI credits. Add more to keep writing.");
+      throw new Error("Résumé writing is temporarily unavailable. Please try again later.");
     }
     throw new Error("The writer couldn't read that file. Try a different export.");
   }

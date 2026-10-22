@@ -155,8 +155,8 @@ function RoastPage() {
           <p className="eyebrow">Free résumé roast · No signup</p>
           <h1 className="mt-4 font-brand text-[2.7rem] leading-[1.02] text-ivory sm:text-6xl">See what your résumé is really saying.</h1>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Upload a PDF or DOCX, or paste the text. Notes either quote your résumé or point out something we confirmed is missing. Your text is sent to an
-            AI service to be graded; results stay in this browser tab. See our{" "}
+            Upload a PDF or DOCX, or paste the text. Notes either quote your résumé or point out something we confirmed is missing. Your text is sent to a
+            third-party service provider for grading; results stay in this browser tab. See our{" "}
             <Link to="/privacy" className="underline underline-offset-4">privacy page</Link>.
           </p>
 
