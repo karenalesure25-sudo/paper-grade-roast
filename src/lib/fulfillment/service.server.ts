@@ -11,7 +11,7 @@ import { liveModels } from "./writer.server";
 import { RESUME_TEMPLATES } from "../resume-templates";
 import { assertPurchaseSelection } from "./purchase-selection";
 import { deliverNotification, type NotificationKind, type NotificationState, type NotifyRepo } from "./notify";
-import { requestOrderLinks } from "./recovery";
+import { RECOVERY_LIMITS, requestOrderLinks } from "./recovery";
 import { productionEmailPort } from "./email-transport.server";
 import { PUBLIC_SITE_ORIGIN } from "../site";
 
