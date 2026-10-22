@@ -19,6 +19,12 @@ export function SiteFooter() {
             <Link to="/roast" className="transition-colors hover:text-ink">
               Free roast
             </Link>
+            <Link to="/order-help" className="transition-colors hover:text-ink">
+              Order help
+            </Link>
+            <Link to="/terms" className="transition-colors hover:text-ink">
+              Terms
+            </Link>
             <Link to="/privacy" className="transition-colors hover:text-ink">
               Privacy
             </Link>

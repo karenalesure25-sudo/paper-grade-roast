@@ -336,7 +336,7 @@ export function CareerServices() {
                 </a>
               ) : (
                 <span className="coming-label">
-                  Coming soon <ArrowRight size={14} />
+                  Not yet offered
                 </span>
               )}
             </div>
