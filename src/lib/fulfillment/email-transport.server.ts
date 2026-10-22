@@ -62,7 +62,7 @@ export function createLovableEmailPort(env: () => Env, send: Sender = sendLovabl
 }
 
 export const productionEmailPort: EmailPort = createLovableEmailPort(() => ({
-  senderDomain: process.env.EMAIL_SENDER_DOMAIN,
-  fromDomain: process.env.EMAIL_FROM_DOMAIN,
-  apiKey: process.env.LOVABLE_API_KEY,
+  senderDomain: process.env["EMAIL_SENDER_DOMAIN"],
+  fromDomain: process.env["EMAIL_FROM_DOMAIN"],
+  apiKey: process.env["LOVABLE_API_KEY"],
 }));
