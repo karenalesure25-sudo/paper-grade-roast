@@ -187,6 +187,8 @@ export type Database = {
       order_revisions: {
         Row: {
           attempts: number
+          base_revision_id: string | null
+          base_version: number
           clarification_request: string | null
           clarifications: Json
           completed_at: string | null
@@ -210,6 +212,8 @@ export type Database = {
         }
         Insert: {
           attempts?: number
+          base_revision_id?: string | null
+          base_version?: number
           clarification_request?: string | null
           clarifications?: Json
           completed_at?: string | null
@@ -233,6 +237,8 @@ export type Database = {
         }
         Update: {
           attempts?: number
+          base_revision_id?: string | null
+          base_version?: number
           clarification_request?: string | null
           clarifications?: Json
           completed_at?: string | null
@@ -255,6 +261,13 @@ export type Database = {
           version?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "order_revisions_base_revision_id_fkey"
+            columns: ["base_revision_id"]
+            isOneToOne: false
+            referencedRelation: "order_revisions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "order_revisions_order_id_fkey"
             columns: ["order_id"]
@@ -469,6 +482,8 @@ export type Database = {
         Args: { _id: string; _lease_seconds?: number }
         Returns: {
           attempts: number
+          base_revision_id: string | null
+          base_version: number
           clarification_request: string | null
           clarifications: Json
           completed_at: string | null
@@ -521,6 +536,10 @@ export type Database = {
         Args: { _kind: string; _order_id: string; _patch: Json; _token: string }
         Returns: boolean
       }
+      latest_revision_base: {
+        Args: { _order_id: string }
+        Returns: Record<string, unknown>
+      }
       minor_revision_window_end: {
         Args: { _delivered: string }
         Returns: string
@@ -540,7 +559,15 @@ export type Database = {
         }
         Returns: Json
       }
+      retry_order_revision: {
+        Args: { _id: string; _max_rounds?: number }
+        Returns: Json
+      }
       settle_stale_fulfillments: { Args: never; Returns: number }
+      settle_stale_revision: {
+        Args: { _id: string; _lease: string; _reason: string }
+        Returns: boolean
+      }
       verify_worker_token: {
         Args: { _name: string; _token: string }
         Returns: boolean
