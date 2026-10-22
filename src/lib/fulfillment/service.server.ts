@@ -10,6 +10,10 @@ import { buildSnapshotSource } from "./snapshot";
 import { liveModels } from "./writer.server";
 import { RESUME_TEMPLATES } from "../resume-templates";
 import { assertPurchaseSelection } from "./purchase-selection";
+import { deliverNotification, type NotificationKind, type NotificationState, type NotifyRepo } from "./notify";
+import { requestOrderLinks } from "./recovery";
+import { productionEmailPort } from "./email-transport.server";
+import { PUBLIC_SITE_ORIGIN } from "../site";
 
 const BUCKET = "intake-uploads";
 
@@ -167,7 +171,9 @@ export type PublicStatus = {
   files: Array<{ kind: string; label: string; href: string }>;
   keywordReport?: NonNullable<OrderRow["result"]>["keywordReport"];
   checks?: NonNullable<OrderRow["result"]>["checks"];
-  emailed: false;
+  /** True only after the managed sender accepted the "ready" email. */
+  emailed: boolean;
+  emailActive: boolean;
   paidAt: string | null;
   expiresAt: string | null;
 };
@@ -194,7 +200,8 @@ function toPublic(o: OrderRow): PublicStatus {
     files,
     ...(o.status === "ready" && o.result?.keywordReport ? { keywordReport: o.result.keywordReport } : {}),
     ...(o.status === "ready" && o.result ? { checks: o.result.checks } : {}),
-    emailed: false,
+    emailed: ((o as OrderRow & { notifications?: Record<string, NotificationState> }).notifications?.["ready"]?.outcome) === "sent",
+    emailActive: productionEmailPort.available(),
     paidAt: o.paid_at, expiresAt: o.expires_at ?? null,
   };
 }
@@ -251,7 +258,68 @@ export async function handleStripeEvent(evt: { id: string; type: string; data?: 
   }
 }
 
-/** Background sweep: confirm pending payments and process due orders. */
+export const notifyRepo: NotifyRepo = {
+  byId: (id) => supabaseRepo.byId(id),
+  async claim(id, kind) {
+    const db = await admin();
+    const { data, error } = await db.rpc("claim_notification" as never, { _order_id: id, _kind: kind, _lease_seconds: 120 } as never);
+    if (error) throw new Error("notification claim failed");
+    return data === true;
+  },
+  async finish(id, kind, patch) {
+    const db = await admin();
+    const { error } = await db.rpc("finish_notification" as never, { _order_id: id, _kind: kind, _patch: patch } as never);
+    if (error) throw new Error("notification update failed");
+  },
+};
+
+/** Sends due confirmation/ready emails (bounded). No-op until email delivery is active. */
+export async function sweepNotifications(limit = 10) {
+  if (!productionEmailPort.available()) return [] as string[];
+  const db = await admin();
+  const { data } = await db.rpc("due_notifications" as never, { _limit: limit } as never);
+  const out: string[] = [];
+  for (const r of (data ?? []) as Array<{ order_id: string; kind: NotificationKind }>) {
+    out.push(await deliverNotification(notifyRepo, productionEmailPort, r.order_id, r.kind, PUBLIC_SITE_ORIGIN).catch(() => "retry" as const));
+  }
+  return out;
+}
+
+async function hashId(v: string) {
+  return sha256(`kcs-recovery-v1:${v}`);
+}
+
+export async function recoverOrderLinks(email: string, ip: string) {
+  const db = await admin();
+  return requestOrderLinks(email, ip, {
+    hash: hashId,
+    async countRecent(eh, ih) {
+      const since = new Date(Date.now() - 3600_000).toISOString();
+      const [a, b] = await Promise.all([
+        db.from("recovery_requests").select("id", { count: "exact", head: true }).eq("email_hash", eh).gt("created_at", since),
+        db.from("recovery_requests").select("id", { count: "exact", head: true }).eq("ip_hash", ih).gt("created_at", since),
+      ]);
+      return { email: a.count ?? 0, ip: b.count ?? 0 };
+    },
+    async record(eh, ih) {
+      const { error } = await db.from("recovery_requests").insert({ email_hash: eh, ip_hash: ih });
+      if (error) throw new Error("recovery log failed");
+    },
+    async ordersFor(e) {
+      const { data } = await db.from("fulfillment_orders" as never).select("access_token,tier,status")
+        .ilike("email", e).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(5);
+      return (data ?? []) as Array<{ access_token: string; tier: string; status: string }>;
+    },
+    port: productionEmailPort,
+    origin: PUBLIC_SITE_ORIGIN,
+  });
+}
+
+export function emailDeliveryActive() {
+  return productionEmailPort.available();
+}
+
+/** Background sweep: confirm pending payments, process due orders, then send due emails. */
 export async function sweep(limit = 2) {
   const db = await admin();
   const { data: pending } = await db.from("fulfillment_orders" as never).select("*")
@@ -261,5 +329,6 @@ export async function sweep(limit = 2) {
   const ids = await supabaseRepo.due(limit);
   const results: string[] = [];
   for (const id of ids) results.push(await processOrder(supabaseRepo, liveModels, id));
-  return { confirmed: (pending ?? []).length, processed: results };
+  const emails = await sweepNotifications(10).catch(() => [] as string[]);
+  return { confirmed: (pending ?? []).length, processed: results, emails };
 }
