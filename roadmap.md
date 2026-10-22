@@ -14,7 +14,7 @@
 - [ ] Email: buy/connect domain → set up email domain → wire managed sender into email-transport.server.ts (blocked: domain)
 - [ ] Stripe webhook signing secret (blocked: Stripe access denied; user must register endpoint and save STRIPE_WEBHOOK_SECRET)
 - [ ] Live test-mode purchase per tier (blocked: no Stripe test keys)
-- [ ] Business inputs: public support email/contact, revision policy, delivery timeframe
+- [ ] Business inputs: public support email/contact (revision policy and delivery window now approved and implemented)
 
 - [x] Responsive visual audit and scoped fixes: homepage, roast, and order dashboard at 1440/1280/1024/390/360; before/after evidence, anchors, loaded logo/portrait, and browser-only template/review fixtures verified without checkout calls. Evidence: /tmp/browser/responsive-audit/. No production publish.
 - [ ] GitHub main sync for responsive fixes: platform-managed Git state; remote main still reads ba2469d, while the saved working revision is c08dd75. Manual Git writes are prohibited in this environment.
