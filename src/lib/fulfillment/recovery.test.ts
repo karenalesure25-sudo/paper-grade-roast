@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { GENERIC_RECOVERY_MESSAGE, RECOVERY_LIMITS, requestOrderLinks, type RecoveryDeps } from "./recovery";
+import { GENERIC_RECOVERY_MESSAGE, RECOVERY_UNAVAILABLE_MESSAGE, RECOVERY_LIMITS, requestOrderLinks, type RecoveryDeps } from "./recovery";
 import type { EmailMessage } from "./notify";
 
 function deps(orders: Record<string, Array<{ access_token: string; tier: string; status: string }>>, available = true) {
@@ -7,8 +7,11 @@ function deps(orders: Record<string, Array<{ access_token: string; tier: string;
   const sent: EmailMessage[] = [];
   const d: RecoveryDeps = {
     hash: async (v) => `h(${v})`,
-    countRecent: async (e, i) => ({ email: log.filter(([a]) => a === e).length, ip: log.filter(([, b]) => b === i).length }),
-    record: async (e, i) => { log.push([e, i]); },
+    // Mirrors admit_recovery_request(): count and insert happen in one critical section.
+    admit: async (e, i) => {
+      if (log.filter(([a]) => a === e).length >= RECOVERY_LIMITS.perEmailPerHour || log.filter(([, b]) => b === i).length >= RECOVERY_LIMITS.perIpPerHour) return false;
+      log.push([e, i]); return true;
+    },
     ordersFor: async (e) => orders[e] ?? [],
     port: { available: () => available, send: async (m) => { sent.push(m); return { status: "sent" }; } },
     origin: "https://paper-grade-roast.lovable.app",
@@ -64,5 +67,25 @@ describe("lost-link recovery", () => {
 
   test("invalid email rejected", async () => {
     expect((await requestOrderLinks("not-an-email", "1", deps(known).d)).ok).toBe(false);
+  });
+
+  test("concurrent burst admits at most the per-email limit", async () => {
+    const a = deps(known);
+    const rs = await Promise.all(Array.from({ length: 20 }, (_, i) => requestOrderLinks("avery@kcs-test.dev", `ip${i}`, a.d)));
+    expect(rs.filter((r) => r.ok).length).toBe(RECOVERY_LIMITS.perEmailPerHour);
+    expect(a.log.length).toBe(RECOVERY_LIMITS.perEmailPerHour);
+  });
+
+  test("database error fails closed: no send, generic retry message", async () => {
+    const a = deps(known);
+    a.d.admit = async () => { throw new Error("db down"); };
+    const r = await requestOrderLinks("avery@kcs-test.dev", "1.1.1.1", a.d);
+    expect(r).toEqual({ ok: false, reason: "unavailable", message: RECOVERY_UNAVAILABLE_MESSAGE });
+    expect(a.sent.length).toBe(0);
+  });
+
+  test("generic reply never claims an email was already sent", () => {
+    expect(GENERIC_RECOVERY_MESSAGE).toContain("If that email is eligible, you will receive");
+    expect(GENERIC_RECOVERY_MESSAGE).not.toMatch(/we've sent|we have sent/i);
   });
 });
