@@ -1501,7 +1501,7 @@
 .clarity-product-art .career-snapshot { position: relative; right: auto; bottom: auto; margin: -10px -10px 0 auto; }
 @media (max-width: 600px) { .clarity-product-art .career-snapshot { margin-right: 0; } }
 
-/* Homepage: single Career Clarity AI preview (in the showcase); hero keeps only the illustrative snapshot. */
+/* Homepage: single Career Clarity preview (in the showcase); hero keeps only the illustrative snapshot. */
 .clarity-hero { overflow: clip; }
 .clarity-product-art { min-height: 0; display: grid; place-items: center; padding: 40px 0; }
 .career-snapshot.career-snapshot-hero {
