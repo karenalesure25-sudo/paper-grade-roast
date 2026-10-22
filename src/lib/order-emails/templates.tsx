@@ -59,6 +59,7 @@ export function OrderConfirmationEmail({ firstName, packageName, orderUrl, expir
         Stripe confirmed your payment for <strong>{packageName ?? "your package"}</strong>. We&apos;re writing it from the facts you gave us, and every file is checked before release.
         We&apos;ll email you again when your files are ready. You can check progress anytime.
       </Text>
+      <Text style={small}>Delivery is typically sooner, but allow up to 48 hours after payment and any required details, not counting Sundays (Central Time).</Text>
       {orderUrl && <Button href={orderUrl} style={button}>View your order</Button>}
       <PrivateNote expires={expires} />
     </Shell>
@@ -75,6 +76,7 @@ export function OrderReadyEmail({ firstName, packageName, orderUrl, expires, has
         Your <strong>{packageName ?? "package"}</strong> passed our accuracy checks. Open your order page to download your résumé
         {hasCoverLetter ? " and cover letter" : ""} as an editable Word file or a styled version you can print to PDF.
       </Text>
+      <Text style={small}>Your package includes one complimentary minor revision (wording, corrections or formatting within your template), requested from your order page within 7 calendar days. Errors we introduced are fixed free and don&apos;t use it.</Text>
       {orderUrl && <Button href={orderUrl} style={button}>Download your files</Button>}
       <PrivateNote expires={expires} />
     </Shell>
