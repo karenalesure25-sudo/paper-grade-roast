@@ -22,6 +22,7 @@ export type Database = {
           clarification_request: Json | null
           clarifications: Json
           created_at: string
+          delivered_at: string | null
           email: string
           expires_at: string
           failure_reason: string | null
@@ -53,6 +54,7 @@ export type Database = {
           clarification_request?: Json | null
           clarifications?: Json
           created_at?: string
+          delivered_at?: string | null
           email: string
           expires_at?: string
           failure_reason?: string | null
@@ -84,6 +86,7 @@ export type Database = {
           clarification_request?: Json | null
           clarifications?: Json
           created_at?: string
+          delivered_at?: string | null
           email?: string
           expires_at?: string
           failure_reason?: string | null
@@ -180,6 +183,86 @@ export type Database = {
           tier?: string
         }
         Relationships: []
+      }
+      order_revisions: {
+        Row: {
+          attempts: number
+          clarification_request: string | null
+          clarifications: Json
+          completed_at: string | null
+          created_at: string
+          deadline_at: string
+          failure_reason: string | null
+          id: string
+          idempotency_key: string
+          kind: string
+          lease_id: string | null
+          locked_until: string | null
+          max_attempts: number
+          order_id: string
+          request_text: string
+          requested_at: string
+          result: Json | null
+          retry_rounds: number
+          status: string
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          attempts?: number
+          clarification_request?: string | null
+          clarifications?: Json
+          completed_at?: string | null
+          created_at?: string
+          deadline_at: string
+          failure_reason?: string | null
+          id?: string
+          idempotency_key: string
+          kind: string
+          lease_id?: string | null
+          locked_until?: string | null
+          max_attempts?: number
+          order_id: string
+          request_text: string
+          requested_at?: string
+          result?: Json | null
+          retry_rounds?: number
+          status?: string
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          attempts?: number
+          clarification_request?: string | null
+          clarifications?: Json
+          completed_at?: string | null
+          created_at?: string
+          deadline_at?: string
+          failure_reason?: string | null
+          id?: string
+          idempotency_key?: string
+          kind?: string
+          lease_id?: string | null
+          locked_until?: string | null
+          max_attempts?: number
+          order_id?: string
+          request_text?: string
+          requested_at?: string
+          result?: Json | null
+          retry_rounds?: number
+          status?: string
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_revisions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       orders: {
         Row: {
@@ -342,6 +425,7 @@ export type Database = {
           clarification_request: Json | null
           clarifications: Json
           created_at: string
+          delivered_at: string | null
           email: string
           expires_at: string
           failure_reason: string | null
@@ -381,6 +465,38 @@ export type Database = {
         Args: { _kind: string; _lease_seconds?: number; _order_id: string }
         Returns: string
       }
+      claim_revision: {
+        Args: { _id: string; _lease_seconds?: number }
+        Returns: {
+          attempts: number
+          clarification_request: string | null
+          clarifications: Json
+          completed_at: string | null
+          created_at: string
+          deadline_at: string
+          failure_reason: string | null
+          id: string
+          idempotency_key: string
+          kind: string
+          lease_id: string | null
+          locked_until: string | null
+          max_attempts: number
+          order_id: string
+          request_text: string
+          requested_at: string
+          result: Json | null
+          retry_rounds: number
+          status: string
+          updated_at: string
+          version: number | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "order_revisions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       due_fulfillments: { Args: { _limit?: number }; Returns: string[] }
       due_notifications: {
         Args: { _limit?: number }
@@ -389,6 +505,14 @@ export type Database = {
           order_id: string
         }[]
       }
+      due_revision_notifications: {
+        Args: { _limit?: number }
+        Returns: {
+          kind: string
+          order_id: string
+        }[]
+      }
+      due_revisions: { Args: { _limit?: number }; Returns: string[] }
       finish_notification: {
         Args: { _kind: string; _order_id: string; _patch: Json }
         Returns: undefined
@@ -397,10 +521,24 @@ export type Database = {
         Args: { _kind: string; _order_id: string; _patch: Json; _token: string }
         Returns: boolean
       }
+      minor_revision_window_end: {
+        Args: { _delivered: string }
+        Returns: string
+      }
       purge_expired_fulfillments: { Args: never; Returns: number }
       renew_fulfillment_lease: {
         Args: { _lease_id: string; _lease_seconds?: number; _order_id: string }
         Returns: boolean
+      }
+      request_order_revision: {
+        Args: {
+          _deadline: string
+          _idem: string
+          _kind: string
+          _order_id: string
+          _text: string
+        }
+        Returns: Json
       }
       settle_stale_fulfillments: { Args: never; Returns: number }
       verify_worker_token: {

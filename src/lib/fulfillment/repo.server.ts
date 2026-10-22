@@ -1,6 +1,7 @@
 /** Supabase-backed repository for fulfillment orders (service role, server-only). */
 import type { TierId } from "../products";
 import type { OrderRow, OrderStatus, Repo } from "./engine";
+import type { RevisionRepo, RevisionRow } from "./revision";
 
 async function admin() {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -70,3 +71,58 @@ export async function orderByToken(token: string): Promise<OrderRow | null> {
   const { data } = await db.from(T).select("*").eq("access_token", token).gt("expires_at", new Date().toISOString()).maybeSingle();
   return (data as OrderRow | null) ?? null;
 }
+
+const RV = "order_revisions" as never;
+
+export const revisionRepo: RevisionRepo = {
+  order: (id) => supabaseRepo.byId(id),
+  async request(orderId, kind, text, idem, deadline) {
+    const db = await admin();
+    const { data, error } = await db.rpc("request_order_revision" as never, { _order_id: orderId, _kind: kind, _text: text, _idem: idem, _deadline: deadline } as never);
+    if (error) throw new Error("revision request failed");
+    return data as { outcome: never; id?: string };
+  },
+  async byId(id) {
+    const db = await admin();
+    const { data } = await db.from(RV).select("*").eq("id", id).maybeSingle();
+    return (data as RevisionRow | null) ?? null;
+  },
+  async forOrder(orderId) {
+    const db = await admin();
+    const { data, error } = await db.from(RV).select("*").eq("order_id", orderId).order("requested_at", { ascending: true });
+    if (error) throw new Error("revision read failed");
+    return (data ?? []) as RevisionRow[];
+  },
+  async claim(id) {
+    const db = await admin();
+    const { data, error } = await db.rpc("claim_revision" as never, { _id: id, _lease_seconds: 600 } as never);
+    if (error) throw new Error("revision claim failed");
+    return ((data ?? []) as RevisionRow[])[0] ?? null;
+  },
+  async finish(id, lease, patch) {
+    const db = await admin();
+    const { data, error } = await db.from(RV).update(patch as never).eq("id", id).eq("status", "processing").eq("lease_id", lease).select("*").maybeSingle();
+    if (error) throw new Error("revision update failed");
+    return (data as RevisionRow | null) ?? null;
+  },
+  async renew(id, lease) {
+    const db = await admin();
+    const { data, error } = await db.from(RV).update({ locked_until: new Date(Date.now() + 600_000).toISOString() } as never)
+      .eq("id", id).eq("status", "processing").eq("lease_id", lease).select("id").maybeSingle();
+    if (error) throw new Error("revision renew failed");
+    return Boolean(data);
+  },
+  async transition(id, from, patch) {
+    const db = await admin();
+    const { data, error } = await db.from(RV).update(patch as never).eq("id", id).in("status", from).select("*").maybeSingle();
+    if (error) throw new Error("revision update failed");
+    return (data as RevisionRow | null) ?? null;
+  },
+  async nextVersion(orderId) {
+    const db = await admin();
+    const { data, error } = await db.from(RV).select("version").eq("order_id", orderId).not("version", "is", null).order("version", { ascending: false }).limit(1);
+    if (error) throw new Error("revision version read failed");
+    const top = ((data ?? []) as Array<{ version: number }>)[0]?.version ?? 1;
+    return Math.max(1, top) + 1;
+  },
+};

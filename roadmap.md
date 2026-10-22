@@ -4,6 +4,7 @@
 
 ## Launch readiness
 - [x] Authenticated background worker (DB-held token). Schedule `kcs-fulfillment-sweep` every 2 min targets paper-grade-roast.lovable.app, PAUSED until publish.
+- [x] Automated minor revisions + delivery/revision policy (order page, worker, emails, terms). Synthetic tests only.
 - [ ] Email: set EMAIL_SENDER_DOMAIN after domain verification (adapter built; scaffold refused without domain).
 - [x] Order emails (confirmation/ready/link recovery) built + tested with mocked transport; delivery OFF until domain verified
 - [x] Package deliverables, AI-use disclosure, synthetic sample, Terms, Order help pages
@@ -13,7 +14,7 @@
 - [ ] Email: buy/connect domain → set up email domain → wire managed sender into email-transport.server.ts (blocked: domain)
 - [ ] Stripe webhook signing secret (blocked: Stripe access denied; user must register endpoint and save STRIPE_WEBHOOK_SECRET)
 - [ ] Live test-mode purchase per tier (blocked: no Stripe test keys)
-- [ ] Business inputs: public support email/contact, revision policy, delivery timeframe
+- [ ] Business inputs: public support email/contact (revision policy and delivery window now approved and implemented)
 
 - [x] Responsive visual audit and scoped fixes: homepage, roast, and order dashboard at 1440/1280/1024/390/360; before/after evidence, anchors, loaded logo/portrait, and browser-only template/review fixtures verified without checkout calls. Evidence: /tmp/browser/responsive-audit/. No production publish.
 - [ ] GitHub main sync for responsive fixes: platform-managed Git state; remote main still reads ba2469d, while the saved working revision is c08dd75. Manual Git writes are prohibited in this environment.

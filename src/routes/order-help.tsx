@@ -54,6 +54,8 @@ function OrderHelp() {
         <section className="mt-8 space-y-3 font-sans leading-relaxed text-muted-foreground">
           <p>After checkout, Stripe sends you back to your private order page. That page shows progress, any questions we need answered, and your downloads.</p>
           <p>On the same device and browser you ordered from, starting the same package again also brings you back to your saved order.</p>
+          <p>Delivery: allow up to 48 hours after payment and any required details, not counting Sundays (Central Time) — typically sooner.</p>
+          <p>Need a change? Once your files are ready, your order page has a revisions form: one included minor revision within 7 calendar days of delivery, plus free fixes for errors we introduced. Revised files arrive within 48 hours of a complete request, not counting Sundays.</p>
         </section>
 
         <section className="premium-panel mt-10 p-6" aria-labelledby="resend-title">
