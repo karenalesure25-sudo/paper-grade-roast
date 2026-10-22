@@ -33,7 +33,7 @@ function order(tier: TierId, over: Partial<OrderRow> = {}): OrderRow {
 const CENTS = { revamp: 4000, scratch: 5000, bundle: 6000 } as const;
 function session(o: OrderRow, over: Partial<StripeSessionView> = {}): StripeSessionView {
   return { id: "cs_1", mode: "payment", status: "complete", payment_status: "paid", amount_total: CENTS[o.tier], currency: "usd",
-    metadata: { order_id: o.id, tier: o.tier, email: o.email }, client_reference_id: o.id, ...over };
+    metadata: { order_id: o.id, tier: o.tier, email: o.email }, client_reference_id: o.id, livemode: true, ...over };
 }
 
 /** In-memory repo with the same conditional/lease semantics as the SQL functions. */

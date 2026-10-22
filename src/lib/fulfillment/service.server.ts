@@ -187,6 +187,8 @@ export type PublicStatus = {
   /** True only after the managed sender accepted the "ready" email. */
   emailed: boolean;
   emailActive: boolean;
+  /** Stripe test-mode order: no real charge, no customer email. */
+  testMode: boolean;
   paidAt: string | null;
   expiresAt: string | null;
   /** When files first became available (starts the minor-revision window). */

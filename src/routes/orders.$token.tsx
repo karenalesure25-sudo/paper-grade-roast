@@ -135,6 +135,11 @@ function OrderStatusPage() {
         )}
         {status && c && (
           <>
+            {status.testMode && (
+              <p role="status" className="mt-4 inline-block rounded border border-gold/60 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-gold">
+                Test order — no real charge, no emails sent
+              </p>
+            )}
             <h1 className="mt-4 font-brand text-4xl leading-tight text-ivory sm:text-5xl">
               {status.name ? `${c.title}, ${status.name}` : c.title}
             </h1>
