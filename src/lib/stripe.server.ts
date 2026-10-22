@@ -1,5 +1,6 @@
 /** Minimal Stripe REST client (fetch-based, Worker-safe). Server-only. */
 import type { TierId } from "./products";
+import type { StripeMode } from "./fulfillment/stripe-mode";
 
 const API = "https://api.stripe.com/v1";
 
@@ -10,17 +11,18 @@ export const TIER_PRICING: Record<TierId, { cents: number; name: string; priceId
   bundle: { cents: 6000, name: "Revamp + ATS Optimization", priceId: "price_1UN1s2B29VijguUHtaQMBeu7" },
 };
 
-function key(): string {
-  const k = process.env["STRIPE_SECRET_KEY"];
+function key(mode: StripeMode): string {
+  // Live and test keys are separate secrets; neither ever replaces the other.
+  const k = process.env[mode === "test" ? "STRIPE_TEST_SECRET_KEY" : "STRIPE_SECRET_KEY"];
   if (!k) throw new Error("Checkout isn't configured.");
   return k;
 }
 
-async function stripe<T>(path: string, init?: { method?: string; form?: URLSearchParams; idempotencyKey?: string }): Promise<T> {
+async function stripe<T>(path: string, init?: { method?: string; form?: URLSearchParams; idempotencyKey?: string }, mode: StripeMode = "live"): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     method: init?.method ?? "GET",
     headers: {
-      Authorization: `Bearer ${key()}`,
+      Authorization: `Bearer ${key(mode)}`,
       ...(init?.idempotencyKey ? { "Idempotency-Key": init.idempotencyKey } : {}),
       ...(init?.form ? { "Content-Type": "application/x-www-form-urlencoded" } : {}),
     },
@@ -66,13 +68,16 @@ export async function createCheckoutSession(opts: {
   orderId?: string;
   successPath?: string;
   checkoutAttempt?: number;
+  mode?: StripeMode;
 }): Promise<StripeSession> {
+  const mode = opts.mode ?? "live";
   const p = TIER_PRICING[opts.tier];
   const f = new URLSearchParams();
   f.set("mode", "payment");
   f.set("customer_email", opts.email);
   f.set("line_items[0][quantity]", "1");
-  if (p.priceId) {
+  // Live price IDs don't exist in test mode; test sessions use the same server-owned USD amount inline.
+  if (p.priceId && mode === "live") {
     f.set("line_items[0][price]", p.priceId);
   } else {
     f.set("line_items[0][price_data][currency]", "usd");
@@ -88,10 +93,13 @@ export async function createCheckoutSession(opts: {
   }
   // Per-session branding override (Stripe File IDs for the Kay's logo/icon).
   f.set("branding_settings[display_name]", "Kay's Career Solutions");
-  f.set("branding_settings[logo][type]", "file");
-  f.set("branding_settings[logo][file]", "file_1UN3GeB29VijguUHS6dc8l0y");
-  f.set("branding_settings[icon][type]", "file");
-  f.set("branding_settings[icon][file]", "file_1UN3I5B29VijguUH6KlBDRBp");
+  if (mode === "live") {
+    // Uploaded logo files belong to live mode.
+    f.set("branding_settings[logo][type]", "file");
+    f.set("branding_settings[logo][file]", "file_1UN3GeB29VijguUHS6dc8l0y");
+    f.set("branding_settings[icon][type]", "file");
+    f.set("branding_settings[icon][file]", "file_1UN3I5B29VijguUH6KlBDRBp");
+  }
   // Match the site's graphite, cyan and indigo system within hosted Checkout controls.
   f.set("branding_settings[background_color]", "#080D1B");
   f.set("branding_settings[button_color]", "#2DD4D0");
@@ -101,18 +109,18 @@ export async function createCheckoutSession(opts: {
   f.append("excluded_payment_method_types[]", "affirm");
   f.set("success_url", `${opts.origin}${opts.successPath ?? "/payment-success"}${(opts.successPath ?? "").includes("?") ? "&" : "?"}session_id={CHECKOUT_SESSION_ID}`);
   f.set("cancel_url", `${opts.origin}${opts.orderId && opts.successPath ? opts.successPath : "/payment-canceled"}`);
-  return stripe<StripeSession>("/checkout/sessions", { method: "POST", form: f, ...(opts.orderId ? { idempotencyKey: `kcs-${opts.orderId}-${opts.checkoutAttempt ?? 0}` } : {}) });
+  return stripe<StripeSession>("/checkout/sessions", { method: "POST", form: f, ...(opts.orderId ? { idempotencyKey: `kcs-${mode}-${opts.orderId}-${opts.checkoutAttempt ?? 0}` } : {}) }, mode);
 }
 
-export async function getCheckoutSession(id: string): Promise<StripeSession> {
-  return stripe<StripeSession>(`/checkout/sessions/${encodeURIComponent(id)}`);
+export async function getCheckoutSession(id: string, mode: StripeMode = "live"): Promise<StripeSession> {
+  return stripe<StripeSession>(`/checkout/sessions/${encodeURIComponent(id)}`, undefined, mode);
 }
 
-export async function expireCheckoutSession(id: string): Promise<StripeSession> {
+export async function expireCheckoutSession(id: string, mode: StripeMode = "live"): Promise<StripeSession> {
   return stripe<StripeSession>(`/checkout/sessions/${encodeURIComponent(id)}/expire`, {
     method: "POST",
     form: new URLSearchParams(),
-  });
+  }, mode);
 }
 
 /**

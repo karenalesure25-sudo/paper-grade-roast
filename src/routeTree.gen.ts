@@ -21,6 +21,7 @@ import { Route as OrderTierRouteImport } from './routes/order.$tier'
 import { Route as OrdersTokenRouteImport } from './routes/orders.$token'
 import { Route as ApiPublicFulfillmentTickRouteImport } from './routes/api/public/fulfillment-tick'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
+import { Route as ApiPublicStripeWebhookTestRouteImport } from './routes/api/public/stripe-webhook-test'
 import { Route as ApiPublicDownloadTokenRouteImport } from './routes/api/public/download.$token'
 import { Route as ApiPublicOrderFileTokenFileRouteImport } from './routes/api/public/order-file.$token.$file'
 
@@ -85,6 +86,12 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicStripeWebhookTestRoute =
+  ApiPublicStripeWebhookTestRouteImport.update({
+    id: '/api/public/stripe-webhook-test',
+    path: '/api/public/stripe-webhook-test',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicDownloadTokenRoute = ApiPublicDownloadTokenRouteImport.update({
   id: '/api/public/download/$token',
   path: '/api/public/download/$token',
@@ -110,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/stripe-webhook-test': typeof ApiPublicStripeWebhookTestRoute
   '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
   '/api/public/order-file/$token/$file': typeof ApiPublicOrderFileTokenFileRoute
 }
@@ -126,6 +134,7 @@ export interface FileRoutesByTo {
   '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/stripe-webhook-test': typeof ApiPublicStripeWebhookTestRoute
   '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
   '/api/public/order-file/$token/$file': typeof ApiPublicOrderFileTokenFileRoute
 }
@@ -143,6 +152,7 @@ export interface FileRoutesById {
   '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/public/stripe-webhook-test': typeof ApiPublicStripeWebhookTestRoute
   '/api/public/download/$token': typeof ApiPublicDownloadTokenRoute
   '/api/public/order-file/$token/$file': typeof ApiPublicOrderFileTokenFileRoute
 }
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/orders/$token'
     | '/api/public/fulfillment-tick'
     | '/api/public/stripe-webhook'
+    | '/api/public/stripe-webhook-test'
     | '/api/public/download/$token'
     | '/api/public/order-file/$token/$file'
   fileRoutesByTo: FileRoutesByTo
@@ -177,6 +188,7 @@ export interface FileRouteTypes {
     | '/orders/$token'
     | '/api/public/fulfillment-tick'
     | '/api/public/stripe-webhook'
+    | '/api/public/stripe-webhook-test'
     | '/api/public/download/$token'
     | '/api/public/order-file/$token/$file'
   id:
@@ -193,6 +205,7 @@ export interface FileRouteTypes {
     | '/orders/$token'
     | '/api/public/fulfillment-tick'
     | '/api/public/stripe-webhook'
+    | '/api/public/stripe-webhook-test'
     | '/api/public/download/$token'
     | '/api/public/order-file/$token/$file'
   fileRoutesById: FileRoutesById
@@ -210,6 +223,7 @@ export interface RootRouteChildren {
   OrdersTokenRoute: typeof OrdersTokenRoute
   ApiPublicFulfillmentTickRoute: typeof ApiPublicFulfillmentTickRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
+  ApiPublicStripeWebhookTestRoute: typeof ApiPublicStripeWebhookTestRoute
   ApiPublicDownloadTokenRoute: typeof ApiPublicDownloadTokenRoute
   ApiPublicOrderFileTokenFileRoute: typeof ApiPublicOrderFileTokenFileRoute
 }
@@ -300,6 +314,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/stripe-webhook-test': {
+      id: '/api/public/stripe-webhook-test'
+      path: '/api/public/stripe-webhook-test'
+      fullPath: '/api/public/stripe-webhook-test'
+      preLoaderRoute: typeof ApiPublicStripeWebhookTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/download/$token': {
       id: '/api/public/download/$token'
       path: '/api/public/download/$token'
@@ -330,6 +351,7 @@ const rootRouteChildren: RootRouteChildren = {
   OrdersTokenRoute: OrdersTokenRoute,
   ApiPublicFulfillmentTickRoute: ApiPublicFulfillmentTickRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
+  ApiPublicStripeWebhookTestRoute: ApiPublicStripeWebhookTestRoute,
   ApiPublicDownloadTokenRoute: ApiPublicDownloadTokenRoute,
   ApiPublicOrderFileTokenFileRoute: ApiPublicOrderFileTokenFileRoute,
 }
