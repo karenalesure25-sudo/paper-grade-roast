@@ -14,7 +14,6 @@ export const Route = createFileRoute("/terms")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  staticData: { sitemap: true },
   component: TermsPage,
 });
 
