@@ -7,6 +7,7 @@ import { StampButton } from "@/components/StampButton";
 import { answerOrderQuestions, getOrderStatus, nudgeOrder, retryOrder, resumeOrderCheckout } from "@/lib/fulfillment.functions";
 import { formatCustomerTime } from "@/lib/customer-time";
 import { getTier } from "@/lib/products";
+import { RevisionPanel } from "@/components/order/RevisionPanel";
 
 export const Route = createFileRoute("/orders/$token")({
   head: () => ({
@@ -154,6 +155,8 @@ function OrderStatusPage() {
             </p>
             <p className="mt-4 text-sm text-muted-foreground">{getTier(status.tier)?.name} · ${getTier(status.tier)?.price} USD · One-time payment</p>
             {status.paidAt && <p className="mt-2 text-sm text-muted-foreground">Payment confirmed: {formatCustomerTime(status.paidAt)}</p>}
+            {status.deliveryDeadline && <p className="mt-2 text-sm text-muted-foreground">Expected by: {formatCustomerTime(status.deliveryDeadline)} at the latest (48 hours, not counting Sundays) — typically sooner.</p>}
+            {status.deliveredAt && <p className="mt-2 text-sm text-muted-foreground">Files first available: {formatCustomerTime(status.deliveredAt)}</p>}
             {status.expiresAt && <p className="mt-2 text-sm text-muted-foreground">Private link expires: {formatCustomerTime(status.expiresAt)}</p>}
             {status.status === "awaiting_payment" && <StampButton type="button" disabled={busy} onClick={reopenCheckout} className="mt-6">{busy ? "Opening checkout…" : "Reopen secure checkout"}</StampButton>}
             {msg && status.status !== "needs_information" && <p role="alert" className="mt-3 text-redpen-text">{msg}</p>}
@@ -190,6 +193,7 @@ function OrderStatusPage() {
 
             {status.status === "ready" && (
               <div className="mt-8 space-y-6">
+                {status.revisions.some((r) => r.status === "ready") && <h2 className="font-stamp text-xl text-ink">Original delivery (version 1)</h2>}
                 <ul className="premium-panel divide-y divide-border p-2">
                   {status.files.map((f) => (
                     <li key={f.kind}>
@@ -219,6 +223,7 @@ function OrderStatusPage() {
                     </div>
                   </div>
                 )}
+                <RevisionPanel token={token} status={status} onStatus={setStatus} />
               </div>
             )}
           </>
