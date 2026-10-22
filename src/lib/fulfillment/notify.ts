@@ -40,10 +40,10 @@ export type NotificationState = {
 
 export type NotifyRepo = {
   byId(id: string): Promise<OrderRow | null>;
-  /** Atomic leased claim; false if already done, exhausted, backing off, or claimed elsewhere. */
-  claim(id: string, kind: NotificationKind): Promise<boolean>;
-  /** Merges patch into the kind's state and releases the claim. */
-  finish(id: string, kind: NotificationKind, patch: NotificationState): Promise<void>;
+  /** Atomic leased claim; returns a unique fencing token, or null if done, exhausted, backing off, or claimed elsewhere. */
+  claim(id: string, kind: NotificationKind): Promise<string | null>;
+  /** Merges patch and releases the claim only if `token` still owns it; false when a newer claim superseded it. */
+  finish(id: string, kind: NotificationKind, token: string, patch: NotificationState): Promise<boolean>;
 };
 
 export function backoffSeconds(attempts: number, retryAfter?: number | null): number {
@@ -82,10 +82,14 @@ export async function deliverNotification(
 ): Promise<NotifyOutcome> {
   // Without a verified sender nothing is claimed, so no attempts are consumed.
   if (!port.available()) return "unconfigured";
-  if (!(await repo.claim(orderId, kind))) return "busy";
+  const token = await repo.claim(orderId, kind);
+  if (!token) return "busy";
+  const finish = async (patch: NotificationState) => {
+    if (!(await finish(token, patch))) console.error("order email claim superseded", { orderId, kind });
+  };
   const order = await repo.byId(orderId);
   if (!order || !eligible(order, kind)) {
-    await repo.finish(orderId, kind, {});
+    await finish({});
     return "not_eligible";
   }
   const state = ((order as OrderRow & { notifications?: Record<string, NotificationState> }).notifications?.[kind]) ?? {};
@@ -97,20 +101,20 @@ export async function deliverNotification(
     result = { status: "retry", code: "send_threw" };
   }
   if (result.status === "sent" || result.status === "suppressed") {
-    await repo.finish(orderId, kind, { done: true, outcome: result.status, sentAt: now().toISOString(), attempts });
+    await finish({ done: true, outcome: result.status, sentAt: now().toISOString(), attempts });
     return result.status;
   }
   if (result.status === "unconfigured") {
-    await repo.finish(orderId, kind, {});
+    await finish({});
     return "unconfigured";
   }
   const exhausted = result.status === "permanent" || attempts >= MAX_NOTIFY_ATTEMPTS;
   if (exhausted) {
     console.error("order email gave up", { orderId, kind, code: result.code });
-    await repo.finish(orderId, kind, { attempts: MAX_NOTIFY_ATTEMPTS, gaveUp: true, lastCode: result.code });
+    await finish({ attempts: MAX_NOTIFY_ATTEMPTS, gaveUp: true, lastCode: result.code });
     return "gave_up";
   }
   const wait = backoffSeconds(attempts, result.status === "retry" ? result.retryAfterSeconds : null);
-  await repo.finish(orderId, kind, { attempts, lastCode: result.code, nextAt: new Date(now().getTime() + wait * 1000).toISOString() });
+  await finish({ attempts, lastCode: result.code, nextAt: new Date(now().getTime() + wait * 1000).toISOString() });
   return "retry";
 }
