@@ -100,9 +100,25 @@ export function OrderLinksEmail({ orders }: LinksProps) {
 }
 
 /** Template catalogue: names are fixed server-side; the browser can never choose one. */
+export type RevisionReadyProps = ReadyProps & { version?: number };
+export function RevisionReadyEmail({ firstName, packageName, orderUrl, expires, hasCoverLetter, version }: RevisionReadyProps) {
+  return (
+    <Shell preview="Your revised files are ready">
+      <Heading style={h1}>{firstName ? `Your revision is ready, ${firstName}` : "Your revision is ready"}</Heading>
+      <Text style={p}>
+        Version {version ?? 2} of your {packageName ?? "package"} passed the same accuracy checks as your first delivery.
+        {hasCoverLetter ? " Your cover letter was updated to match." : ""} Your original files are still on your order page.
+      </Text>
+      <Section style={{ margin: "8px 0 6px" }}><Button href={orderUrl ?? "#"} style={button}>Open your order page</Button></Section>
+      <PrivateNote expires={expires} />
+    </Shell>
+  );
+}
+
 export const ORDER_EMAILS = {
   "order-confirmation": { component: OrderConfirmationEmail, subject: "Payment confirmed — your package is in progress", displayName: "Order confirmation", previewData: { firstName: "Avery", packageName: "Resume Revamp", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", expires: "Nov 21, 2026" } },
   "order-ready": { component: OrderReadyEmail, subject: "Your files are ready", displayName: "Order ready", previewData: { firstName: "Avery", packageName: "Revamp + ATS Optimization", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", hasCoverLetter: true } },
+  "revision-ready": { component: RevisionReadyEmail, subject: "Your revised files are ready", displayName: "Revision ready", previewData: { firstName: "Avery", packageName: "Resume Revamp", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", version: 2 } },
   "order-links": { component: OrderLinksEmail, subject: "Your Kay's Career Solutions order links", displayName: "Order link recovery", previewData: { orders: [{ packageName: "Resume Revamp", url: "https://paper-grade-roast.lovable.app/orders/sample", status: "Ready" }] } },
 } as const;
 

@@ -10,7 +10,8 @@ import { formatCustomerTime } from "../customer-time";
 import type { OrderRow } from "./engine";
 import type { OrderEmailName } from "../order-emails/templates";
 
-export type NotificationKind = "confirmation" | "ready";
+/** "revision:<id>" keys are per revision version, so the initial ready ledger never suppresses revision mail. */
+export type NotificationKind = "confirmation" | "ready" | `revision:${string}`;
 export const MAX_NOTIFY_ATTEMPTS = 6;
 
 export type EmailMessage = {
@@ -40,6 +41,8 @@ export type NotificationState = {
 
 export type NotifyRepo = {
   byId(id: string): Promise<OrderRow | null>;
+  /** Ready revision for this order, or null. Required for "revision:<id>" notifications. */
+  revision?(orderId: string, revisionId: string): Promise<{ id: string; version: number; status: string } | null>;
   /** Atomic leased claim; returns a unique fencing token, or null if done, exhausted, backing off, or claimed elsewhere. */
   claim(id: string, kind: NotificationKind): Promise<string | null>;
   /** Merges patch and releases the claim only if `token` still owns it; false when a newer claim superseded it. */
@@ -51,13 +54,14 @@ export function backoffSeconds(attempts: number, retryAfter?: number | null): nu
   return Math.min(60 * 2 ** Math.max(0, attempts - 1), 3600);
 }
 
-export function eligible(order: OrderRow, kind: NotificationKind): boolean {
+export function eligible(order: OrderRow, kind: NotificationKind, rev?: { status: string } | null): boolean {
   if (!order.paid_at) return false;
+  if (kind.startsWith("revision:")) return order.status === "ready" && rev?.status === "ready";
   if (kind === "ready") return order.status === "ready" && Boolean(order.result);
   return true;
 }
 
-export function buildMessage(order: OrderRow, kind: NotificationKind, origin: string): EmailMessage {
+export function buildMessage(order: OrderRow, kind: NotificationKind, origin: string, rev?: { id: string; version: number } | null): EmailMessage {
   const packageName = getTier(order.tier)?.name ?? "your package";
   const base = {
     firstName: order.snapshot.name.split(/\s+/)[0] ?? "",
@@ -65,6 +69,13 @@ export function buildMessage(order: OrderRow, kind: NotificationKind, origin: st
     orderUrl: `${origin}/orders/${order.access_token}`,
     ...(order.expires_at ? { expires: formatCustomerTime(order.expires_at) } : {}),
   };
+  if (kind.startsWith("revision:") && rev) {
+    return {
+      template: "revision-ready", to: order.email,
+      data: { ...base, version: rev.version, hasCoverLetter: Boolean(order.result?.coverLetter) },
+      idempotencyKey: `revision-ready-${rev.id}`,
+    };
+  }
   if (kind === "confirmation") {
     return { template: "order-confirmation", to: order.email, data: base, idempotencyKey: `order-confirmation-${order.id}` };
   }
@@ -88,7 +99,8 @@ export async function deliverNotification(
     if (!(await repo.finish(orderId, kind, token, patch))) console.error("order email claim superseded", { orderId, kind });
   };
   const order = await repo.byId(orderId);
-  if (!order || !eligible(order, kind)) {
+  const rev = kind.startsWith("revision:") && repo.revision ? await repo.revision(orderId, kind.slice("revision:".length)) : null;
+  if (!order || !eligible(order, kind, rev)) {
     await finish({});
     return "not_eligible";
   }
@@ -96,7 +108,7 @@ export async function deliverNotification(
   const attempts = (state.attempts ?? 0) + 1;
   let result: EmailResult;
   try {
-    result = await port.send(buildMessage(order, kind, origin));
+    result = await port.send(buildMessage(order, kind, origin, rev));
   } catch {
     result = { status: "retry", code: "send_threw" };
   }
