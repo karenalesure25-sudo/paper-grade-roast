@@ -61,3 +61,19 @@ export const retryOrder = createServerFn({ method: "POST" })
     const { retryByToken } = await import("./fulfillment/service.server");
     return retryByToken(data.token);
   });
+
+/** Lost-link recovery: generic response, rate-limited, links go only to the address on file. */
+export const requestOrderLinks = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ email: z.string().trim().min(3).max(254) }).parse(i))
+  .handler(async ({ data }) => {
+    setResponseHeader("Cache-Control", "no-store");
+    const req = getRequest();
+    const ip = req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "";
+    const { recoverOrderLinks } = await import("./fulfillment/service.server");
+    return recoverOrderLinks(data.email, ip);
+  });
+
+export const getEmailAvailability = createServerFn({ method: "GET" }).handler(async () => {
+  const { emailDeliveryActive } = await import("./fulfillment/service.server");
+  return { active: emailDeliveryActive() };
+});

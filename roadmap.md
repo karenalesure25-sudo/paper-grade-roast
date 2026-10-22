@@ -2,6 +2,18 @@
 - [x] Metallic-logo signature homepage revision and responsive cross-route verification
 # Roadmap
 
+## Launch readiness
+- [x] Authenticated background worker (DB-held token verified; wrong/missing token → 401). Schedule `kcs-fulfillment-sweep` every 2 min created PAUSED.
+- [x] Order emails (confirmation/ready/link recovery) built + tested with mocked transport; delivery OFF until domain verified
+- [x] Package deliverables, AI-use disclosure, synthetic sample, Terms, Order help pages
+- [x] Privacy-safe share card, social image/meta (@Lovable removed), sitemap + robots, "Not yet offered" labels
+- [x] Tests: 120 pass; typecheck OK; desktop/mobile smoke OK
+- [ ] Activate after publish: resume the paused sweep schedule (blocked: user approval to publish)
+- [ ] Email: buy/connect domain → set up email domain → wire managed sender into email-transport.server.ts (blocked: domain)
+- [ ] Stripe webhook signing secret (blocked: Stripe access denied; user must register endpoint and save STRIPE_WEBHOOK_SECRET)
+- [ ] Live test-mode purchase per tier (blocked: no Stripe test keys)
+- [ ] Business inputs: public support email/contact, revision policy, delivery timeframe
+
 - [x] Responsive visual audit and scoped fixes: homepage, roast, and order dashboard at 1440/1280/1024/390/360; before/after evidence, anchors, loaded logo/portrait, and browser-only template/review fixtures verified without checkout calls. Evidence: /tmp/browser/responsive-audit/. No production publish.
 - [ ] GitHub main sync for responsive fixes: platform-managed Git state; remote main still reads ba2469d, while the saved working revision is c08dd75. Manual Git writes are prohibited in this environment.
 

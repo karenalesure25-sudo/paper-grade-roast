@@ -12,3 +12,7 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /orders/
+Disallow: /api/
+
+Sitemap: https://paper-grade-roast.lovable.app/sitemap.xml

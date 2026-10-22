@@ -32,6 +32,7 @@ export type Database = {
           lease_id: string | null
           locked_until: string | null
           max_attempts: number
+          notifications: Json
           paid_at: string | null
           photo: string | null
           result: Json | null
@@ -62,6 +63,7 @@ export type Database = {
           lease_id?: string | null
           locked_until?: string | null
           max_attempts?: number
+          notifications?: Json
           paid_at?: string | null
           photo?: string | null
           result?: Json | null
@@ -92,6 +94,7 @@ export type Database = {
           lease_id?: string | null
           locked_until?: string | null
           max_attempts?: number
+          notifications?: Json
           paid_at?: string | null
           photo?: string | null
           result?: Json | null
@@ -256,6 +259,27 @@ export type Database = {
         }
         Relationships: []
       }
+      recovery_requests: {
+        Row: {
+          created_at: string
+          email_hash: string
+          id: string
+          ip_hash: string
+        }
+        Insert: {
+          created_at?: string
+          email_hash: string
+          id?: string
+          ip_hash: string
+        }
+        Update: {
+          created_at?: string
+          email_hash?: string
+          id?: string
+          ip_hash?: string
+        }
+        Relationships: []
+      }
       stripe_events: {
         Row: {
           attempts: number
@@ -319,6 +343,7 @@ export type Database = {
           lease_id: string | null
           locked_until: string | null
           max_attempts: number
+          notifications: Json
           paid_at: string | null
           photo: string | null
           result: Json | null
@@ -339,13 +364,32 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_notification: {
+        Args: { _kind: string; _lease_seconds?: number; _order_id: string }
+        Returns: boolean
+      }
       due_fulfillments: { Args: { _limit?: number }; Returns: string[] }
+      due_notifications: {
+        Args: { _limit?: number }
+        Returns: {
+          kind: string
+          order_id: string
+        }[]
+      }
+      finish_notification: {
+        Args: { _kind: string; _order_id: string; _patch: Json }
+        Returns: undefined
+      }
       purge_expired_fulfillments: { Args: never; Returns: number }
       renew_fulfillment_lease: {
         Args: { _lease_id: string; _lease_seconds?: number; _order_id: string }
         Returns: boolean
       }
       settle_stale_fulfillments: { Args: never; Returns: number }
+      verify_worker_token: {
+        Args: { _name: string; _token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never

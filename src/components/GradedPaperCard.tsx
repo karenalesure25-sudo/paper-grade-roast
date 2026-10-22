@@ -1,60 +1,13 @@
-import { useRef, useState } from "react";
-import { toPng } from "html-to-image";
 import { GradeStamp } from "@/components/GradeStamp";
-import { StampButton } from "@/components/StampButton";
+import { ShareCard } from "@/components/ShareCard";
 import type { StoredRoast } from "@/lib/roast-session";
 import { SECTION_LABEL } from "@/lib/roast-grounding";
 
 /** The graded-paper result card, plus a share-as-image action. */
 export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
-  const cardRef = useRef<HTMLDivElement>(null);
-  const [status, setStatus] = useState<"idle" | "working" | "shared" | "error">("idle");
-
-  async function share() {
-    const node = cardRef.current;
-    if (!node) return;
-    setStatus("working");
-    try {
-      const dataUrl = await toPng(node, {
-        pixelRatio: 2,
-        cacheBust: true,
-        backgroundColor: "#10182b",
-      });
-      const blob = await (await fetch(dataUrl)).blob();
-      const file = new File([blob], `kcs-grade-${roast.grade}.png`, {
-        type: "image/png",
-      });
-
-      if (
-        typeof navigator !== "undefined" &&
-        navigator.canShare?.({ files: [file] }) &&
-        navigator.share
-      ) {
-        await navigator.share({
-          files: [file],
-          title: `My resume got a ${roast.grade}`,
-        });
-      } else {
-        const link = document.createElement("a");
-        link.href = dataUrl;
-        link.download = file.name;
-        link.click();
-      }
-      setStatus("shared");
-    } catch (error) {
-      if (error instanceof Error && error.name === "AbortError") {
-        setStatus("idle");
-        return;
-      }
-      console.error(error);
-      setStatus("error");
-    }
-  }
-
   return (
     <div className="space-y-6">
       <div
-        ref={cardRef}
         className="relative rounded-lg border border-border bg-card px-6 pt-8 pb-10 shadow-paper-lift sm:px-10"
       >
         <div className="flex items-start justify-between gap-4">
@@ -138,18 +91,7 @@ export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
         </p>
       </div>
 
-      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <StampButton onClick={share} disabled={status === "working"}>
-          {status === "working" ? "Stamping..." : "Share this roast"}
-        </StampButton>
-        <p className="font-sans text-[0.95rem] text-muted-foreground">
-          {status === "error"
-            ? "Couldn't build the image. Try again."
-            : status === "shared"
-              ? "Image ready \u2014 post it and tag the roast."
-              : "Saves the card as an image for Instagram or TikTok."}
-        </p>
-      </div>
+      <ShareCard grade={roast.grade} />
     </div>
   );
 }

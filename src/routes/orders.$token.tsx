@@ -146,7 +146,11 @@ function OrderStatusPage() {
               )}
             </div>
             <p className="mt-6 border-l-2 border-gold pl-3 text-[0.9rem] text-muted-foreground">
-              Bookmark this page. Email delivery isn’t set up yet, so nothing is emailed — this private link is how you reach your files.
+              {status.emailed
+                ? "We emailed you a link to this page. Keep it private."
+                : status.emailActive
+                  ? "Bookmark this page. We’ll also email you when your files are ready."
+                  : "Bookmark this page. Email delivery isn’t switched on yet, so nothing is emailed — this private link is how you reach your files."}
             </p>
             <p className="mt-4 text-sm text-muted-foreground">{getTier(status.tier)?.name} · ${getTier(status.tier)?.price} USD · One-time payment</p>
             {status.paidAt && <p className="mt-2 text-sm text-muted-foreground">Payment confirmed: {formatCustomerTime(status.paidAt)}</p>}

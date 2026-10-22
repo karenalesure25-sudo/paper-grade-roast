@@ -10,10 +10,13 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as OrderHelpRouteImport } from './routes/order-help'
 import { Route as PaymentCanceledRouteImport } from './routes/payment-canceled'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RoastRouteImport } from './routes/roast'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as OrderTierRouteImport } from './routes/order.$tier'
 import { Route as OrdersTokenRouteImport } from './routes/orders.$token'
 import { Route as ApiPublicFulfillmentTickRouteImport } from './routes/api/public/fulfillment-tick'
@@ -24,6 +27,11 @@ import { Route as ApiPublicOrderFileTokenFileRouteImport } from './routes/api/pu
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrderHelpRoute = OrderHelpRouteImport.update({
+  id: '/order-help',
+  path: '/order-help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PaymentCanceledRoute = PaymentCanceledRouteImport.update({
@@ -44,6 +52,16 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const RoastRoute = RoastRouteImport.update({
   id: '/roast',
   path: '/roast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrderTierRoute = OrderTierRouteImport.update({
@@ -81,10 +99,13 @@ const ApiPublicOrderFileTokenFileRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/order-help': typeof OrderHelpRoute
   '/payment-canceled': typeof PaymentCanceledRoute
   '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/order/$tier': typeof OrderTierRoute
   '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
@@ -94,10 +115,13 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/order-help': typeof OrderHelpRoute
   '/payment-canceled': typeof PaymentCanceledRoute
   '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/order/$tier': typeof OrderTierRoute
   '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
@@ -108,10 +132,13 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/order-help': typeof OrderHelpRoute
   '/payment-canceled': typeof PaymentCanceledRoute
   '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/order/$tier': typeof OrderTierRoute
   '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
@@ -123,10 +150,13 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/order-help'
     | '/payment-canceled'
     | '/payment-success'
     | '/privacy'
     | '/roast'
+    | '/sitemap.xml'
+    | '/terms'
     | '/order/$tier'
     | '/orders/$token'
     | '/api/public/fulfillment-tick'
@@ -136,10 +166,13 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/order-help'
     | '/payment-canceled'
     | '/payment-success'
     | '/privacy'
     | '/roast'
+    | '/sitemap.xml'
+    | '/terms'
     | '/order/$tier'
     | '/orders/$token'
     | '/api/public/fulfillment-tick'
@@ -149,10 +182,13 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/order-help'
     | '/payment-canceled'
     | '/payment-success'
     | '/privacy'
     | '/roast'
+    | '/sitemap.xml'
+    | '/terms'
     | '/order/$tier'
     | '/orders/$token'
     | '/api/public/fulfillment-tick'
@@ -163,10 +199,13 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  OrderHelpRoute: typeof OrderHelpRoute
   PaymentCanceledRoute: typeof PaymentCanceledRoute
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   PrivacyRoute: typeof PrivacyRoute
   RoastRoute: typeof RoastRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
   OrderTierRoute: typeof OrderTierRoute
   OrdersTokenRoute: typeof OrdersTokenRoute
   ApiPublicFulfillmentTickRoute: typeof ApiPublicFulfillmentTickRoute
@@ -182,6 +221,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/order-help': {
+      id: '/order-help'
+      path: '/order-help'
+      fullPath: '/order-help'
+      preLoaderRoute: typeof OrderHelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/payment-canceled': {
@@ -210,6 +256,20 @@ declare module '@tanstack/react-router' {
       path: '/roast'
       fullPath: '/roast'
       preLoaderRoute: typeof RoastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/order/$tier': {
@@ -259,10 +319,13 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  OrderHelpRoute: OrderHelpRoute,
   PaymentCanceledRoute: PaymentCanceledRoute,
   PaymentSuccessRoute: PaymentSuccessRoute,
   PrivacyRoute: PrivacyRoute,
   RoastRoute: RoastRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
   OrderTierRoute: OrderTierRoute,
   OrdersTokenRoute: OrdersTokenRoute,
   ApiPublicFulfillmentTickRoute: ApiPublicFulfillmentTickRoute,
