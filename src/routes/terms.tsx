@@ -42,6 +42,14 @@ function TermsPage() {
           <p>All sales are final. We do not offer refunds.</p>
           <p>If our accuracy checks can&rsquo;t approve your package, your purchase isn&rsquo;t used up: you can answer follow-up questions or retry from your order page.</p>
         </Section>
+        <Section title="Delivery">
+          <p>Files are delivered within 24–48 hours after Stripe confirms payment and we have every required detail, not counting Sundays (America/Chicago time). Delivery is often sooner. Your order page shows the latest expected time and, once delivered, when your files first became available.</p>
+        </Section>
+        <Section title="Revisions">
+          <p>Each package includes one complimentary minor revision: wording changes, corrections or formatting adjustments within the template you selected. Request it from your order page within 7 calendar days of when your files first became available (through the end of the 7th day, Central Time).</p>
+          <p>A minor revision does not include a full rewrite, retargeting to a different job, adding substantial new experience, or switching templates. Revisions are written by AI using only facts you already provided and pass the same accuracy checks; no human review is claimed. Revised files are delivered within 24–48 hours after a complete request, not counting Sundays.</p>
+          <p>Errors we introduced — where a delivered file differs from what you gave us — are corrected free and do not use your included revision. Your included revision is only used once revised files are successfully delivered; your original files remain available.</p>
+        </Section>
         <Section title="AI-written documents">
           <p>Documents are written by AI models from the information you provide, then checked automatically against your own text. We don&rsquo;t invent jobs, schools, dates or numbers. Review your files before using them; you are responsible for what you submit to employers.</p>
           <p>We don&rsquo;t promise interviews, job offers or any specific result. Keyword reports are estimates, not a score from any real applicant tracking system.</p>

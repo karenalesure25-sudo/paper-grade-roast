@@ -30,6 +30,11 @@ export function PackageDetails() {
       <p className="mt-5 text-sm text-muted-foreground">
         Every package: one-time payment, your pick of 7 layouts before you pay, and files on a private order page for 30 days.
       </p>
+      <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+        <li>Delivery: typically sooner, but allow up to 24–48 hours after payment and any required details, not counting Sundays (Central Time).</li>
+        <li>One complimentary minor revision — wording, corrections or formatting within your selected template — requested from your order page within 7 calendar days of your files first being available. Revised files arrive within 24–48 hours of a complete request, not counting Sundays. Revisions are AI-written from the facts you already gave us; they don&rsquo;t cover a full rewrite, a different target job, substantial new experience or a template switch.</li>
+        <li>Errors we introduced are corrected free and don&rsquo;t use your included revision.</li>
+      </ul>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
         <div className="glass-surface min-w-0 rounded-lg p-6">
