@@ -188,6 +188,8 @@ export type PublicStatus = {
   minorRevision: "available" | "pending" | "used" | "closed" | "n/a";
   minorWindowEnd: string | null;
   revisions: PublicRevision[];
+  /** One-off customer notice from the last action (e.g. why a retry was refused). */
+  notice?: string;
 };
 
 export type PublicRevision = {
@@ -239,7 +241,9 @@ function toPublic(o: OrderRow, revisions: RevisionRow[] = []): PublicStatus {
       id: r.id, kind: r.kind, status: r.status, requestedAt: r.requested_at, deadlineAt: r.deadline_at, completedAt: r.completed_at,
       version: r.version, question: r.status === "needs_information" ? r.clarification_request : null,
       reason: r.status === "failed" || r.status === "rejected" ? r.failure_reason : null,
-      canRetry: r.status === "failed" && r.retry_rounds < MAX_REVISION_RETRIES,
+      canRetry: r.status === "failed" && r.retry_rounds < MAX_REVISION_RETRIES
+        && !revisions.some((x) => x.id !== r.id && ["queued", "processing", "needs_information"].includes(x.status))
+        && !(r.kind === "minor" && revisions.some((x) => x.kind === "minor" && x.status === "ready")),
       files: r.status === "ready" && r.result ? fileList(base, Boolean(r.result.coverLetter), `?v=${r.id}`) : [],
     })) : [],
   };
@@ -283,8 +287,9 @@ export async function answerRevisionByToken(token: string, id: string, text: str
 
 export async function retryRevisionByToken(token: string, id: string) {
   const r = await ownedRevision(token, id);
-  if (r) await retryRevision(revisionRepo, r);
-  return statusByToken(token);
+  const res = r ? await retryRevision(revisionRepo, r) : null;
+  const status = await statusByToken(token);
+  return status && res && !res.ok ? { ...status, notice: res.message } : status;
 }
 
 /** Claim-guarded nudge; the background worker processes it too if the tab closes. */

@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { DeliveredPackage, OrderRow } from "./engine";
 import {
-  answerRevision, minorRevisionState, processRevision, requestRevision, retryRevision, screenRequest,
+  answerRevision, minorRevisionState, processRevision, requestRevision, retryRevision, scopeViolations, screenRequest, settleStaleRevision,
   type Classification, type RequestOutcome, type RevisionKind, type RevisionModelPort, type RevisionRepo, type RevisionRow,
 } from "./revision";
 import { minorRevisionWindowEnd } from "./service-time";
@@ -71,7 +71,9 @@ function memRepo(o: OrderRow, clock: () => Date = () => new Date("2026-10-06T15:
         if (mine.some((r) => r.kind === "minor" && r.status === "ready")) return { outcome: "already_used" as RequestOutcome };
       } else if (mine.filter((r) => r.kind === "correction").length >= 3) return { outcome: "limit" as RequestOutcome };
       const id = `00000000-0000-4000-8000-${String(++n).padStart(12, "0")}`;
+      const latest = mine.filter((r) => r.status === "ready" && r.version).sort((a, b) => b.version! - a.version!)[0];
       rows.set(id, {
+        base_revision_id: latest?.id ?? null, base_version: latest?.version ?? 1,
         id, order_id: orderId, kind, status: "queued", request_text: text, idempotency_key: idem, clarifications: [], clarification_request: null,
         requested_at: clock().toISOString(), deadline_at: deadline, attempts: 0, max_attempts: 3, retry_rounds: 0, lease_id: null, locked_until: null,
         result: null, version: null, failure_reason: null, completed_at: null,
@@ -95,13 +97,32 @@ function memRepo(o: OrderRow, clock: () => Date = () => new Date("2026-10-06T15:
     },
     async renew(id, lease) { const r = rows.get(id); return Boolean(r && r.status === "processing" && r.lease_id === lease); },
     async transition(id, from, patch) { const r = rows.get(id); if (!r || !from.includes(r.status)) return null; Object.assign(r, patch); return { ...r }; },
+    async retry(id) {
+      const r = rows.get(id);
+      if (!r) return "not_found";
+      if (r.status !== "failed") return "not_failed";
+      if (o.status !== "ready" || (o.expires_at && new Date(o.expires_at) <= clock())) return "expired";
+      if (r.retry_rounds >= 2) return "limit";
+      const mine = [...rows.values()].filter((x) => x.order_id === r.order_id && x.id !== id);
+      if (mine.some((x) => ["queued", "processing", "needs_information"].includes(x.status))) return "pending";
+      if (r.kind === "minor" && mine.some((x) => x.kind === "minor" && x.status === "ready")) return "already_used";
+      const latest = mine.filter((x) => x.status === "ready" && x.version).sort((a, b) => b.version! - a.version!)[0];
+      Object.assign(r, { status: "queued", attempts: 0, retry_rounds: r.retry_rounds + 1, failure_reason: null, base_revision_id: latest?.id ?? null, base_version: latest?.version ?? 1 });
+      return "queued";
+    },
+    async settleStale(id, lease, reason) {
+      const r = rows.get(id);
+      if (!r || r.status !== "processing" || r.lease_id !== lease || !r.locked_until || new Date(r.locked_until).getTime() >= Date.now() || r.attempts < r.max_attempts) return false;
+      Object.assign(r, { status: "failed", lease_id: null, locked_until: null, failure_reason: reason });
+      return true;
+    },
     async nextVersion(id) { return Math.max(1, ...[...rows.values()].filter((r) => r.order_id === id && r.version).map((r) => r.version!)) + 1; },
   };
   return { repo, rows, setFailRequest: (v: boolean) => { failRequest = v; } };
 }
 
-type Step = "good" | "hallucinate" | "throw" | "ask";
-function models(opts: { cls?: Partial<Classification> | "throw"; steps?: Step[]; checker?: boolean[] } = {}) {
+type Step = "good" | "hallucinate" | "throw" | "ask" | "rewrite";
+function models(opts: { cls?: Partial<Classification> | "throw"; steps?: Step[]; checker?: boolean[]; scope?: boolean[]; edit?: (base: FullResume) => FullResume } = {}) {
   const steps = opts.steps ?? ["good"];
   const m: RevisionModelPort & { revises: number; classified: number } = {
     revises: 0, classified: 0,
@@ -110,8 +131,19 @@ function models(opts: { cls?: Partial<Classification> | "throw"; steps?: Step[];
       if (opts.cls === "throw") throw new Error("model down");
       return { scope: "minor", reason: "", ...(opts.cls ?? {}) } as Classification;
     },
-    async revise(): Promise<WriterOutput> {
+    async revise(input): Promise<WriterOutput> {
       const s = steps[Math.min(m.revises++, steps.length - 1)];
+      if (opts.edit) { const { name: _n, email: _e, phone: _p, ...rest } = opts.edit(structuredClone(input.delivered.resume)); return { kind: "package", resume: rest, keywords: [] }; }
+      if (s === "rewrite") {
+        // Grounded but unsolicited: every bullet and the summary reworded.
+        const r = resume("Operations Coordinator", "Managed freight schedules for twelve regional carriers in SAP.");
+        r.summary = "Logistics and retail professional focused on scheduling, inventory control and team training.";
+        r.experience[0]!.bullets[1] = "Onboarded four new hires on warehouse safety and inventory counts.";
+        r.experience[1]!.bullets[0] = "Led a team of eight associates and owned cash reconciliation.";
+        r.skills = ["Excel", "SAP"];
+        const { name: _n, email: _e, phone: _p, ...rest } = r;
+        return { kind: "package", resume: rest, keywords: [] };
+      }
       if (s === "throw") throw new Error("model down");
       if (s === "ask") return { kind: "needs_information", questions: ["Which bullet?"] };
       const r = resume("Operations Coordinator", s === "hallucinate"
@@ -121,6 +153,7 @@ function models(opts: { cls?: Partial<Classification> | "throw"; steps?: Step[];
       return { kind: "package", resume: rest, keywords: [] };
     },
     async check() { const ok = opts.checker?.length ? opts.checker.shift()! : true; return { approved: ok, problems: ok ? [] : ["unsupported claim"] }; },
+    async scopeCheck() { const ok = opts.scope?.length ? opts.scope.shift()! : true; return { approved: ok, problems: ok ? [] : ["unrequested changes"] }; },
   };
   return m;
 }
@@ -203,7 +236,7 @@ describe("reservation and consumption", () => {
     expect(row.status).toBe("failed");
     expect(o.result!.resume.experience[0]!.bullets[0]).toContain("Coordinated inbound freight");
     expect(minorRevisionState(o, [...rows.values()], NOW)).toBe("available");
-    expect(await retryRevision(repo, row)).not.toBeNull();
+    expect((await retryRevision(repo, row)).ok).toBe(true);
     expect(await processRevision(repo, models(), r.id)).toBe("ready");
   });
 
@@ -315,5 +348,110 @@ describe("revision ready email", () => {
     expect(sent.map((m) => m.idempotencyKey)).toEqual(["revision-ready-rev-a", "revision-ready-rev-b"]);
     expect(sent[0]!.template).toBe("revision-ready");
     expect(buildMessage(o, "ready", "https://x").idempotencyKey).toBe("order-ready-o1");
+  });
+});
+
+describe("revision base, retry and stale fencing (review follow-up)", () => {
+  test("correction after a ready minor builds on v2, fixes a v2-introduced error, and keeps v2 changes in v3", async () => {
+    const o = order(); const { repo, rows } = memRepo(o);
+    const a = await reserve(repo, o); if (!a.ok) throw new Error("reserve");
+    // v2 delivered: the requested bullet rewording, plus a wrong title that slipped through (an error WE introduced in v2).
+    expect(await processRevision(repo, models(), a.id)).toBe("ready");
+    rows.get(a.id)!.result!.resume.experience[0]!.role = "Operations Manager";
+    const v2 = structuredClone(rows.get(a.id)!);
+    expect(v2.result!.resume.experience[0]!.bullets[0]).toContain("Scheduled inbound freight");
+    expect(v2.version).toBe(2);
+
+    const c = await reserve(repo, o, "correction", "My Northwind title now shows Operations Manager but I was Operations Coordinator.", "key-00000002");
+    if (!c.ok) throw new Error("reserve correction");
+    expect(rows.get(c.id)!).toMatchObject({ base_revision_id: a.id, base_version: 2 });
+    let seenBase = "";
+    const fix = models({
+      cls: { scope: "minor", introducedError: { deliveredQuote: "Operations Manager", sourceQuote: "Operations Coordinator" } },
+      edit: (r) => { seenBase = r.experience[0]!.bullets[0]!; r.experience[0]!.role = "Operations Coordinator"; return r; },
+    });
+    expect(await processRevision(repo, fix, c.id)).toBe("ready");
+    const v3 = rows.get(c.id)!;
+    expect(seenBase).toContain("Scheduled inbound freight");
+    expect(v3.version).toBe(3);
+    expect(v3.result!.resume.experience[0]!.role).toBe("Operations Coordinator");
+    expect(v3.result!.resume.experience[0]!.bullets[0]).toContain("Scheduled inbound freight");
+    // Prior versions untouched.
+    expect(rows.get(a.id)).toEqual(v2);
+    expect(o.result!.resume.experience[0]!.bullets[0]).toContain("Coordinated inbound freight");
+  });
+
+  test("the v2-only error can't be proven against the original, so the base matters", async () => {
+    const o = order();
+    const { provesIntroducedError } = await import("./revision");
+    const ev = { deliveredQuote: "Operations Manager", sourceQuote: "Operations Coordinator" };
+    expect(provesIntroducedError(o, o.result, ev)).toBe(false);
+    expect(provesIntroducedError(o, { resume: resume("Operations Manager") }, ev)).toBe(true);
+  });
+
+  test("retry of an old failed minor is refused once another minor is ready", async () => {
+    const o = order(); const { repo, rows } = memRepo(o);
+    const a = await reserve(repo, o); if (!a.ok) throw new Error("reserve");
+    for (let i = 0; i < 3; i++) await processRevision(repo, models({ steps: ["throw"] }), a.id);
+    expect(rows.get(a.id)!.status).toBe("failed");
+    const b = await reserve(repo, o, "minor", "Reword the Bluepeak bullet to sound more natural.", "key-00000003"); if (!b.ok) throw new Error("reserve b");
+    expect(await processRevision(repo, models(), b.id)).toBe("ready");
+    const res = await retryRevision(repo, rows.get(a.id)!);
+    expect(res).toMatchObject({ ok: false, reason: "already_used" });
+    expect(res.message).toContain("already been delivered");
+    expect(rows.get(a.id)!.status).toBe("failed");
+  });
+
+  test("retry is refused while another request is open, and after the order expires", async () => {
+    const o = order(); const { repo, rows } = memRepo(o);
+    const a = await reserve(repo, o); if (!a.ok) throw new Error("reserve");
+    for (let i = 0; i < 3; i++) await processRevision(repo, models({ steps: ["throw"] }), a.id);
+    const c = await reserve(repo, o, "correction", "The Northwind title is wrong in the delivered file.", "key-00000004"); if (!c.ok) throw new Error("reserve c");
+    expect(await retryRevision(repo, rows.get(a.id)!)).toMatchObject({ ok: false, reason: "pending" });
+    rows.get(c.id)!.status = "rejected";
+    o.expires_at = "2026-10-06T00:00:00Z";
+    expect(await retryRevision(repo, rows.get(a.id)!)).toMatchObject({ ok: false, reason: "expired" });
+    expect(rows.get(a.id)!.status).toBe("failed");
+  });
+
+  test("stale settle is fenced on lease: a renewed/reclaimed claim survives a stale read", async () => {
+    const o = order(); const { repo, rows } = memRepo(o);
+    const a = await reserve(repo, o); if (!a.ok) throw new Error("reserve");
+    const row = rows.get(a.id)!;
+    Object.assign(row, { status: "processing", attempts: 3, lease_id: "L-old", locked_until: new Date(Date.now() - 1000).toISOString() });
+    const staleRead = structuredClone(row);
+    Object.assign(row, { lease_id: "L-new", locked_until: new Date(Date.now() + 600_000).toISOString() });
+    const out = await settleStaleRevision(repo, staleRead);
+    expect(rows.get(a.id)!).toMatchObject({ status: "processing", lease_id: "L-new" });
+    expect(out.status).toBe("processing");
+    // A genuinely stale lease still settles.
+    Object.assign(row, { locked_until: new Date(Date.now() - 1000).toISOString() });
+    expect((await settleStaleRevision(repo, structuredClone(row))).status).toBe("failed");
+  });
+});
+
+describe("revision scope validation (review follow-up)", () => {
+  test("grounded but unsolicited rewrite is rejected deterministically and never ships", async () => {
+    const o = order(); const { repo, rows } = memRepo(o);
+    const r = await reserve(repo, o); if (!r.ok) throw new Error("reserve");
+    const m = models({ steps: ["rewrite"] });
+    for (let i = 0; i < 3; i++) await processRevision(repo, m, r.id);
+    expect(rows.get(r.id)!).toMatchObject({ status: "failed", result: null });
+    expect(scopeViolations(resume(), (() => { const x = resume(); x.summary = "Different."; x.skills = ["SAP"]; x.experience.forEach((e) => { e.bullets = e.bullets.map((b) => b + " Reworded."); }); return x; })()).map((v) => v.code)).toContain("scope_rewrite");
+  });
+
+  test("independent scope reviewer rejection fails closed", async () => {
+    const o = order(); const { repo, rows } = memRepo(o);
+    const r = await reserve(repo, o); if (!r.ok) throw new Error("reserve");
+    expect(await processRevision(repo, models({ scope: [false, false, false] }), r.id)).toBe("queued");
+    expect(rows.get(r.id)!.result).toBeNull();
+  });
+
+  test("structure changes and no-op revisions are rejected; a single requested edit passes", () => {
+    const base = resume();
+    const dropped = resume(); dropped.experience.pop();
+    expect(scopeViolations(base, dropped).map((v) => v.code)).toContain("scope_structure");
+    expect(scopeViolations(base, resume()).map((v) => v.code)).toContain("scope_no_change");
+    expect(scopeViolations(base, resume("Operations Coordinator", "Scheduled inbound freight for twelve regional carriers."))).toEqual([]);
   });
 });
