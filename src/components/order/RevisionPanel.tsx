@@ -67,7 +67,7 @@ export function RevisionPanel({ token, status, onStatus }: { token: string; stat
 
   async function doRetry(id: string) {
     setBusy(true); setMsg(null);
-    try { const s = await retry({ data: { token, id } }); if (s) onStatus(s); }
+    try { const s = await retry({ data: { token, id } }); if (s) onStatus(s); if (s?.notice) setMsg({ ok: false, text: s.notice }); }
     catch { setMsg({ ok: false, text: "We couldn’t restart that request. Try again." }); }
     finally { setBusy(false); }
   }
