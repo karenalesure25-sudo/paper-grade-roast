@@ -83,7 +83,7 @@ export function RevisionPanel({ token, status, onStatus }: { token: string; stat
       <p className="mt-2 text-sm text-muted-foreground">
         Your package includes one complimentary minor revision: wording, corrections or formatting within your selected template.
         It doesn’t cover a full rewrite, a different target job, substantial new experience or a template switch.
-        Revisions are written with AI from the facts you already gave us and pass the same accuracy checks.
+        Revisions use the facts you already gave us and pass the same accuracy checks.
         Expect revised files within 48 hours of a complete request, not counting Sundays (Central Time) — typically sooner.
       </p>
       {status.deliveredAt && (

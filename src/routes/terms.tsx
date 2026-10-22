@@ -7,7 +7,7 @@ export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
       { title: "Terms — Kay’s Career Solutions" },
-      { name: "description", content: "Prices, payment, AI-written deliverables, and order link terms for Kay’s Career Solutions résumé packages." },
+      { name: "description", content: "Prices, payment, résumé writing, and order link terms for Kay’s Career Solutions résumé packages." },
       { property: "og:title", content: "Terms — Kay’s Career Solutions" },
       { property: "og:description", content: "How our résumé packages, payment and private order links work." },
       { property: "og:type", content: "website" },
@@ -47,18 +47,18 @@ function TermsPage() {
         </Section>
         <Section title="Revisions">
           <p>Each package includes one complimentary minor revision: wording changes, corrections or formatting adjustments within the template you selected. Request it from your order page within 7 calendar days of when your files first became available (through the end of the 7th day, Central Time).</p>
-          <p>A minor revision does not include a full rewrite, retargeting to a different job, adding substantial new experience, or switching templates. Revisions are written by AI using only facts you already provided and pass the same accuracy checks; no human review is claimed. Revised files are delivered within 24–48 hours after a complete request, not counting Sundays.</p>
+          <p>A minor revision does not include a full rewrite, retargeting to a different job, adding substantial new experience, or switching templates. Revisions use only facts you already provided and pass the same accuracy checks. Revised files are delivered within 24–48 hours after a complete request, not counting Sundays.</p>
           <p>Errors we introduced — where a delivered file differs from what you gave us — are corrected free and do not use your included revision. Your included revision is only used once revised files are successfully delivered; your original files remain available.</p>
         </Section>
-        <Section title="AI-written documents">
-          <p>Documents are written by AI models from the information you provide, then checked automatically against your own text. We don&rsquo;t invent jobs, schools, dates or numbers. Review your files before using them; you are responsible for what you submit to employers.</p>
+        <Section title="Résumé writing and accuracy">
+          <p>Documents are written from the information you provide, then checked automatically against your own text. We don&rsquo;t invent jobs, schools, dates or numbers. Confirm your personal details before using your files; you are responsible for what you submit to employers.</p>
           <p>We don&rsquo;t promise interviews, job offers or any specific result. Keyword reports are estimates, not a score from any real applicant tracking system.</p>
         </Section>
         <Section title="Private order links">
           <p>Your order page link is private. Anyone with it can view your order, so don&rsquo;t share it. Your order page and files stay available for 30 days from when you place the order, then are deleted. Unpaid orders are removed after 3 days.</p>
         </Section>
         <Section title="Free résumé roast">
-          <p>The roast is an AI-written, for-fun review of your writing only. It doesn&rsquo;t judge layout and isn&rsquo;t career advice.</p>
+          <p>The roast is a personalized, for-fun review of your writing only. It doesn&rsquo;t judge layout and isn&rsquo;t career advice.</p>
         </Section>
         <p className="mt-10 text-sm text-muted-foreground">See also our <Link to="/privacy" className="underline">privacy notice</Link> and <Link to="/order-help" className="underline">order help</Link>.</p>
       </main>

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { TIERS } from "@/lib/products";
 
-/** Exact deliverables per package, how AI is used, and a clearly labeled synthetic example. */
+/** Exact deliverables per package, accuracy checks, and a clearly labeled synthetic example. */
 const DELIVERABLES: Record<string, string[]> = {
   revamp: ["Rewritten résumé as an editable Word file", "Styled version of your chosen layout, ready to print to PDF"],
   scratch: ["New résumé written from your background answers as an editable Word file", "Styled version of your chosen layout, ready to print to PDF"],
@@ -32,18 +32,18 @@ export function PackageDetails() {
       </p>
       <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
         <li>Delivery: typically sooner, but allow up to 24–48 hours after payment and any required details, not counting Sundays (Central Time).</li>
-        <li>One complimentary minor revision — wording, corrections or formatting within your selected template — requested from your order page within 7 calendar days of your files first being available. Revised files arrive within 24–48 hours of a complete request, not counting Sundays. Revisions are AI-written from the facts you already gave us; they don&rsquo;t cover a full rewrite, a different target job, substantial new experience or a template switch.</li>
+        <li>One complimentary minor revision — wording, corrections or formatting within your selected template — requested from your order page within 7 calendar days of your files first being available. Revised files arrive within 24–48 hours of a complete request, not counting Sundays. Revisions use the facts you already gave us; they don&rsquo;t cover a full rewrite, a different target job, substantial new experience or a template switch.</li>
         <li>Errors we introduced are corrected free and don&rsquo;t use your included revision.</li>
       </ul>
 
       <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
         <div className="glass-surface min-w-0 rounded-lg p-6">
-          <h3 className="font-sans text-lg font-semibold text-ink">How AI is used</h3>
+          <h3 className="font-sans text-lg font-semibold text-ink">Built from your experience</h3>
           <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            Your free roast and your paid documents are written by AI models using only the résumé, answers and job posting you provide.
+            Your personalized résumé feedback and paid documents use only the résumé, answers and job posting you provide.
             Before anything is released, automated checks compare every name, employer, date, school and number against your own text,
-            and a separate AI check reviews the draft. If a fact can&rsquo;t be backed up, we ask you instead of guessing.
-            AI can still make mistakes, so read your files before you send them.
+            and a separate fact-check checks the draft. If a fact can&rsquo;t be backed up, we ask you instead of guessing.
+            Confirm your personal details before sending your files to employers.
           </p>
         </div>
         <figure className="glass-surface min-w-0 rounded-lg p-6" aria-label="Synthetic before and after example">

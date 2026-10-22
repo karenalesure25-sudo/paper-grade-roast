@@ -17,7 +17,7 @@ import {
 import { BrandLogo } from "./BrandLogo";
 
 const navigation = [
-  ["AI Career Tools", "#career-ai"],
+  ["Career Tools", "#career-ai"],
   ["Resume Services", "#services"],
   ["LinkedIn", "#linkedin"],
   ["Interview Prep", "#interview"],
@@ -106,7 +106,7 @@ function CareerPanel({ expanded = false }: { expanded?: boolean }) {
       <div className="career-panel-heading">
         <img src="/brand/kcs-emblem.svg" alt="" width="42" height="50" />
         <div>
-          <h3>Career Clarity AI</h3>
+          <h3>Career Clarity</h3>
           <p>Your personal career strategist.</p>
         </div>
         <span className="preview-pill">Preview</span>
@@ -164,7 +164,7 @@ export function ClarityHero() {
   return (
     <section className="clarity-hero clarity-shell">
       <div className="clarity-hero-copy">
-        <p className="clarity-eyebrow">AI-powered career support + expert guidance</p>
+        <p className="clarity-eyebrow">Personalized résumé feedback + career support</p>
         <h1>
           Career Clarity
           <br />
@@ -172,7 +172,7 @@ export function ClarityHero() {
         </h1>
         <p className="clarity-intro">
           Build a stronger resume, sharpen your professional brand, prepare for interviews, and make
-          your next career move with AI-powered guidance and expert support when you need it.
+          your next career move with personalized feedback and focused career tools.
         </p>
         <div className="clarity-hero-actions">
           <Link to="/roast" className="clarity-button">
@@ -368,7 +368,7 @@ export function CareerShowcase() {
         <p className="clarity-eyebrow">Introducing the next chapter · In development</p>
         <h2>Your career strategy shouldn’t start from scratch every time.</h2>
         <p>
-          We’re shaping Career Clarity AI around your whole story: your resume, experience, career
+          We’re shaping Career Clarity around your whole story: your resume, experience, career
           goals, target positions, saved jobs, and prior work.
         </p>
         <p>

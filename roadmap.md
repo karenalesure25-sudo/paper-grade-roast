@@ -2,12 +2,16 @@
 - [x] Metallic-logo signature homepage revision and responsive cross-route verification
 # Roadmap
 
+## Customer-facing copy cleanup
+- [x] Remove public AI wording across pages, errors, email copy, accessibility text, metadata and static assets; preserve internal identifiers and all safeguards.
+- [x] Verify source sweep and desktop/mobile rendered screens without customer operations; report saved revision and Git sync visibility. Browser-only private-order fixtures; 1280/390/360 widths, no public AI strings, overflow or page errors.
+
 ## Launch readiness
 - [x] Authenticated background worker (DB-held token). Schedule `kcs-fulfillment-sweep` every 2 min targets paper-grade-roast.lovable.app, PAUSED until publish.
 - [x] Automated minor revisions + delivery/revision policy (order page, worker, emails, terms). Synthetic tests only.
 - [ ] Email: set EMAIL_SENDER_DOMAIN after domain verification (adapter built; scaffold refused without domain).
 - [x] Order emails (confirmation/ready/link recovery) built + tested with mocked transport; delivery OFF until domain verified
-- [x] Package deliverables, AI-use disclosure, synthetic sample, Terms, Order help pages
+- [x] Package deliverables, service-provider privacy disclosure, synthetic sample, Terms, Order help pages
 - [x] Privacy-safe share card, social image/meta (@Lovable removed), sitemap + robots, "Not yet offered" labels
 - [x] Tests: 120 pass; typecheck OK; desktop/mobile smoke OK
 - [ ] Activate after publish: resume the paused sweep schedule (blocked: user approval to publish)

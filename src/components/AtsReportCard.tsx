@@ -27,7 +27,7 @@ export function AtsReportCard({
             </p>
           ) : null}
           <p className="mt-2 font-sans text-[0.8rem] text-muted-foreground">
-            An AI estimate of keyword overlap with this posting — not a score from any employer&rsquo;s real applicant tracking system.
+            An estimate of keyword overlap with this posting — not a score from any employer&rsquo;s real applicant tracking system.
           </p>
         </div>
 
