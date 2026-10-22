@@ -29,6 +29,13 @@
       "when": 1792636164018,
       "tag": "0003_worker_token_notifications_recovery",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792636831350,
+      "tag": "0004_fenced_notifications_atomic_recovery",
+      "breakpoints": true
     }
   ]
 }

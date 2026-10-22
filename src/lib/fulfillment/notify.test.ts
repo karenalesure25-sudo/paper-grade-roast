@@ -15,17 +15,22 @@ function order(over: Partial<OrderRow> = {}): OrderRow & { notifications: Record
 
 /** Same claim semantics as claim_notification(): not done, under attempt cap, past backoff, unclaimed. */
 function memRepo(row: ReturnType<typeof order>, clock: () => Date) {
-  const claimed = new Set<string>();
+  const claimed = new Map<string, string>();
+  let n = 0;
   const repo: NotifyRepo = {
     async byId() { return row; },
     async claim(_id, kind) {
       const s = row.notifications[kind] ?? {};
-      if (s.done || (s.attempts ?? 0) >= MAX_NOTIFY_ATTEMPTS || claimed.has(kind)) return false;
-      if (s.nextAt && new Date(s.nextAt) > clock()) return false;
-      claimed.add(kind); return true;
+      if (s.done || (s.attempts ?? 0) >= MAX_NOTIFY_ATTEMPTS || claimed.has(kind)) return null;
+      if (s.nextAt && new Date(s.nextAt) > clock()) return null;
+      const t = `tok-${++n}`; claimed.set(kind, t); return t;
     },
-    async finish(_id, kind, patch) { row.notifications[kind] = { ...(row.notifications[kind] ?? {}), ...patch }; claimed.delete(kind); },
+    async finish(_id, kind, token, patch) {
+      if (claimed.get(kind) !== token) return false;
+      row.notifications[kind] = { ...(row.notifications[kind] ?? {}), ...patch }; claimed.delete(kind); return true;
+    },
   };
+  (repo as NotifyRepo & { expire(kind: string): void }).expire = (kind) => claimed.delete(kind);
   return repo;
 }
 
@@ -129,5 +134,24 @@ describe("email templates render", () => {
       expect(html).toContain("#ffffff");
       expect(name.length).toBeGreaterThan(0);
     }
+  });
+
+  test("stale worker after lease expiry cannot overwrite or release a newer claim", async () => {
+    const now = () => new Date("2026-10-22T01:00:00Z");
+    const row = order();
+    const repo = memRepo(row, now) as NotifyRepo & { expire(kind: string): void };
+    let releaseA!: () => void;
+    const slow: EmailPort = { available: () => true, send: () => new Promise((r) => { releaseA = () => r({ status: "retry", code: "slow" }); }) };
+    const a = deliverNotification(repo, slow, "o1", "confirmation", ORIGIN, now);
+    await new Promise((r) => setTimeout(r, 0));
+    repo.expire("confirmation"); // A's lease lapses
+    const fast = port([{ status: "sent" }]);
+    expect(await deliverNotification(repo, fast, "o1", "confirmation", ORIGIN, now)).toBe("sent");
+    // a third worker re-claims nothing (done), then stale A finishes with its old token
+    releaseA();
+    await a;
+    expect(row.notifications["confirmation"]?.done).toBe(true);
+    expect(row.notifications["confirmation"]?.outcome).toBe("sent");
+    expect(row.notifications["confirmation"]?.lastCode).toBeUndefined();
   });
 });

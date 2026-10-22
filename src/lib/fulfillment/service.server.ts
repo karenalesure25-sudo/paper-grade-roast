@@ -11,7 +11,7 @@ import { liveModels } from "./writer.server";
 import { RESUME_TEMPLATES } from "../resume-templates";
 import { assertPurchaseSelection } from "./purchase-selection";
 import { deliverNotification, type NotificationKind, type NotificationState, type NotifyRepo } from "./notify";
-import { requestOrderLinks } from "./recovery";
+import { RECOVERY_LIMITS, requestOrderLinks } from "./recovery";
 import { productionEmailPort } from "./email-transport.server";
 import { PUBLIC_SITE_ORIGIN } from "../site";
 
@@ -262,14 +262,15 @@ export const notifyRepo: NotifyRepo = {
   byId: (id) => supabaseRepo.byId(id),
   async claim(id, kind) {
     const db = await admin();
-    const { data, error } = await db.rpc("claim_notification" as never, { _order_id: id, _kind: kind, _lease_seconds: 120 } as never);
+    const { data, error } = await db.rpc("claim_notification_fenced" as never, { _order_id: id, _kind: kind, _lease_seconds: 120 } as never);
     if (error) throw new Error("notification claim failed");
-    return data === true;
+    return typeof data === "string" ? data : null;
   },
-  async finish(id, kind, patch) {
+  async finish(id, kind, token, patch) {
     const db = await admin();
-    const { error } = await db.rpc("finish_notification" as never, { _order_id: id, _kind: kind, _patch: patch } as never);
+    const { data, error } = await db.rpc("finish_notification_fenced" as never, { _order_id: id, _kind: kind, _token: token, _patch: patch } as never);
     if (error) throw new Error("notification update failed");
+    return data === true;
   },
 };
 
@@ -293,21 +294,17 @@ export async function recoverOrderLinks(email: string, ip: string) {
   const db = await admin();
   return requestOrderLinks(email, ip, {
     hash: hashId,
-    async countRecent(eh, ih) {
-      const since = new Date(Date.now() - 3600_000).toISOString();
-      const [a, b] = await Promise.all([
-        db.from("recovery_requests").select("id", { count: "exact", head: true }).eq("email_hash", eh).gt("created_at", since),
-        db.from("recovery_requests").select("id", { count: "exact", head: true }).eq("ip_hash", ih).gt("created_at", since),
-      ]);
-      return { email: a.count ?? 0, ip: b.count ?? 0 };
-    },
-    async record(eh, ih) {
-      const { error } = await db.from("recovery_requests").insert({ email_hash: eh, ip_hash: ih });
-      if (error) throw new Error("recovery log failed");
+    async admit(eh, ih) {
+      const { data, error } = await db.rpc("admit_recovery_request" as never, {
+        _email_hash: eh, _ip_hash: ih, _per_email: RECOVERY_LIMITS.perEmailPerHour, _per_ip: RECOVERY_LIMITS.perIpPerHour,
+      } as never);
+      if (error) throw new Error("recovery admission failed");
+      return data === true;
     },
     async ordersFor(e) {
-      const { data } = await db.from("fulfillment_orders" as never).select("access_token,tier,status")
+      const { data, error } = await db.from("fulfillment_orders" as never).select("access_token,tier,status")
         .ilike("email", e.replace(/[\\%_]/g, (c) => `\\${c}`)).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(5);
+      if (error) throw new Error("recovery lookup failed");
       return (data ?? []) as Array<{ access_token: string; tier: string; status: string }>;
     },
     port: productionEmailPort,

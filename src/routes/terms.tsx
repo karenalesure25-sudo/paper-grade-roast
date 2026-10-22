@@ -47,7 +47,7 @@ function TermsPage() {
           <p>We don&rsquo;t promise interviews, job offers or any specific result. Keyword reports are estimates, not a score from any real applicant tracking system.</p>
         </Section>
         <Section title="Private order links">
-          <p>Your order page link is private. Anyone with it can view your order, so don&rsquo;t share it. Files stay available for 30 days, then are deleted. Unpaid orders are removed after 3 days.</p>
+          <p>Your order page link is private. Anyone with it can view your order, so don&rsquo;t share it. Your order page and files stay available for 30 days from when you place the order, then are deleted. Unpaid orders are removed after 3 days.</p>
         </Section>
         <Section title="Free résumé roast">
           <p>The roast is an AI-written, for-fun review of your writing only. It doesn&rsquo;t judge layout and isn&rsquo;t career advice.</p>
