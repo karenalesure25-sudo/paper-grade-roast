@@ -46,6 +46,9 @@ export type RevisionRow = {
   version: number | null;
   failure_reason: string | null;
   completed_at: string | null;
+  /** Delivered package this request edits, fixed at reservation: null = original (v1). */
+  base_revision_id: string | null;
+  base_version: number;
 };
 
 export type RequestOutcome = "created" | "duplicate" | "not_eligible" | "invalid" | "pending" | "limit" | "window_closed" | "already_used";
@@ -62,7 +65,13 @@ export type RevisionRepo = {
   renew(id: string, lease: string): Promise<boolean>;
   transition(id: string, from: RevisionStatus[], patch: Partial<RevisionRow>): Promise<RevisionRow | null>;
   nextVersion(orderId: string): Promise<number>;
+  /** Atomic retry (order-locked): checks failed status, rounds, one-open, minor-used, expiry; rebases onto latest delivered. */
+  retry(id: string): Promise<RetryOutcome>;
+  /** Atomic stale settle: only while lease_id matches AND locked_until has passed. */
+  settleStale(id: string, lease: string, reason: string): Promise<boolean>;
 };
+
+export type RetryOutcome = "queued" | "not_found" | "not_failed" | "expired" | "limit" | "pending" | "already_used";
 
 export type Classification = {
   scope: "minor" | "out_of_scope" | "unclear";
@@ -77,7 +86,39 @@ export type RevisionModelPort = {
   classify(input: RevisionInput): Promise<Classification>;
   revise(input: RevisionInput, feedback: Violation[]): Promise<WriterOutput>;
   check(facts: SourceFacts, output: unknown): Promise<CheckVerdict>;
+  /** Independent scope check: did the revision apply ONLY the requested edit to the base? Must fail closed. */
+  scopeCheck(input: RevisionInput, revised: Package): Promise<CheckVerdict>;
 };
+
+const norm = (x: string) => x.toLowerCase().replace(/\s+/g, " ").trim();
+
+/**
+ * Deterministic change bounds between the selected base and a revision. A minor revision edits a few
+ * lines; structure (employers, schools, credentials) stays fixed and most lines must be preserved.
+ */
+export function scopeViolations(base: FullResume, next: FullResume): Violation[] {
+  const v: Violation[] = [];
+  const key = (r: FullResume) => JSON.stringify({
+    exp: r.experience.map((e) => norm(e.company)),
+    edu: r.education.map((e) => [norm(e.school), norm(e.credential)]),
+    cert: r.certifications.map((c) => norm(JSON.stringify(c))),
+  });
+  if (key(base) !== key(next)) v.push({ code: "scope_structure", detail: "Keep the same employers, schools and credentials, in the same order, as the delivered version." });
+  const units = (r: FullResume) => {
+    const u: string[] = [r.title, r.summary, r.objective ?? "", r.location ?? "", r.skills.map(norm).sort().join("|")];
+    r.experience.forEach((e) => { u.push(`${e.role}|${e.location ?? ""}|${e.dates}`); e.bullets.forEach((b) => u.push(b)); });
+    r.education.forEach((e) => u.push(`${e.dates ?? ""}`));
+    return u.map((x) => norm(String(x)));
+  };
+  const a = units(base), b = units(next);
+  const len = Math.max(a.length, b.length);
+  let changed = 0;
+  for (let i = 0; i < len; i++) if (a[i] !== b[i]) changed++;
+  const allowed = Math.max(3, Math.ceil(a.length * 0.25));
+  if (changed === 0) v.push({ code: "scope_no_change", detail: "The requested change was not applied." });
+  if (changed > allowed) v.push({ code: "scope_rewrite", detail: `Change only the lines the request asks about; ${changed} lines differ from the delivered version.` });
+  return v;
+}
 
 /** Deterministic scope screen. Returns a customer-facing reason when clearly out of scope. */
 export function screenRequest(text: string): string | null {
@@ -95,12 +136,12 @@ export function cleanRequest(text: string): string | null {
 }
 
 /** A correction is free only when it proves the delivered text departed from the customer's own source. */
-export function provesIntroducedError(order: OrderRow, ev: Classification["introducedError"]): boolean {
-  if (!ev || !order.result) return false;
+export function provesIntroducedError(order: OrderRow, base: Package | null, ev: Classification["introducedError"]): boolean {
+  if (!ev || !base) return false;
   const delivered = ev.deliveredQuote.trim();
   const source = ev.sourceQuote.trim();
   if (delivered.length < 3 || source.length < 3 || delivered.length > 300 || source.length > 300) return false;
-  const deliveredText = [resumeProse(order.result.resume), order.result.coverLetter ?? ""].join("\n");
+  const deliveredText = [resumeProse(base.resume), base.coverLetter ?? ""].join("\n");
   const facts = factsFor(order);
   return containsPhrase(deliveredText, delivered) && containsPhrase(facts.text, source) && !containsPhrase(facts.text, delivered);
 }
@@ -157,8 +198,15 @@ export async function processRevision(
   const screened = screenRequest([claimed.request_text, ...claimed.clarifications.map((c) => c.text)].join("\n"));
   if (screened) return finish({ status: "rejected", failure_reason: `${screened} Nothing was used up.` });
 
+  // The edit applies to the package fixed at reservation, never silently to the original.
+  let base: DeliveredPackage | null = order.result;
+  if (claimed.base_revision_id) {
+    const b = await repo.byId(claimed.base_revision_id);
+    base = b && b.order_id === order.id && b.status === "ready" && b.result && b.version === claimed.base_version ? b.result : null;
+  }
+  if (!base) return finish({ status: "failed", failure_reason: "We couldn’t load the version this request builds on. Your files are unchanged and nothing was used up." });
   const facts = factsFor(order);
-  const input: RevisionInput = { facts, delivered: order.result, kind: claimed.kind, request: claimed.request_text, clarifications: claimed.clarifications.map((c) => c.text) };
+  const input: RevisionInput = { facts, delivered: base, kind: claimed.kind, request: claimed.request_text, clarifications: claimed.clarifications.map((c) => c.text) };
   try {
     await beat();
     const cls = await models.classify(input);
@@ -167,12 +215,12 @@ export async function processRevision(
       if (claimed.clarifications.length >= MAX_REVISION_CLARIFICATIONS) return finish({ status: "rejected", failure_reason: "We still couldn’t tell exactly what to change. Nothing was used up; you can send a new, more specific request." });
       return finish({ status: "needs_information", clarification_request: (cls.question || "Which exact line should change, and how?").slice(0, 400) });
     }
-    if (claimed.kind === "correction" && !provesIntroducedError(order, cls.introducedError ?? null)) {
+    if (claimed.kind === "correction" && !provesIntroducedError(order, base, cls.introducedError ?? null)) {
       return finish({ status: "rejected", failure_reason: NOT_PROVEN });
     }
 
     let feedback: Violation[] = [];
-    const keywords = order.result.keywordReport?.rows.map((r) => r.keyword) ?? [];
+    const keywords = base.keywordReport?.rows.map((r) => r.keyword) ?? [];
     for (let g = 1; g <= MAX_GENERATIONS_PER_ATTEMPT; g++) {
       await beat();
       const out = await models.revise(input, feedback);
@@ -181,13 +229,16 @@ export async function processRevision(
         return finish({ status: "needs_information", clarification_request: (out.questions[0] ?? "Can you clarify the change?").slice(0, 400) });
       }
       const resume: FullResume = { ...out.resume, name: facts.name, email: facts.email, phone: facts.phone };
-      const coverLetter = out.coverLetter ?? (order.result.coverLetter && facts.tier !== "bundle" ? order.result.coverLetter : undefined);
+      const coverLetter = out.coverLetter ?? (base.coverLetter && facts.tier !== "bundle" ? base.coverLetter : undefined);
       const keywordReport = facts.job ? buildKeywordReport(keywords, facts.job.text, facts.text, resume) : undefined;
       const pkg: Package = { resume, ...(coverLetter ? { coverLetter } : {}), ...(keywordReport ? { keywordReport } : {}) };
       const violations = validatePackage(pkg, facts);
       if (facts.tier === "bundle" && !out.coverLetter) violations.push({ code: "cover_letter", detail: "Return the cover letter updated to stay consistent with the revised résumé." });
+      violations.push(...scopeViolations(base.resume, resume));
       if (violations.length) { feedback = violations; continue; }
       await beat();
+      const scope = await models.scopeCheck(input, pkg);
+      if (!scope.approved) { feedback = (scope.problems.length ? scope.problems : ["scope check rejected"]).map((p) => ({ code: "scope_check", detail: p })); continue; }
       const verdict = await models.check(facts, { resume, coverLetter: pkg.coverLetter });
       if (!verdict.approved) { feedback = verdict.problems.map((p) => ({ code: "fact_check", detail: p })); continue; }
       const exportProblems = opts.exportCheck ? await opts.exportCheck(pkg) : [];
@@ -224,14 +275,30 @@ export async function answerRevision(repo: RevisionRepo, rev: RevisionRow, raw: 
   });
 }
 
-export async function retryRevision(repo: RevisionRepo, rev: RevisionRow) {
-  if (rev.status !== "failed" || rev.retry_rounds >= MAX_REVISION_RETRIES) return null;
-  return repo.transition(rev.id, ["failed"], { status: "queued", attempts: 0, retry_rounds: rev.retry_rounds + 1, failure_reason: null });
+export const RETRY_MESSAGES: Record<RetryOutcome, string> = {
+  queued: "Retrying your revision.",
+  not_found: "We couldn’t find that request.",
+  not_failed: "That request isn’t waiting for a retry.",
+  expired: "This order link has expired.",
+  limit: "This request has reached its retry limit. You can send a new, more specific request.",
+  pending: "Another request is already in progress. You can retry after it finishes.",
+  already_used: "Your included minor revision has already been delivered, so this one can’t be retried.",
+};
+
+/** Eligibility is enforced atomically by the repo (order-locked); this only shapes the reply. */
+export async function retryRevision(repo: RevisionRepo, rev: RevisionRow): Promise<{ ok: boolean; reason: RetryOutcome; message: string }> {
+  if (rev.status !== "failed") return { ok: false, reason: "not_failed", message: RETRY_MESSAGES.not_failed };
+  const reason = await repo.retry(rev.id);
+  return { ok: reason === "queued", reason, message: RETRY_MESSAGES[reason] };
 }
 
+const INTERRUPTED = "Processing was interrupted. Your original files are unchanged and nothing was used up.";
+
 export async function settleStaleRevision(repo: RevisionRepo, rev: RevisionRow, now = Date.now()) {
-  if (rev.status === "processing" && rev.attempts >= rev.max_attempts && rev.locked_until && new Date(rev.locked_until).getTime() < now) {
-    return (await repo.transition(rev.id, ["processing"], { status: "failed", lease_id: null, locked_until: null, failure_reason: "Processing was interrupted. Your original files are unchanged and nothing was used up." })) ?? rev;
+  if (rev.status === "processing" && rev.lease_id && rev.attempts >= rev.max_attempts && rev.locked_until && new Date(rev.locked_until).getTime() < now) {
+    // Fenced on the lease we observed: a renewed or reclaimed lease makes this a no-op.
+    if (await repo.settleStale(rev.id, rev.lease_id, INTERRUPTED)) return (await repo.byId(rev.id)) ?? rev;
+    return (await repo.byId(rev.id)) ?? rev;
   }
   return rev;
 }
