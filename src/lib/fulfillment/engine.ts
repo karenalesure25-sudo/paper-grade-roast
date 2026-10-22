@@ -47,6 +47,8 @@ export type OrderRow = {
   result: DeliveredPackage | null;
   failure_reason: string | null;
   expires_at?: string;
+  /** When validated files first became available. Starts the revision window; immutable. */
+  delivered_at?: string | null;
 };
 
 export type Snapshot = {
@@ -214,6 +216,7 @@ export async function processOrder(
     if (claimed.stripe_session_id) await repo.recordRedemption(claimed.stripe_session_id, claimed.tier, claimed.email, "delivered");
     const done = await repo.finish(claimed.id, lease, {
       status: "ready", result: outcome.pkg, locked_until: null, lease_id: null, failure_reason: null, clarification_request: null,
+      delivered_at: claimed.delivered_at ?? new Date().toISOString(),
     });
     return done ? "ready" : "lease_lost";
   }
