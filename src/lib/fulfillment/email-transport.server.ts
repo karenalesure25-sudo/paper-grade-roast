@@ -14,7 +14,7 @@ import { ORDER_EMAILS } from "../order-emails/templates";
 import { SITE_NAME } from "../site";
 import type { EmailMessage, EmailPort, EmailResult } from "./notify";
 
-type Env = { senderDomain?: string; fromDomain?: string; apiKey?: string };
+type Env = { senderDomain?: string | undefined; fromDomain?: string | undefined; apiKey?: string | undefined };
 type Sender = typeof sendLovableEmail;
 
 const VALID_DOMAIN = /^(?=.{4,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i;
