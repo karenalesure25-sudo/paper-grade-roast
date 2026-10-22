@@ -89,7 +89,7 @@ export function RevisionPanel({ token, status, onStatus }: { token: string; stat
       {status.deliveredAt && (
         <p className="mt-3 text-sm text-muted-foreground">
           Files first available: {formatCustomerTime(status.deliveredAt)}
-          {status.minorWindowEnd && <> · Minor revision requests close: {formatCustomerTime(status.minorWindowEnd)}</>}
+          {status.minorWindowEnd && <> · Minor revision requests accepted through {formatCustomerTime(new Date(new Date(status.minorWindowEnd).getTime() - 60_000).toISOString())}</>}
         </p>
       )}
       <p className="mt-2 text-sm text-ink">
