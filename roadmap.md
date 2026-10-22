@@ -4,6 +4,7 @@
 
 ## Launch readiness
 - [x] Authenticated background worker (DB-held token). Schedule `kcs-fulfillment-sweep` every 2 min targets paper-grade-roast.lovable.app, PAUSED until publish.
+- [x] Automated minor revisions + delivery/revision policy (order page, worker, emails, terms). Synthetic tests only.
 - [ ] Email: set EMAIL_SENDER_DOMAIN after domain verification (adapter built; scaffold refused without domain).
 - [x] Order emails (confirmation/ready/link recovery) built + tested with mocked transport; delivery OFF until domain verified
 - [x] Package deliverables, AI-use disclosure, synthetic sample, Terms, Order help pages
