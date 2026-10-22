@@ -15,6 +15,7 @@ import { Route as PaymentCanceledRouteImport } from './routes/payment-canceled'
 import { Route as PaymentSuccessRouteImport } from './routes/payment-success'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RoastRouteImport } from './routes/roast'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as OrderTierRouteImport } from './routes/order.$tier'
 import { Route as OrdersTokenRouteImport } from './routes/orders.$token'
@@ -51,6 +52,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
 const RoastRoute = RoastRouteImport.update({
   id: '/roast',
   path: '/roast',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/order/$tier': typeof OrderTierRoute
   '/orders/$token': typeof OrdersTokenRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/order/$tier': typeof OrderTierRoute
   '/orders/$token': typeof OrdersTokenRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/payment-success': typeof PaymentSuccessRoute
   '/privacy': typeof PrivacyRoute
   '/roast': typeof RoastRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/order/$tier': typeof OrderTierRoute
   '/orders/$token': typeof OrdersTokenRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/privacy'
     | '/roast'
+    | '/sitemap.xml'
     | '/terms'
     | '/order/$tier'
     | '/orders/$token'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/privacy'
     | '/roast'
+    | '/sitemap.xml'
     | '/terms'
     | '/order/$tier'
     | '/orders/$token'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/payment-success'
     | '/privacy'
     | '/roast'
+    | '/sitemap.xml'
     | '/terms'
     | '/order/$tier'
     | '/orders/$token'
@@ -192,6 +204,7 @@ export interface RootRouteChildren {
   PaymentSuccessRoute: typeof PaymentSuccessRoute
   PrivacyRoute: typeof PrivacyRoute
   RoastRoute: typeof RoastRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   OrderTierRoute: typeof OrderTierRoute
   OrdersTokenRoute: typeof OrdersTokenRoute
@@ -243,6 +256,13 @@ declare module '@tanstack/react-router' {
       path: '/roast'
       fullPath: '/roast'
       preLoaderRoute: typeof RoastRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -304,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   PaymentSuccessRoute: PaymentSuccessRoute,
   PrivacyRoute: PrivacyRoute,
   RoastRoute: RoastRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   OrderTierRoute: OrderTierRoute,
   OrdersTokenRoute: OrdersTokenRoute,
