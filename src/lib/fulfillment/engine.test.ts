@@ -246,3 +246,42 @@ describe("grounding", () => {
     expect(validatePackage({ resume: r }, f).length).toBeGreaterThan(0);
   });
 });
+
+describe("simulated complete orders (synthetic data, isolated fakes)", () => {
+  for (const tier of ["revamp", "scratch", "bundle"] as const) {
+    test(`${tier}: verified payment → validated package → exportable files`, async () => {
+      const o = order(tier);
+      const { repo, rows } = memRepo(o);
+      const paid = await confirmPayment(repo, async () => session(o), o);
+      expect(paid.status).toBe("queued");
+      expect(await processOrder(repo, models(["good"]), o.id)).toBe("ready");
+      const done = rows.get(o.id)!;
+      expect(done.result?.checks.independent).toBe("passed");
+      const { resumeDocxDocument, letterDocxDocument, toDocxBytes } = await import("./docx");
+      const { renderResumeDocument } = await import("../deliverable-doc");
+      const JSZip = (await import("jszip")).default;
+      const xml = async (bytes: ArrayBuffer) => (await (await JSZip.loadAsync(bytes)).file("word/document.xml")!.async("string"));
+      const resumeXml = await xml(await toDocxBytes(resumeDocxDocument(done.result!.resume, { template: "classic" })));
+      for (const s of ["Avery Stone", "Northwind Logistics", "Bluepeak Retail", "University of Colorado Denver"]) expect(resumeXml).toContain(s);
+      expect(resumeXml).not.toContain("Google");
+      const html = renderResumeDocument(done.result!.resume, "classic", { photo: null });
+      expect(html).toContain("Northwind Logistics");
+      if (tier === "bundle") {
+        expect(done.result!.coverLetter).toBeTruthy();
+        expect(done.result!.keywordReport).toBeTruthy();
+        const letterXml = await xml(await toDocxBytes(letterDocxDocument(done.result!.coverLetter!, done.result!.resume)));
+        expect(letterXml).toContain("Acme");
+      } else {
+        expect(done.result!.coverLetter).toBeUndefined();
+      }
+    });
+  }
+
+  test("unpaid session never produces files", async () => {
+    const o = order("revamp");
+    const { repo, rows } = memRepo(o);
+    await confirmPayment(repo, async () => session(o, { payment_status: "unpaid", status: "open" }), o);
+    expect(await processOrder(repo, models(["good"]), o.id)).toBe("busy");
+    expect(rows.get(o.id)!.result).toBeNull();
+  });
+});
