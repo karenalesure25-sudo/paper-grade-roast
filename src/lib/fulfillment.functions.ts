@@ -77,3 +77,40 @@ export const getEmailAvailability = createServerFn({ method: "GET" }).handler(as
   const { emailDeliveryActive } = await import("./fulfillment/service.server");
   return { active: emailDeliveryActive() };
 });
+
+const RevisionId = z.string().uuid();
+
+export const requestOrderRevision = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({
+    token: Token, kind: z.enum(["minor", "correction"]), text: z.string().trim().min(10).max(1500),
+    idem: z.string().regex(/^[A-Za-z0-9-]{8,80}$/),
+  }).parse(i))
+  .handler(async ({ data }) => {
+    const { requestRevisionByToken } = await import("./fulfillment/service.server");
+    try {
+      return await requestRevisionByToken(data.token, data.kind, data.text, data.idem);
+    } catch {
+      return { ok: false as const, message: "We couldn’t submit that right now. Nothing was used up — please try again.", status: null };
+    }
+  });
+
+export const answerRevisionQuestion = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ token: Token, id: RevisionId, text: z.string().trim().min(10).max(1500) }).parse(i))
+  .handler(async ({ data }) => {
+    const { answerRevisionByToken } = await import("./fulfillment/service.server");
+    return answerRevisionByToken(data.token, data.id, data.text);
+  });
+
+export const retryOrderRevision = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ token: Token, id: RevisionId }).parse(i))
+  .handler(async ({ data }) => {
+    const { retryRevisionByToken } = await import("./fulfillment/service.server");
+    return retryRevisionByToken(data.token, data.id);
+  });
+
+export const nudgeOrderRevision = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ token: Token, id: RevisionId }).parse(i))
+  .handler(async ({ data }) => {
+    const { runRevisionByToken } = await import("./fulfillment/service.server");
+    return runRevisionByToken(data.token, data.id);
+  });

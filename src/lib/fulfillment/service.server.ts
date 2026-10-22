@@ -5,9 +5,14 @@ import {
   type OrderRow, type StripeSessionView,
 } from "./engine";
 import { extractDocumentText } from "./extract.server";
-import { orderByToken, supabaseRepo } from "./repo.server";
+import { orderByToken, revisionRepo, supabaseRepo } from "./repo.server";
 import { buildSnapshotSource } from "./snapshot";
-import { liveModels } from "./writer.server";
+import { liveModels, liveRevisionModels } from "./writer.server";
+import {
+  answerRevision, minorRevisionState, processRevision, requestRevision, retryRevision, settleStaleRevision,
+  MAX_REVISION_RETRIES, type RevisionKind, type RevisionRow,
+} from "./revision";
+import { DELIVERY_WINDOW_HOURS, addEligibleHours, minorRevisionWindowEnd } from "./service-time";
 import { RESUME_TEMPLATES } from "../resume-templates";
 import { assertPurchaseSelection } from "./purchase-selection";
 import { deliverNotification, type NotificationKind, type NotificationState, type NotifyRepo } from "./notify";
@@ -176,22 +181,45 @@ export type PublicStatus = {
   emailActive: boolean;
   paidAt: string | null;
   expiresAt: string | null;
+  /** When files first became available (starts the minor-revision window). */
+  deliveredAt: string | null;
+  /** Latest promised initial delivery (48 eligible hours, Sundays excluded) while not yet delivered. */
+  deliveryDeadline: string | null;
+  minorRevision: "available" | "pending" | "used" | "closed" | "n/a";
+  minorWindowEnd: string | null;
+  revisions: PublicRevision[];
 };
 
-function toPublic(o: OrderRow): PublicStatus {
+export type PublicRevision = {
+  id: string; kind: RevisionKind; status: RevisionRow["status"]; requestedAt: string; deadlineAt: string;
+  completedAt: string | null; version: number | null; question: string | null; reason: string | null; canRetry: boolean;
+  files: Array<{ kind: string; label: string; href: string }>;
+};
+
+function fileList(base: string, hasLetter: boolean, q = "") {
+  return [
+    { kind: "resume-docx", label: "Résumé (Word, editable)", href: `${base}/resume.docx${q}` },
+    { kind: "resume-html", label: "Résumé (styled, print to PDF)", href: `${base}/resume.html${q}` },
+    ...(hasLetter
+      ? [
+          { kind: "letter-docx", label: "Cover letter (Word, editable)", href: `${base}/cover-letter.docx${q}` },
+          { kind: "letter-html", label: "Cover letter (styled, print to PDF)", href: `${base}/cover-letter.html${q}` },
+        ]
+      : []),
+  ];
+}
+
+function deliveryStart(o: OrderRow): string | null {
+  if (!o.paid_at) return null;
+  const last = o.clarifications.at(-1)?.at;
+  return last && last > o.paid_at ? last : o.paid_at;
+}
+
+function toPublic(o: OrderRow, revisions: RevisionRow[] = []): PublicStatus {
   const base = `/api/public/order-file/${o.access_token}`;
-  const files = o.status === "ready" && o.result
-    ? [
-        { kind: "resume-docx", label: "Résumé (Word, editable)", href: `${base}/resume.docx` },
-        { kind: "resume-html", label: "Résumé (styled, print to PDF)", href: `${base}/resume.html` },
-        ...(o.result.coverLetter
-          ? [
-              { kind: "letter-docx", label: "Cover letter (Word, editable)", href: `${base}/cover-letter.docx` },
-              { kind: "letter-html", label: "Cover letter (styled, print to PDF)", href: `${base}/cover-letter.html` },
-            ]
-          : []),
-      ]
-    : [];
+  const files = o.status === "ready" && o.result ? fileList(base, Boolean(o.result.coverLetter)) : [];
+  const start = deliveryStart(o);
+  const ready = o.status === "ready" && Boolean(o.result);
   return {
     status: o.status, tier: o.tier, name: o.snapshot.name.split(/\s+/)[0] ?? "",
     questions: o.status === "needs_information" ? (o.clarification_request?.questions ?? []) : [],
@@ -203,7 +231,24 @@ function toPublic(o: OrderRow): PublicStatus {
     emailed: ((o as OrderRow & { notifications?: Record<string, NotificationState> }).notifications?.["ready"]?.outcome) === "sent",
     emailActive: productionEmailPort.available(),
     paidAt: o.paid_at, expiresAt: o.expires_at ?? null,
+    deliveredAt: o.delivered_at ?? null,
+    deliveryDeadline: !ready && start && o.status !== "needs_information" ? addEligibleHours(start, DELIVERY_WINDOW_HOURS.max).toISOString() : null,
+    minorRevision: ready && o.delivered_at ? minorRevisionState(o, revisions) : "n/a",
+    minorWindowEnd: o.delivered_at ? minorRevisionWindowEnd(o.delivered_at).toISOString() : null,
+    revisions: ready ? revisions.map((r) => ({
+      id: r.id, kind: r.kind, status: r.status, requestedAt: r.requested_at, deadlineAt: r.deadline_at, completedAt: r.completed_at,
+      version: r.version, question: r.status === "needs_information" ? r.clarification_request : null,
+      reason: r.status === "failed" || r.status === "rejected" ? r.failure_reason : null,
+      canRetry: r.status === "failed" && r.retry_rounds < MAX_REVISION_RETRIES,
+      files: r.status === "ready" && r.result ? fileList(base, Boolean(r.result.coverLetter), `?v=${r.id}`) : [],
+    })) : [],
   };
+}
+
+async function revisionsFor(o: OrderRow): Promise<RevisionRow[]> {
+  if (o.status !== "ready") return [];
+  const list = await revisionRepo.forOrder(o.id);
+  return Promise.all(list.map((r) => settleStaleRevision(revisionRepo, r)));
 }
 
 /** Status read: confirms payment with Stripe if needed and settles dead leases. */
@@ -212,7 +257,41 @@ export async function statusByToken(token: string): Promise<PublicStatus | null>
   if (!o) return null;
   o = await confirmPayment(supabaseRepo, getSession, o);
   o = await settleStale(supabaseRepo, o);
-  return toPublic(o);
+  return toPublic(o, await revisionsFor(o));
+}
+
+/** Customer revision request. Reservation is atomic; nothing is consumed until a validated revision completes. */
+export async function requestRevisionByToken(token: string, kind: RevisionKind, text: string, idem: string) {
+  const o = await orderByToken(token);
+  if (!o) return { ok: false as const, message: "This order link has expired.", status: null };
+  const r = await requestRevision(revisionRepo, o, kind, text, idem);
+  return { ...(r.ok ? { ok: true as const, message: "Request received." } : { ok: false as const, message: r.message }), status: await statusByToken(token) };
+}
+
+async function ownedRevision(token: string, id: string) {
+  const o = await orderByToken(token);
+  if (!o) return null;
+  const r = await revisionRepo.byId(id);
+  return r && r.order_id === o.id ? r : null;
+}
+
+export async function answerRevisionByToken(token: string, id: string, text: string) {
+  const r = await ownedRevision(token, id);
+  if (r) await answerRevision(revisionRepo, r, text);
+  return statusByToken(token);
+}
+
+export async function retryRevisionByToken(token: string, id: string) {
+  const r = await ownedRevision(token, id);
+  if (r) await retryRevision(revisionRepo, r);
+  return statusByToken(token);
+}
+
+/** Claim-guarded nudge; the background worker processes it too if the tab closes. */
+export async function runRevisionByToken(token: string, id: string) {
+  const r = await ownedRevision(token, id);
+  if (r && r.status === "queued") await processRevision(revisionRepo, liveRevisionModels, r.id);
+  return statusByToken(token);
 }
 
 /** Runs one processing attempt if due (claim-guarded). */
@@ -260,6 +339,10 @@ export async function handleStripeEvent(evt: { id: string; type: string; data?: 
 
 export const notifyRepo: NotifyRepo = {
   byId: (id) => supabaseRepo.byId(id),
+  async revision(orderId, revisionId) {
+    const r = await revisionRepo.byId(revisionId);
+    return r && r.order_id === orderId && r.version ? { id: r.id, version: r.version, status: r.status } : null;
+  },
   async claim(id, kind) {
     const db = await admin();
     const { data, error } = await db.rpc("claim_notification_fenced" as never, { _order_id: id, _kind: kind, _lease_seconds: 120 } as never);
@@ -279,8 +362,9 @@ export async function sweepNotifications(limit = 10) {
   if (!productionEmailPort.available()) return [] as string[];
   const db = await admin();
   const { data } = await db.rpc("due_notifications" as never, { _limit: limit } as never);
+  const { data: revs } = await db.rpc("due_revision_notifications" as never, { _limit: limit } as never);
   const out: string[] = [];
-  for (const r of (data ?? []) as Array<{ order_id: string; kind: NotificationKind }>) {
+  for (const r of [...((data ?? []) as Array<{ order_id: string; kind: NotificationKind }>), ...((revs ?? []) as Array<{ order_id: string; kind: NotificationKind }>)]) {
     out.push(await deliverNotification(notifyRepo, productionEmailPort, r.order_id, r.kind, PUBLIC_SITE_ORIGIN).catch(() => "retry" as const));
   }
   return out;
@@ -326,6 +410,12 @@ export async function sweep(limit = 2) {
   const ids = await supabaseRepo.due(limit);
   const results: string[] = [];
   for (const id of ids) results.push(await processOrder(supabaseRepo, liveModels, id));
+  const { data: revIds } = await db.rpc("due_revisions" as never, { _limit: limit } as never);
+  const revisions: string[] = [];
+  for (const r of (revIds ?? []) as unknown[]) {
+    const rid = typeof r === "string" ? r : (r as { due_revisions: string }).due_revisions;
+    revisions.push(await processRevision(revisionRepo, liveRevisionModels, rid).catch(() => "error"));
+  }
   const emails = await sweepNotifications(10).catch(() => [] as string[]);
-  return { confirmed: (pending ?? []).length, processed: results, emails };
+  return { confirmed: (pending ?? []).length, processed: results, revisions, emails };
 }
