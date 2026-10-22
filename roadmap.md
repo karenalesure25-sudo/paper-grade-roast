@@ -2,6 +2,13 @@
 - [x] Metallic-logo signature homepage revision and responsive cross-route verification
 # Roadmap
 
+## Launch readiness (in progress)
+- [ ] Authenticated background worker (DB-held token, paused schedule) independent of browser
+- [ ] Order emails: confirmation (paid), ready (artifacts), lost-link recovery; mocked transport until domain verified; durable retries/idempotency
+- [ ] Package deliverables + AI-use disclosure, synthetic sample section, Terms page (existing policy only), order help/recovery page
+- [ ] Privacy-safe share card, social meta (remove @Lovable), sitemap, de-emphasize coming-soon
+- [ ] Backend failure/retry/duplicate/recovery tests, simulated 3-tier orders, desktop/mobile smoke
+
 - [x] Responsive visual audit and scoped fixes: homepage, roast, and order dashboard at 1440/1280/1024/390/360; before/after evidence, anchors, loaded logo/portrait, and browser-only template/review fixtures verified without checkout calls. Evidence: /tmp/browser/responsive-audit/. No production publish.
 - [ ] GitHub main sync for responsive fixes: platform-managed Git state; remote main still reads ba2469d, while the saved working revision is c08dd75. Manual Git writes are prohibited in this environment.
 
