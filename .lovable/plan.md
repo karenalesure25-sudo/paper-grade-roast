@@ -1,39 +1,33 @@
-# Launch readiness: findings and remaining steps
+# Isolated Stripe test-mode checkout (audit + what to build)
 
-Short answer: the backend is **not ready** to take paid orders without you watching it. Buying a domain **by itself will not** turn on automatic email delivery. Email sending code still has to be built after the domain is set up.
+## Audit findings (read-only, verified this turn)
+- Saved settings present: live payment key, live webhook signing secret, test payment key. No test webhook signing secret saved. Scheduled-worker secret not present.
+- Test mode is **not implemented**. Only the live key is ever read (`stripe.server.ts`). The test key is unused.
+- Only one webhook endpoint exists: `/api/public/stripe-webhook`, verified with the live secret only. **There is no test webhook URL to configure yet** — do not register one in Stripe until it is built.
+- Orders, payment records and Stripe event rows have no mode/livemode column. A test and live order are indistinguishable in the database.
+- Payment rereads (`getCheckoutSession`) always call Stripe with the live key, so a test session could not even be verified today — it fails closed, but also cannot be tested.
+- Price IDs in code are live prices; test mode needs its own test prices (or inline USD amounts).
+- Email sending stays disabled (no verified domain), and the worker cron is paused. Not end-to-end ready.
 
-## What I checked (read-only, 22 Oct 2026)
+## Proposed minimal isolation
+1. **Mode stamped at order creation.** Add `stripe_mode` (`live` | `test`, default `live`, immutable) to fulfillment orders, payment redemptions and Stripe event rows. Test checkout only starts on the preview host or behind a server-only allow flag; production never creates test orders.
+2. **Mode-selected Stripe client.** `stripe.server.ts` picks the key from the order's stored mode: live uses the existing live key, test uses the test key. Production keys are never overwritten. Test uses inline USD amounts (no live price IDs).
+3. **Separate test webhook route** `/api/public/stripe-webhook-test`, verified only with a new `STRIPE_TEST_WEBHOOK_SECRET`. Each route rejects events whose `livemode` doesn't match, and rejects sessions whose order mode differs.
+4. **Payment verification checks mode.** The payment gate re-reads the session with the order's own key and requires `session.livemode` to equal the order mode — a test payment can never unlock a live order, and vice versa.
+5. **Fulfillment/email.** Test orders run through the same pipeline, labeled "TEST" on the order page; emails go to a capture/log adapter only, never the real sender. Test orders excluded from any live reporting and purged on the normal schedule.
+6. **Tests:** cross-mode rejection (test event on live route, test session on live order, live session on test order), signature per secret, test order cannot reach live email transport.
 
-| Item | Status | Evidence |
-|---|---|---|
-| Stripe secret key | Verified present | Secrets list (value not shown) |
-| STRIPE_WEBHOOK_SECRET | **Missing** | Not in secrets list. Webhook route returns 503 "not configured" |
-| Stripe webhook registered in Stripe | **Inaccessible** | Stripe tool returned access denied (403) |
-| LOVABLE_CRON_SECRET | **Missing** | Not in secrets list. The fulfillment-tick route rejects every call with 500 |
-| Fulfillment scheduler | **Missing** | Only one scheduled job exists: `purge-expired-callback-orders` (daily). No job calls fulfillment-tick |
-| Email sender domain | **Missing** | Email setup: not_started, no domain configured |
-| Email delivery code | **Stub only** | `sendOrderConfirmation` only writes a log line and returns false. Paid orders are hard-coded `emailed: false`. No email templates exist |
-| Order page copy | Code-only | Tells buyers "Email delivery isn't set up yet… this private link is how you reach your files" |
-| Paid fulfillment logic | Code-only (unit tests) | engine/writer/purchase-selection tests exist. These are logic tests, not proof that live payments work |
-| Full paid package, start to finish | **Not verified** | No test-mode Stripe keys. No order has ever reached "ready" with files I checked |
+## After implementation (your steps)
+- In Stripe **Test mode**, add destination `https://project--656b31d5-ed91-45d2-b4a8-5acb422e4204-dev.lovable.app/api/public/stripe-webhook-test` (preview) with `checkout.session.completed` and `checkout.session.async_payment_succeeded`, then save its signing secret as `STRIPE_TEST_WEBHOOK_SECRET`.
+- Run a test card checkout on the preview; I verify the order reaches ready with a test-labeled package.
 
-## What happens today if someone pays
-Payment happens on Stripe. There's no webhook secret and no scheduler, so the order only moves forward when the buyer stays on, or comes back to, their private order page. That page re-checks Stripe and starts the writing. Nothing gets emailed. If the buyer closes the tab and loses the link, the order stalls.
-
-## Remaining steps, in priority order
-1. **Webhook secret (you):** In Stripe, open the webhook endpoint `https://paper-grade-roast.lovable.app/api/public/stripe-webhook` (create it if needed). Choose events `checkout.session.completed` and `checkout.session.async_payment_succeeded`. Copy its signing secret into Project Settings → Secrets as `STRIPE_WEBHOOK_SECRET`. I can't see Stripe from here, so I can't confirm the endpoint exists.
-2. **Background worker (me, after approval):** Create the cron secret and a once-a-minute schedule that calls fulfillment-tick, so orders finish even after the buyer leaves.
-3. **Email (both of us):** Buy or connect a domain, then complete "Set up email domain". After that I build the order-ready email: a branded template with the private order link, sent once per order from the server after files are ready, plus updated order-page wording. Emails start going out only after the domain's DNS is verified.
-4. **Real end-to-end proof (both of us):** Add Stripe test-mode keys, or approve one small live purchase you refund yourself in Stripe. Then I run one order per tier ($40/$50/$60) through to downloaded Word and styled files and the received email, and check the content against the source résumé.
-5. Publish only after steps 1–4 pass.
-
-## 3–5 highest-value launch improvements (no redesign)
-1. **Contact and Terms pages**, plus a sitemap. Paid services need a visible support contact and terms that match the no-refunds rule.
-2. **Fix leftover "Lovable" social metadata and "coming soon" copy**, so shared links and pages look finished.
-3. **Safer roast share card**: leave out quoted résumé text and add the site link, so every share brings people back.
-4. **Sample deliverables section**: one before/after example per tier, to build trust before checkout.
-5. **"Lost your order link?" recovery by email**, available once email is live. It cuts down support requests.
+## Still pending (not end-to-end ready)
+- Domain + verified email sender; real emails stay off.
+- Worker activation and publish authorization (preview test runs need the worker nudged manually or via the order page).
+- Confirm the live webhook is delivering successfully once published.
 
 ## Technical notes
-- Cron route uses `authenticateCronRequest` (needs `LOVABLE_CRON_SECRET`). The new schedule must use a managed cron credential, not the publishable key.
-- Email wiring: scaffold the app-email templates, replace the `order-mailer.server.ts` stub, call it from the fulfillment engine when an order becomes ready, use idempotency key `order-ready-<orderId>`, and set `emailed` from the actual result.
+- Migration: add `stripe_mode text not null default 'live' check (in ('live','test'))` with immutability in existing triggers.
+- `createCheckoutSession/getCheckoutSession(mode, …)`; `verifyPayment` adds `s.livemode === (mode==='live')`.
+- `handleStripeEvent(evt, mode)` asserts `evt.livemode` and order mode before claiming.
+- Test checkout gate: server checks request host is the preview host and `STRIPE_TEST_SECRET_KEY` exists.
