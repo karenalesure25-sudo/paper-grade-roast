@@ -50,6 +50,13 @@
       "when": 1792638162613,
       "tag": "0006_revision_base_retry_stale",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792667209049,
+      "tag": "0007_stripe_test_mode_isolation",
+      "breakpoints": true
     }
   ]
 }

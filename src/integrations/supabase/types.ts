@@ -42,6 +42,7 @@ export type Database = {
           source_sha256: string
           source_text: string
           status: string
+          stripe_mode: string
           stripe_session_id: string | null
           template: string
           tier: string
@@ -74,6 +75,7 @@ export type Database = {
           source_sha256: string
           source_text: string
           status?: string
+          stripe_mode?: string
           stripe_session_id?: string | null
           template: string
           tier: string
@@ -106,6 +108,7 @@ export type Database = {
           source_sha256?: string
           source_text?: string
           status?: string
+          stripe_mode?: string
           stripe_session_id?: string | null
           template?: string
           tier?: string
@@ -332,6 +335,7 @@ export type Database = {
           email: string
           session_id: string
           status: string
+          stripe_mode: string
           tier: string
           updated_at: string
         }
@@ -341,6 +345,7 @@ export type Database = {
           email: string
           session_id: string
           status?: string
+          stripe_mode?: string
           tier: string
           updated_at?: string
         }
@@ -350,6 +355,7 @@ export type Database = {
           email?: string
           session_id?: string
           status?: string
+          stripe_mode?: string
           tier?: string
           updated_at?: string
         }
@@ -382,6 +388,7 @@ export type Database = {
           id: string
           processed_at: string | null
           received_at: string
+          stripe_mode: string
           type: string
         }
         Insert: {
@@ -389,6 +396,7 @@ export type Database = {
           id: string
           processed_at?: string | null
           received_at?: string
+          stripe_mode?: string
           type: string
         }
         Update: {
@@ -396,6 +404,7 @@ export type Database = {
           id?: string
           processed_at?: string | null
           received_at?: string
+          stripe_mode?: string
           type?: string
         }
         Relationships: []
@@ -458,6 +467,7 @@ export type Database = {
           source_sha256: string
           source_text: string
           status: string
+          stripe_mode: string
           stripe_session_id: string | null
           template: string
           tier: string
