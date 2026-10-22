@@ -307,7 +307,7 @@ export async function recoverOrderLinks(email: string, ip: string) {
     },
     async ordersFor(e) {
       const { data } = await db.from("fulfillment_orders" as never).select("access_token,tier,status")
-        .ilike("email", e).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(5);
+        .ilike("email", e.replace(/[\\%_]/g, (c) => `\\${c}`)).gt("expires_at", new Date().toISOString()).order("created_at", { ascending: false }).limit(5);
       return (data ?? []) as Array<{ access_token: string; tier: string; status: string }>;
     },
     port: productionEmailPort,
