@@ -137,6 +137,7 @@ describe("email templates render", () => {
   });
 
   test("stale worker after lease expiry cannot overwrite or release a newer claim", async () => {
+    const now = () => new Date("2026-10-22T01:00:00Z");
     const row = order();
     const repo = memRepo(row, now) as NotifyRepo & { expire(kind: string): void };
     let releaseA!: () => void;
@@ -149,8 +150,8 @@ describe("email templates render", () => {
     // a third worker re-claims nothing (done), then stale A finishes with its old token
     releaseA();
     await a;
-    expect(row.notifications.confirmation.done).toBe(true);
-    expect(row.notifications.confirmation.outcome).toBe("sent");
-    expect(row.notifications.confirmation.lastCode).toBeUndefined();
+    expect(row.notifications["confirmation"]?.done).toBe(true);
+    expect(row.notifications["confirmation"]?.outcome).toBe("sent");
+    expect(row.notifications["confirmation"]?.lastCode).toBeUndefined();
   });
 });
