@@ -21,6 +21,6 @@
 
 - Size template picker columns by their own container, and show the three-column order dashboard only at xl; nested workspace width, not viewport width, determines usable preview sizes.
 - The fulfillment worker route authenticates with a token held only in the database `private` schema (checked by the service-role-only `verify_worker_token`) or a managed cron secret; never the publishable key, because `/api/public/*` is reachable by anyone.
-- Customer order emails go through src/lib/fulfillment/notify.ts with an injected EmailPort and per-order claim/backoff state in `fulfillment_orders.notifications`; success is recorded only after an accepted send, and email-sent links always use PUBLIC_SITE_ORIGIN (never request headers).
+- Customer order emails go through src/lib/fulfillment/notify.ts with an injected EmailPort and per-order fenced claims (unique claim token required to finish) and backoff state in `fulfillment_orders.notifications`; recovery admission is one atomic DB call that fails closed; success is recorded only after an accepted send, and email-sent links always use PUBLIC_SITE_ORIGIN (never request headers).
 - Lost-link recovery returns one generic response, rate-limits by hashed email/IP, and emails only the address on file — prevents order enumeration.
 - Share images are built from the letter grade only (src/lib/share-card.ts); never include roast text or résumé quotes in shareable output.
