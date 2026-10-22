@@ -85,7 +85,7 @@ export async function deliverNotification(
   const token = await repo.claim(orderId, kind);
   if (!token) return "busy";
   const finish = async (patch: NotificationState) => {
-    if (!(await repo.finish(orderId, kind, token, token, patch))) console.error("order email claim superseded", { orderId, kind });
+    if (!(await repo.finish(orderId, kind, token, patch))) console.error("order email claim superseded", { orderId, kind });
   };
   const order = await repo.byId(orderId);
   if (!order || !eligible(order, kind)) {

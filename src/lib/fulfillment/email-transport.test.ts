@@ -20,11 +20,11 @@ describe("managed email adapter", () => {
     expect(p.available()).toBe(true);
     expect(await p.send(msg)).toEqual({ status: "sent" });
     const s = seen[0]!;
-    expect(s.payload.idempotency_key).toBe("order-ready-o1");
-    expect(s.opts.idempotencyKey).toBe("order-ready-o1");
-    expect(s.payload.sender_domain).toBe("notify.example.test");
-    expect(s.payload.purpose).toBe("transactional");
-    expect(String(s.payload.html)).toContain("https://paper-grade-roast.lovable.app/orders/x");
+    expect(s.payload["idempotency_key"]).toBe("order-ready-o1");
+    expect(s.opts["idempotencyKey"]).toBe("order-ready-o1");
+    expect(s.payload["sender_domain"]).toBe("notify.example.test");
+    expect(s.payload["purpose"]).toBe("transactional");
+    expect(String(s.payload["html"])).toContain("https://paper-grade-roast.lovable.app/orders/x");
   });
 
   test("error mapping", () => {
