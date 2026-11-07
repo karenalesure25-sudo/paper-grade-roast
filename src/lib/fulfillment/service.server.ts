@@ -1,3 +1,6 @@
+import { PersonaIdSchema, type PersonaId } from "../roast-personas";
+import type { DeliveredRoast } from "../roast-delivery";
+import { verifyRoastReceipt } from "../roast-receipt.server";
 /** Production wiring of the fulfillment engine (Supabase + Stripe + Lovable AI). Server-only. */
 import type { TierId } from "../products";
 import {
@@ -14,7 +17,8 @@ import {
 } from "./revision";
 import { DELIVERY_WINDOW_HOURS, addEligibleHours, minorRevisionWindowEnd } from "./service-time";
 import { RESUME_TEMPLATES } from "../resume-templates";
-import { assertPurchaseSelection } from "./purchase-selection";
+import { originalRoastForDelivery } from "./roast-delivery";
+import { assertPurchaseSelection, recoveredPurchaseSelection } from "./purchase-selection";
 import { deliverNotification, type NotificationKind, type NotificationState, type NotifyRepo } from "./notify";
 import { RECOVERY_LIMITS, requestOrderLinks } from "./recovery";
 import { productionEmailPort } from "./email-transport.server";
@@ -55,7 +59,8 @@ async function sha256(text: string): Promise<string> {
  * order row, then open a Stripe session bound to it. Nothing from the browser except
  * the intake id, template and optional photo is trusted.
  */
-export async function createOrderCheckout(input: { intakeId: string; template: string; photo?: string | undefined; origin: string; mode: StripeMode }) {
+export async function createOrderCheckout(input: { intakeId: string; template: string; photo?: string | undefined; origin: string; mode: StripeMode; roastPersona?: PersonaId | undefined; roastReceipt?: string | undefined; roastOwner?: string | undefined }) {
+  const roastPersona = input.roastPersona === undefined ? undefined : PersonaIdSchema.parse(input.roastPersona);
   const layout = RESUME_TEMPLATES.find((t) => t.id === input.template);
   if (!layout) throw new Error("Choose one of the available layouts.");
   if (layout.usesPhoto && !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(input.photo ?? "")) throw new Error("Confirm a valid photo for this layout before paying.");
@@ -96,6 +101,9 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
     }
     const { snapshot, sourceText } = buildSnapshotSource(row.tier, row.answers, extracted, row.resume_filename ?? "your intake answers");
     if (sourceText.length > 40_000) throw new Error("Your résumé is too long for us to process in full. Please shorten it to under ~6 pages.");
+    if (roastPersona) snapshot.roastPersona = roastPersona;
+    // Signed original roast only: never trust a browser grade or regenerate it in a new voice.
+    if (input.roastReceipt) snapshot.originalRoast = await verifyRoastReceipt(input.roastReceipt, input.roastOwner, roastPersona);
     const photo = layout.usesPhoto ? input.photo ?? null : null;
     const { data: created, error } = await db.from("fulfillment_orders" as never).insert({
       intake_id: row.id, tier: row.tier, email: snapshot.email, template: input.template,
@@ -111,7 +119,7 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
   if (!order) throw new Error("We couldn't save your order. Try again.");
   // Also checks the winning snapshot after a concurrent insert. Never change a
   // selection while another tab may create or pay an existing Stripe session.
-  assertPurchaseSelection(order, { template: input.template, photo: layout.usesPhoto ? input.photo ?? null : null });
+  assertPurchaseSelection({ ...order, roastPersona: order.snapshot.roastPersona }, { template: input.template, photo: layout.usesPhoto ? input.photo ?? null : null, roastPersona });
   return checkoutForOrder(order, input.origin);
 }
 
@@ -161,20 +169,22 @@ export async function recoverProgress(tier?: TierId, intakeId?: string, token?: 
     else if (order && (!tier || order.tier === tier)) {
       const { data } = await (await admin()).from("fulfillment_orders" as never).select("intake_id").eq("id", order.id).maybeSingle();
       const saved = data as { intake_id: string } | null;
-      return { intakeId: saved?.intake_id ?? null, token: order.access_token, tier: order.tier, previous: null, selection: { template: order.template, photo: order.photo ?? null } };
+      return { intakeId: saved?.intake_id ?? null, token: order.access_token, tier: order.tier, previous: null, selection: recoveredPurchaseSelection(order) };
     }
   }
   if (!tier || !intakeId || !/^[0-9a-f-]{36}$/i.test(intakeId)) return previous ? { intakeId: null, token: null, tier, previous } : null;
   const db = await admin();
   const { data } = await db.from("intakes" as never).select("id,tier").eq("id", intakeId).eq("tier", tier).gt("created_at", new Date(Date.now() - 86400000).toISOString()).maybeSingle();
   if (!data) return previous ? { intakeId: null, token: null, tier, previous } : null;
-  const { data: saved } = await db.from("fulfillment_orders" as never).select("access_token,status,template,photo").eq("intake_id", intakeId).gt("expires_at", new Date().toISOString()).maybeSingle();
-  const s = saved as { access_token: string; status: string; template: string; photo: string | null } | null;
+  const { data: saved } = await db.from("fulfillment_orders" as never).select("access_token,status,template,photo,snapshot").eq("intake_id", intakeId).gt("expires_at", new Date().toISOString()).maybeSingle();
+  const s = saved as { access_token: string; status: string; template: string; photo: string | null; snapshot: OrderRow["snapshot"] } | null;
   if (s && s.status !== "awaiting_payment") return { intakeId: null, token: null, tier, previous: previous ?? { token: s.access_token, tier } };
-  return { intakeId, token: s?.access_token ?? null, tier, previous, ...(s ? { selection: { template: s.template, photo: s.photo } } : {}) };
+  return { intakeId, token: s?.access_token ?? null, tier, previous, ...(s ? { selection: recoveredPurchaseSelection(s) } : {}) };
 }
 
 export type PublicStatus = {
+  roastPersona?: PersonaId;
+  originalRoast?: DeliveredRoast;
   status: OrderRow["status"];
   tier: TierId;
   name: string;
@@ -232,12 +242,15 @@ function toPublic(o: OrderRow, revisions: RevisionRow[] = []): PublicStatus {
   const files = o.status === "ready" && o.result ? fileList(base, Boolean(o.result.coverLetter)) : [];
   const start = deliveryStart(o);
   const ready = o.status === "ready" && Boolean(o.result);
+  const originalRoast = originalRoastForDelivery(o);
   return {
     status: o.status, tier: o.tier, name: o.snapshot.name.split(/\s+/)[0] ?? "",
     questions: o.status === "needs_information" ? (o.clarification_request?.questions ?? []) : [],
     failureReason: o.status === "failed" ? o.failure_reason : null,
     canRetry: o.status === "failed" && o.retry_rounds < 2,
     files,
+    ...(o.snapshot.roastPersona ? { roastPersona: o.snapshot.roastPersona } : {}),
+    ...(originalRoast ? { originalRoast } : {}),
     ...(o.status === "ready" && o.result?.keywordReport ? { keywordReport: o.result.keywordReport } : {}),
     ...(o.status === "ready" && o.result ? { checks: o.result.checks } : {}),
     emailed: ((o as OrderRow & { notifications?: Record<string, NotificationState> }).notifications?.["ready"]?.outcome) === "sent",

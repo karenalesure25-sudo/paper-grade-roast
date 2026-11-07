@@ -1,3 +1,5 @@
+import { readPersona, ROAST_PERSONAS, type PersonaId } from "@/lib/roast-personas";
+import { readRoastForOrder } from "@/lib/roast-session";
 import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
@@ -98,6 +100,9 @@ function OrderPage() {
   const checkout = useServerFn(startOrderCheckout);
   const recover = useServerFn(recoverOrderProgress);
   const navigate = useNavigate();
+  const [roastPersona, setRoastPersona] = useState<PersonaId | null>(null);
+  const [roastReceipt, setRoastReceipt] = useState<string | null>(null);
+  const [roastLabel, setRoastLabel] = useState<string | null>(null);
   const [intakeId, setIntakeId] = useState<string | null>(null);
   const [intake, setIntake] = useState<SubmittedIntake | null>(null);
   const [stage, setStage] = useState<"template" | "review">("template");
@@ -125,6 +130,9 @@ function OrderPage() {
     setRecovering(true);
     setPrevious(null);
     setSelectionLocked(false);
+    const preference = readPersona();
+    const original = readRoastForOrder(preference);
+    setRoastPersona(preference); setRoastReceipt(original?.receipt ?? null); setRoastLabel(original?.label ?? null);
     recover({ data: { tier: tierId as "revamp" | "scratch" | "bundle" } }).then(async (saved) => {
       if (!active || !saved) return;
       setPrevious(saved.previous);
@@ -134,6 +142,7 @@ function OrderPage() {
         if (!layout) throw new Error("Saved layout unavailable.");
         setTemplate(layout.id);
         setPhoto(selection.photo);
+        setRoastPersona(selection.roastPersona); setRoastReceipt(null); setRoastLabel(selection.roastLabel);
         setTemplateChosen(true);
         setSelectionLocked(true);
         setStage("review");
@@ -162,6 +171,8 @@ function OrderPage() {
   }
 
   function startNewIntake() {
+    const preference = readPersona(); const original = readRoastForOrder(preference);
+    setRoastPersona(preference); setRoastReceipt(original?.receipt ?? null); setRoastLabel(original?.label ?? null);
     setIntakeId(null); setIntake(null); setSelectionLocked(false); setTemplate("sidebar"); setTemplateChosen(false);
     setPhoto(null); setError(null); setGuided(true); setStage("template"); toTop();
   }
@@ -185,7 +196,7 @@ function OrderPage() {
     try {
       // The order snapshot (service, price, template, photo) is created only here.
       const r = await checkout({
-        data: { intakeId, template, ...(templateUsesPhoto && photo ? { photo } : {}) },
+        data: { intakeId, template, ...(roastPersona ? { roastPersona } : {}), ...(roastReceipt ? { roastReceipt } : {}), ...(templateUsesPhoto && photo ? { photo } : {}) },
       });
       if (r.already) {
         await navigate({ to: "/orders/$token", params: { token: r.token } });
@@ -211,6 +222,12 @@ function OrderPage() {
             <h1 className="font-brand text-[2.2rem] leading-[1.05] text-ivory sm:text-5xl">{tier.name}</h1>
             <p className="max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">{tier.tagline}</p>
           </header>
+
+          {!recovering && roastPersona && <div className="mt-5 border-l-2 border-accent pl-3 text-sm text-muted-foreground">
+            <p>Roast personality: <span className="text-ink">{ROAST_PERSONAS.find((p) => p.id === roastPersona)?.name}</span></p>
+            {roastLabel && <p className="mt-1">Your completed free roast for “{roastLabel}” will stay with this order. Your application documents will use professional wording.</p>}
+            {!selectionLocked && roastReceipt && <button type="button" disabled={pending} onClick={() => { setRoastReceipt(null); setRoastLabel(null); }} className="mt-2 underline underline-offset-4">Continue without attaching my earlier roast</button>}
+          </div>}
 
           {previous && (
             <p role="status" className="mt-5 border-l-2 border-gold pl-3 text-sm text-muted-foreground">

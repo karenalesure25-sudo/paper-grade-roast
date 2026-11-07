@@ -66,8 +66,8 @@ export function OrderConfirmationEmail({ firstName, packageName, orderUrl, expir
   );
 }
 
-export type ReadyProps = { firstName?: string; packageName?: string; orderUrl?: string; expires?: string; hasCoverLetter?: boolean };
-export function OrderReadyEmail({ firstName, packageName, orderUrl, expires, hasCoverLetter }: ReadyProps) {
+export type ReadyProps = { firstName?: string; packageName?: string; orderUrl?: string; expires?: string; hasCoverLetter?: boolean; roastPersonality?: string };
+export function OrderReadyEmail({ firstName, packageName, orderUrl, expires, hasCoverLetter, roastPersonality }: ReadyProps) {
   return (
     <Shell preview="Your files are ready to download.">
       <Heading style={h1}>Your files are ready</Heading>
@@ -76,6 +76,7 @@ export function OrderReadyEmail({ firstName, packageName, orderUrl, expires, has
         Your <strong>{packageName ?? "package"}</strong> passed our accuracy checks. Open your order page to download your résumé
         {hasCoverLetter ? " and cover letter" : ""} as an editable Word file or a styled version you can print to PDF.
       </Text>
+      {roastPersonality && <Text style={p}>Your original free roast from {roastPersonality} is also saved on your private order page.</Text>}
       <Text style={small}>Your package includes one complimentary minor revision (wording, corrections or formatting within your template), requested from your order page within 7 calendar days. Errors we introduced are fixed free and don&apos;t use it.</Text>
       {orderUrl && <Button href={orderUrl} style={button}>Download your files</Button>}
       <PrivateNote expires={expires} />

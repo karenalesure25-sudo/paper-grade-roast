@@ -2,12 +2,14 @@ import { createServerFn } from "@tanstack/react-start";
 import { getCookie, getRequest, setCookie, setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 
+import { PersonaIdSchema } from "./roast-personas";
+
 const Token = z.string().uuid();
 
 /** Snapshot the saved intake and open Stripe Checkout bound to that order. */
 export const startOrderCheckout = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) =>
-    z.object({ intakeId: z.string().uuid(), template: z.string().trim().min(1).max(40), photo: z.string().max(900_000).optional() }).parse(i),
+    z.object({ intakeId: z.string().uuid(), template: z.string().trim().min(1).max(40), photo: z.string().max(900_000).optional(), roastPersona: PersonaIdSchema.optional(), roastReceipt: z.string().max(32_000).optional() }).parse(i),
   )
   .handler(async ({ data }) => {
     const { createOrderCheckout } = await import("./fulfillment/service.server");
@@ -16,7 +18,7 @@ export const startOrderCheckout = createServerFn({ method: "POST" })
     const { checkoutModeFor } = await import("./fulfillment/stripe-mode");
     // Preview hosts with a test key use Stripe test mode; the published site is always live.
     const mode = checkoutModeFor(url.host, Boolean(process.env["STRIPE_TEST_SECRET_KEY"]));
-    const result = await createOrderCheckout({ ...data, origin, mode });
+    const result = await createOrderCheckout({ ...data, origin, mode, roastOwner: getCookie("kcs-roast-owner") });
     setCookie("kcs-order", result.token, { httpOnly: true, secure: origin.startsWith("https:"), sameSite: "lax", path: "/", maxAge: 86400 });
     return result;
   });

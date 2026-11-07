@@ -1,3 +1,4 @@
+import { PersonalityRoast } from "@/components/PersonalityRoast";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
@@ -233,6 +234,11 @@ function OrderStatusPage() {
             )}
           </>
         )}
+        {status?.status === "ready" && status.originalRoast && <section className="premium-panel mx-auto mt-8 max-w-4xl p-6 sm:p-8" aria-label="Your original free roast">
+          <h2 className="mb-2 font-brand text-2xl text-ivory">Your original free roast</h2>
+          <p className="mb-6 text-sm text-muted-foreground">{status.originalRoast.label} · This reviews your original submission, not your newly written résumé.</p>
+          <PersonalityRoast persona={status.originalRoast.persona} sections={status.originalRoast.personality} grade={status.originalRoast.grade} notes={status.originalRoast.notes} />
+        </section>}
       </main>
       <SiteFooter />
     </div>

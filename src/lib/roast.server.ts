@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { PersonaId, PersonalitySections } from "./roast-personas";
 import {
   SECTION_LABEL,
   checkLength,
@@ -163,6 +164,8 @@ export type RoastOutcome =
       tip: string;
       tipQuote: string | null;
       source: SourceKind;
+      persona?: PersonaId;
+      personality?: PersonalitySections;
     }
   | { status: "not_resume"; message: string }
   | { status: "unavailable"; message: string };
@@ -199,7 +202,7 @@ async function callModel(
   return callGateway(apiKey, SYSTEM_PROMPT, user, "roast", SCHEMA, timeoutMs);
 }
 
-async function callGateway(
+export async function callGateway(
   apiKey: string,
   instructions: string,
   user: string,

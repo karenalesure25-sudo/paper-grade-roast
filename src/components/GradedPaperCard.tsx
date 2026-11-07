@@ -1,3 +1,4 @@
+import { PersonalityRoast } from "@/components/PersonalityRoast";
 import { GradeStamp } from "@/components/GradeStamp";
 import { ShareCard } from "@/components/ShareCard";
 import type { StoredRoast } from "@/lib/roast-session";
@@ -5,6 +6,13 @@ import { SECTION_LABEL } from "@/lib/roast-grounding";
 
 /** The graded-paper result card, plus a share-as-image action. */
 export function GradedPaperCard({ roast }: { roast: StoredRoast }) {
+  if (roast.persona && roast.personality) return <div className="space-y-6">
+    <div className="rounded-lg border border-border bg-card px-6 py-8 shadow-paper-lift sm:px-10">
+      <div className="mb-7 flex items-start justify-between gap-4"><p className="min-w-0 break-words text-sm text-muted-foreground">{roast.label}</p><GradeStamp grade={roast.grade} /></div>
+      <PersonalityRoast persona={roast.persona} sections={roast.personality} grade={roast.grade} notes={roast.notes} />
+    </div>
+    <ShareCard grade={roast.grade} />
+  </div>;
   return (
     <div className="space-y-6">
       <div

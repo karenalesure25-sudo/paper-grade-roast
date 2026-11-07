@@ -1,27 +1,20 @@
 import { createServerFn } from "@tanstack/react-start";
-import { z } from "zod";
+import { getCookie, setCookie, getRequest, setResponseHeader } from "@tanstack/react-start/server";
 import { gradeAnySource } from "./roast-pipeline.server";
-
-// Generous transport cap; the real 24,000-char limit is enforced (with a clear message) after cleanup.
-const MAX_TEXT_CHARS = 200_000;
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
-
-/** PDFs are sent as bytes and read on the server; DOCX is converted to text in the browser. */
-const RoastInput = z.discriminatedUnion("source", [
-  z.object({
-    source: z.literal("pdf"),
-    filename: z.string().trim().min(1).max(200),
-    dataBase64: z.string().min(1).max(Math.ceil((MAX_FILE_BYTES * 4) / 3) + 16),
-  }),
-  z.object({
-    source: z.enum(["docx", "text"]),
-    filename: z.string().trim().max(200).optional(),
-    text: z.string().max(MAX_TEXT_CHARS, { message: "That's far longer than a résumé." }),
-  }),
-]);
+import { RoastInput } from "./roast-input";
 
 export type { RoastResult } from "./roast-pipeline.server";
 
 export const roastResume = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => RoastInput.parse(input))
-  .handler(async ({ data }) => gradeAnySource(data));
+  .handler(async ({ data }) => {
+    setResponseHeader("Cache-Control", "no-store");
+    const { ROAST_OWNER_COOKIE, newRoastOwner, issueRoastReceipt } = await import("./roast-receipt.server");
+    const cookie = getCookie(ROAST_OWNER_COOKIE);
+    const owner = cookie && /^[a-f0-9]{64}$/.test(cookie) ? cookie : newRoastOwner();
+    setCookie(ROAST_OWNER_COOKIE, owner, { httpOnly: true, secure: new URL(getRequest().url).protocol === "https:", sameSite: "lax", path: "/", maxAge: 86400 });
+    const result = await gradeAnySource(data);
+    if (result.status !== "graded" || !result.persona || !result.personality) return result;
+    const receipt = await issueRoastReceipt({ grade: result.grade, notes: result.notes, persona: result.persona, personality: result.personality, label: result.label }, owner);
+    return { ...result, receipt };
+  });

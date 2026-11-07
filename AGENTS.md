@@ -9,6 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Free roast grades must pass deterministic grounding checks and an independent model fact-check (fail-closed) before display; overlong text is rejected, never truncated — prevents unbacked or partial grades.
+- Roast personalities only style an already-verified assessment; never pass the persona to the existing assessor or paid document writer. Verify every styled section independently and freeze only a server-signed original roast in the order snapshot; retries/recovery must never substitute the device's latest preference.
 - Shared brand chrome lives in SiteHeader, SiteFooter, and BrandLogo; keep route business logic independent from presentation so redesigns cannot weaken safeguards.
 - Shared full-logo branding uses the customer's exact, unmodified public/brand/kcs-logo-original.jpeg through BrandLogo. Preserve the complete image, background, and aspect ratio; do not crop, redraw, filter, or re-encode it. The existing emblem remains for favicon/icon scale.
 

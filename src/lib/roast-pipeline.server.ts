@@ -1,16 +1,18 @@
 import { checkLength, checkReadable, cleanSource, type SourceKind } from "./roast-grounding";
 import { gradeResumeText, type RoastOutcome } from "./roast.server";
+import { gradeWithPersonality } from "./roast-personality.server";
+import type { PersonaId } from "./roast-personas";
 
 export type RoastResult =
-  | (Extract<RoastOutcome, { status: "graded" }> & { label: string })
+  | (Extract<RoastOutcome, { status: "graded" }> & { label: string; receipt?: string })
   | { status: "unreadable"; message: string; label: string }
   | { status: "too_long"; message: string; label: string }
   | { status: "not_resume"; message: string; label: string }
   | { status: "unavailable"; message: string; label: string };
 
-type Input =
+type Input = (
   | { source: "pdf"; filename: string; dataBase64: string }
-  | { source: "docx" | "text"; filename?: string | undefined; text: string };
+  | { source: "docx" | "text"; filename?: string | undefined; text: string }) & { persona?: PersonaId | undefined };
 
 async function pdfToText(b64: string): Promise<string | null> {
   try {
@@ -52,6 +54,6 @@ export async function gradeAnySource(input: Input): Promise<RoastResult> {
     };
   }
 
-  const outcome = await gradeResumeText(text, kind);
+  const outcome = input.persona ? await gradeWithPersonality(text, kind, input.persona) : await gradeResumeText(text, kind);
   return { ...outcome, label };
 }

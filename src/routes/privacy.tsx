@@ -40,12 +40,11 @@ function PrivacyPage() {
           <Section title="Free resume roast">
             <p>
               When you request a roast, the text of your résumé (read from your PDF or DOCX, or what you paste)
-              is sent to a third-party service provider for grading. We don&rsquo;t save your résumé or your roast in our
-              database.
+              is sent to a third-party service provider for grading. Free results stay in this browser tab. If you attach a completed roast to a paid order, that original roast and its selected personality are saved privately with the order.
             </p>
             <p>
               Your results are kept in your own browser for this tab only, and they disappear when you close the
-              tab or press &ldquo;Clear my results&rdquo;. We don&rsquo;t make any promises about how long the
+              tab or press &ldquo;Clear my results&rdquo;. Clearing browser results does not remove a copy already attached to an order. Your personality preference is remembered on this device; a private cookie verifies that an attached roast belongs to your session. We don&rsquo;t make any promises about how long the
               third-party service provider itself keeps the data.
             </p>
           </Section>

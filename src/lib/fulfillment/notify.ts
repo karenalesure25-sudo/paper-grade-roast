@@ -1,3 +1,4 @@
+import { ROAST_PERSONAS } from "../roast-personas";
 /**
  * Customer notifications for orders. I/O is injected so tests exercise the exact logic.
  * - confirmation: only after server-verified payment (paid_at set)
@@ -81,7 +82,7 @@ export function buildMessage(order: OrderRow, kind: NotificationKind, origin: st
   }
   return {
     template: "order-ready", to: order.email,
-    data: { ...base, hasCoverLetter: Boolean(order.result?.coverLetter) },
+    data: { ...base, hasCoverLetter: Boolean(order.result?.coverLetter), ...(order.snapshot.originalRoast && order.snapshot.originalRoast.persona === order.snapshot.roastPersona ? { roastPersonality: ROAST_PERSONAS.find((p) => p.id === order.snapshot.roastPersona)?.name } : {}) },
     idempotencyKey: `order-ready-${order.id}`,
   };
 }

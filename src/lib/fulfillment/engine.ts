@@ -1,3 +1,5 @@
+import type { PersonaId } from "../roast-personas";
+import type { DeliveredRoast } from "../roast-delivery";
 import { livemodeMatches, modeOf } from "./stripe-mode";
 /**
  * Fulfillment state machine. I/O is injected (repo, Stripe reader, models) so the
@@ -55,6 +57,9 @@ export type OrderRow = {
 };
 
 export type Snapshot = {
+  /** Frozen presentation preference and signed, verified ORIGINAL free roast, never paid writing instructions. */
+  roastPersona?: PersonaId;
+  originalRoast?: DeliveredRoast;
   name: string;
   email: string;
   phone: string;

@@ -10,7 +10,10 @@ import { RESUME_TEMPLATES, type TemplateId } from "@/lib/resume-templates";
 import { SiteFooter } from "@/components/SiteFooter";
 import { roastResume } from "@/lib/roast.functions";
 import { prepareUpload } from "@/lib/prepare-upload";
-import { readRoasts, saveRoast, clearRoasts, type StoredRoast } from "@/lib/roast-session";
+import { readRoasts, saveRoast, clearRoasts, selectRoastForOrder, type StoredRoast } from "@/lib/roast-session";
+
+import { RoastPersonalityPicker } from "@/components/RoastPersonalityPicker";
+import { readPersona, savePersona, type PersonaId } from "@/lib/roast-personas";
 
 export const Route = createFileRoute("/roast")({
   head: () => ({
@@ -34,11 +37,12 @@ export const Route = createFileRoute("/roast")({
 
 const MAX_PASTE = 24000;
 /** Slightly above the server's own grading budget; past this we stop waiting and say so. */
-const CLIENT_WAIT_MS = 130_000;
+const CLIENT_WAIT_MS = 180_000;
 type Stage = "reading" | "grading";
 
 function RoastPage() {
   const grade = useServerFn(roastResume);
+  const [persona, setPersona] = useState<PersonaId | null>(null);
   const [mode, setMode] = useState<"file" | "paste">("file");
   const [file, setFile] = useState<File | null>(null);
   const [pasted, setPasted] = useState("");
@@ -68,10 +72,11 @@ function RoastPage() {
     setError("Grading canceled. No grade was given — you can try again.");
   }
 
-  useEffect(() => setHistory(readRoasts()), []);
+  useEffect(() => { setHistory(readRoasts()); setPersona(readPersona()); }, []);
 
   /** Any change to the input invalidates what's on screen. */
   function resetResult() {
+    selectRoastForOrder(null);
     setCurrent(null);
     setAnnounce("");
     setError(null);
@@ -80,6 +85,8 @@ function RoastPage() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
+    if (!persona) return setError("Choose your roast personality first.");
+    selectRoastForOrder(null);
     const id = ++requestId.current;
     setCurrent(null);
     setError(null);
@@ -114,7 +121,7 @@ function RoastPage() {
       setStage("grading");
       let timer: ReturnType<typeof setTimeout> | undefined;
       const result = await Promise.race([
-        grade({ data: payload }),
+        grade({ data: { ...payload, persona } }),
         new Promise<never>((_, reject) => {
           timer = setTimeout(() => reject(new Error("Grading is taking much longer than usual, so we stopped waiting. No grade was given — please try again.")), CLIENT_WAIT_MS);
         }),
@@ -126,7 +133,8 @@ function RoastPage() {
       }
       const stored = saveRoast(result);
       setCurrent(stored);
-      setAnnounce(`Graded ${stored.grade}. ${stored.roast}`);
+      selectRoastForOrder(stored);
+      setAnnounce(`Graded ${stored.grade}. ${stored.personality?.vibe ?? stored.roast}`);
       requestAnimationFrame(() => resultRef.current?.focus());
       setHistory(readRoasts());
     } catch (cause) {
@@ -161,6 +169,10 @@ function RoastPage() {
           </p>
 
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">An evidence-based writing assessment, not an employer’s ATS score or a hiring guarantee.</p>
+
+          <RoastPersonalityPicker value={persona} disabled={pending} onChange={(choice) => {
+            setPersona(choice); savePersona(choice); resetResult();
+          }} />
 
           <form onSubmit={submit} className="premium-panel mt-10 p-6 sm:p-8" aria-busy={pending}>
             <div role="tablist" aria-label="How to send your résumé" className="flex gap-3">
@@ -231,7 +243,7 @@ function RoastPage() {
                       {stage === "reading" ? "Step 1 of 2 · Reading your file" : "Step 2 of 2 · Grading and fact-checking against your résumé"}
                       <span aria-hidden="true">
                         {" · "}<span className="tabular-nums">{elapsed}s</span>
-                        {stage === "grading" && elapsed < 60 ? " · usually 20–60 seconds" : stage === "grading" ? " · still working, up to about 2 minutes" : ""}
+                        {stage === "grading" && elapsed < 60 ? " · usually 30–90 seconds" : stage === "grading" ? " · still working, up to about 3 minutes" : ""}
                       </span>
                     </p>
                     <button type="button" onClick={cancel} className="mt-4 rounded-md border border-border px-4 py-2 font-sans text-[0.9rem] text-ink hover:border-primary">
@@ -281,6 +293,7 @@ function RoastPage() {
                 <h2 id="history-heading" className="font-stamp text-xl text-ink">This browser session</h2>
                 <button
                   type="button"
+                  disabled={pending}
                   onClick={() => { clearRoasts(); setHistory([]); setCurrent(null); }}
                   className="font-sans text-[0.95rem] text-muted-foreground underline underline-offset-4 hover:text-ink"
                 >
@@ -293,9 +306,9 @@ function RoastPage() {
                     <span className="grid size-10 shrink-0 place-items-center rounded-full border border-border font-stamp text-lg text-ink-soft">
                       {entry.grade}
                     </span>
-                    <button type="button" onClick={() => setCurrent(entry)} className="min-w-0 flex-1 text-left font-sans text-[0.95rem] text-ink">
+                    <button type="button" disabled={pending} onClick={() => { setCurrent(entry); if (entry.persona) { setPersona(entry.persona); savePersona(entry.persona); } selectRoastForOrder(entry); }} className="min-w-0 flex-1 text-left font-sans text-[0.95rem] text-ink">
                       <span className="block truncate">{entry.label}</span>
-                      <span className="block truncate text-xs text-muted-foreground">{entry.roast}</span>
+                      <span className="block truncate text-xs text-muted-foreground">{entry.personality?.vibe ?? entry.roast}</span>
                     </button>
                   </li>
                 ))}
