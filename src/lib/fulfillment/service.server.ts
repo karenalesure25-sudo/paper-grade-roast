@@ -428,6 +428,13 @@ export async function sweepNotifications(limit = 10) {
     if (!o || modeOf(o) === "test") continue;
     out.push(await deliverNotification(notifyRepo, productionEmailPort, r.order_id, r.kind, PUBLIC_SITE_ORIGIN).catch(() => "retry" as const));
   }
+  // Opt-in commercial follow-ups use their own (currently disabled) port; never the app-email sender.
+  if (marketingEmailPort.available()) {
+    const { data: fu } = await db.rpc("due_followups" as never, { _limit: limit } as never);
+    for (const r of (fu ?? []) as Array<{ order_id: string; kind: NotificationKind }>) {
+      out.push(await deliverNotification(notifyRepo, marketingEmailPort, r.order_id, r.kind, PUBLIC_SITE_ORIGIN).catch(() => "retry" as const));
+    }
+  }
   return out;
 }
 
