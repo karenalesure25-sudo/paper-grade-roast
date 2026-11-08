@@ -9,6 +9,7 @@ import { answerOrderQuestions, getOrderStatus, nudgeOrder, retryOrder, resumeOrd
 import { formatCustomerTime } from "@/lib/customer-time";
 import { getTier } from "@/lib/products";
 import { RevisionPanel } from "@/components/order/RevisionPanel";
+import { FollowupConsent } from "@/components/order/FollowupConsent";
 
 export const Route = createFileRoute("/orders/$token")({
   head: () => ({
@@ -164,6 +165,7 @@ function OrderStatusPage() {
             {status.deliveryDeadline && <p className="mt-2 text-sm text-muted-foreground">Expected by: {formatCustomerTime(status.deliveryDeadline)} at the latest (48 hours, not counting Sundays) — typically sooner.</p>}
             {status.deliveredAt && <p className="mt-2 text-sm text-muted-foreground">Files first available: {formatCustomerTime(status.deliveredAt)}</p>}
             {status.expiresAt && <p className="mt-2 text-sm text-muted-foreground">Private link expires: {formatCustomerTime(status.expiresAt)}</p>}
+            {status.paidAt && !status.testMode && <FollowupConsent token={token} initial={status.followupOptIn} />}
             {status.status === "awaiting_payment" && <StampButton type="button" disabled={busy} onClick={reopenCheckout} className="mt-6">{busy ? "Opening checkout…" : "Reopen secure checkout"}</StampButton>}
             {msg && status.status !== "needs_information" && <p role="alert" className="mt-3 text-redpen-text">{msg}</p>}
 
