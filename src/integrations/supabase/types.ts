@@ -26,6 +26,9 @@ export type Database = {
           email: string
           expires_at: string
           failure_reason: string | null
+          followup_opt_in: boolean
+          followup_opt_in_at: string | null
+          followup_unsubscribed_at: string | null
           id: string
           intake_id: string
           is_test: boolean
@@ -36,6 +39,7 @@ export type Database = {
           notifications: Json
           paid_at: string | null
           photo: string | null
+          pref_token: string
           result: Json | null
           retry_rounds: number
           snapshot: Json
@@ -59,6 +63,9 @@ export type Database = {
           email: string
           expires_at?: string
           failure_reason?: string | null
+          followup_opt_in?: boolean
+          followup_opt_in_at?: string | null
+          followup_unsubscribed_at?: string | null
           id?: string
           intake_id: string
           is_test?: boolean
@@ -69,6 +76,7 @@ export type Database = {
           notifications?: Json
           paid_at?: string | null
           photo?: string | null
+          pref_token?: string
           result?: Json | null
           retry_rounds?: number
           snapshot: Json
@@ -92,6 +100,9 @@ export type Database = {
           email?: string
           expires_at?: string
           failure_reason?: string | null
+          followup_opt_in?: boolean
+          followup_opt_in_at?: string | null
+          followup_unsubscribed_at?: string | null
           id?: string
           intake_id?: string
           is_test?: boolean
@@ -102,6 +113,7 @@ export type Database = {
           notifications?: Json
           paid_at?: string | null
           photo?: string | null
+          pref_token?: string
           result?: Json | null
           retry_rounds?: number
           snapshot?: Json
@@ -204,6 +216,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      order_feedback: {
+        Row: {
+          comment: string | null
+          created_at: string
+          order_id: string
+          rating: number
+          share_ok: boolean
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          order_id: string
+          rating: number
+          share_ok?: boolean
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          order_id?: string
+          rating?: number
+          share_ok?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_feedback_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "fulfillment_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       order_revisions: {
         Row: {
@@ -485,6 +532,9 @@ export type Database = {
           email: string
           expires_at: string
           failure_reason: string | null
+          followup_opt_in: boolean
+          followup_opt_in_at: string | null
+          followup_unsubscribed_at: string | null
           id: string
           intake_id: string
           is_test: boolean
@@ -495,6 +545,7 @@ export type Database = {
           notifications: Json
           paid_at: string | null
           photo: string | null
+          pref_token: string
           result: Json | null
           retry_rounds: number
           snapshot: Json
@@ -555,6 +606,13 @@ export type Database = {
           isOneToOne: false
           isSetofReturn: true
         }
+      }
+      due_followups: {
+        Args: { _limit?: number }
+        Returns: {
+          kind: string
+          order_id: string
+        }[]
       }
       due_fulfillments: { Args: { _limit?: number }; Returns: string[] }
       due_notifications: {
