@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { errorType, outageCode } from "./ops/guard";
+import { aiGate, noteGatewayOk, tripOutage } from "./ops/ops.server";
 import type { PersonaId, PersonalitySections } from "./roast-personas";
 import {
   SECTION_LABEL,
