@@ -120,6 +120,26 @@ describe("one analysis engine, three presentation voices", () => {
     expect(result.reason).not.toContain("private@example.invalid"); expect(result.reason).not.toContain("private value");
   });
 
+  test("the actual personality verifier receives the strict approval contract; approval with explanations never counts", async () => {
+    process.env["LOVABLE_API_KEY"] = "synthetic-key";
+    let styleChecks = 0;
+    globalThis.fetch = (async (_url: unknown, init?: RequestInit) => {
+      if (typeof init?.body !== "string") throw new Error("Missing body");
+      const body = JSON.parse(init.body);
+      const name = body.text.format.name;
+      if (name === "personality_verdict") {
+        styleChecks++;
+        expect(body.instructions).toContain("approved=true requires reasons=[] exactly");
+      }
+      const answer = name === "roast" ? RAW : name === "roast_personality" ? JSON.stringify(SECTIONS)
+        : name === "personality_verdict" ? JSON.stringify({ approved: true, reasons: ["All claims align with the source."] })
+        : JSON.stringify({ approved: true, reasons: [] });
+      return new Response(`data: ${JSON.stringify({ type: "response.output_text.done", text: answer })}\n\n`);
+    }) as typeof fetch;
+    const result = await gradeAnySource(RoastInput.parse({ source: "text", text: SOURCE, persona: "fashion-bestie" }));
+    expect(result.status).toBe("unavailable"); expect(styleChecks).toBe(2);
+  });
+
   test("saved B-grade sign-off severity stays rejected and names only the prohibited word and field", () => {
     const fixed = { ...assessment(), grade: "B" as const };
     const result = checkPersonalityOutput(JSON.stringify({ ...SECTIONS, signOff: "Give the vague reporting wording that same energy, bestie." }), SOURCE, fixed);
