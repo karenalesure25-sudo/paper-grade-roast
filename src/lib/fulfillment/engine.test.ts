@@ -337,3 +337,115 @@ describe("generation outage handling", () => {
     expect(await processOrder(repo, throwing(429), "o-revamp")).toBe("failed");
   });
 });
+
+// ---- Lease recovery: dead workers, long calls, overlapping sweeps (fake clock, no network) ----
+import { LEASE_SECONDS, MODEL_CALL_TIMEOUT_MS } from "./engine";
+
+const CRON_SECONDS = 120;
+
+/** Same semantics as claim_fulfillment / renew_fulfillment_lease, against an injected clock. */
+function clockRepo(initial: OrderRow) {
+  let now = Date.parse("2026-11-08T19:53:00Z");
+  const base = memRepo(initial);
+  let n = 0;
+  const writes: string[] = [];
+  const repo: Repo = {
+    ...base.repo,
+    async finish(id, lease, patch) { const r = await base.repo.finish(id, lease, patch); if (r) writes.push(`${lease}:${r.status}`); return r; },
+    async renew(id, lease) {
+      const r = base.rows.get(id);
+      if (!r || r.status !== "processing" || r.lease_id !== lease) return false;
+      r.locked_until = new Date(now + LEASE_SECONDS * 1000).toISOString(); return true;
+    },
+    async claim(id) {
+      const r = base.rows.get(id); if (!r) return null;
+      const stale = r.status === "processing" && r.locked_until && Date.parse(r.locked_until) < now;
+      if (!(r.status === "queued" || stale) || r.attempts >= r.max_attempts) return null;
+      Object.assign(r, { status: "processing", attempts: r.attempts + 1, lease_id: `W${++n}`, locked_until: new Date(now + LEASE_SECONDS * 1000).toISOString() });
+      return { ...r };
+    },
+  };
+  return { ...base, repo, writes, advance: (s: number) => { now += s * 1000; }, now: () => now };
+}
+
+/** Model whose calls take `seconds` of fake time; `hang` never resolves until released (worker killed). */
+function timedModels(c: { advance: (s: number) => void }, seconds: number) {
+  const m = models(["good"]);
+  const write = m.write.bind(m); const check = m.check.bind(m);
+  return Object.assign(m, {
+    async write(f: SourceFacts, fb: never[]) { c.advance(seconds); return write(f, fb); },
+    async check(f: SourceFacts, o: never) { c.advance(seconds); return check(f, o); },
+  }) as ModelPort & { writes: number };
+}
+
+describe("lease recovery", () => {
+  test("lease covers exactly one timed-out call plus grace, well under the old 10 minutes", () => {
+    expect(MODEL_CALL_TIMEOUT_MS).toBe(120_000);
+    expect(LEASE_SECONDS * 1000).toBeGreaterThan(MODEL_CALL_TIMEOUT_MS);
+    expect(LEASE_SECONDS).toBe(180);
+  });
+
+  test("a legitimate ~2-minute call per step is never overtaken by an overlapping sweep", async () => {
+    const c = clockRepo(order("revamp", { status: "queued", paid_at: "x" }));
+    let probes = 0;
+    const m = timedModels(c, 119);
+    const write = m.write.bind(m);
+    m.write = async (f, fb) => { const out = await write(f, fb); probes++; expect(await c.repo.claim("o-revamp")).toBe(null); return out; };
+    expect(await processOrder(c.repo, m, "o-revamp")).toBe("ready");
+    expect(probes).toBe(1);
+    expect(c.rows.get("o-revamp")!.attempts).toBe(1);
+    expect(c.ledger.filter((l) => l.status === "delivered")).toHaveLength(1);
+  });
+
+  test("overlapping sweeps: exactly one claims, the other reports busy", async () => {
+    const c = clockRepo(order("revamp", { status: "queued", paid_at: "x" }));
+    const outs = await Promise.all([processOrder(c.repo, models(["good"]), "o-revamp"), processOrder(c.repo, models(["good"]), "o-revamp")]);
+    expect(outs.sort()).toEqual(["busy", "ready"]);
+    expect(c.ledger.filter((l) => l.status === "delivered")).toHaveLength(1);
+  });
+
+  test("worker killed mid-call: order is reclaimed within lease + one cron tick, and the zombie can't double-deliver", async () => {
+    const c = clockRepo(order("revamp", { status: "queued", paid_at: "x" }));
+    let release!: () => void;
+    const hung = models(["good"]);
+    const hungWrite = hung.write.bind(hung);
+    hung.write = (f, fb) => new Promise((res) => { release = () => res(hungWrite(f, fb)); });
+    const zombie = processOrder(c.repo, hung, "o-revamp");
+    await Promise.resolve(); await Promise.resolve();
+    const killedAt = c.now();
+    // Sweeps keep firing every 2 minutes; none may steal a lease that is still valid.
+    c.advance(CRON_SECONDS);
+    expect(await processOrder(c.repo, models(["good"]), "o-revamp")).toBe("busy");
+    c.advance(CRON_SECONDS);
+    const out = await processOrder(c.repo, models(["good"]), "o-revamp");
+    expect(out).toBe("ready");
+    expect((c.now() - killedAt) / 1000).toBeLessThanOrEqual(LEASE_SECONDS + CRON_SECONDS);
+    expect((c.now() - killedAt) / 1000).toBeLessThan(600);
+    // The cancelled worker's call finally returns: every write is fenced by its stale lease.
+    release();
+    expect(await zombie).toBe("lease_lost");
+    expect(c.rows.get("o-revamp")!.status).toBe("ready");
+    expect(c.writes.filter((w) => w.endsWith(":ready"))).toEqual(["W2:ready"]);
+    expect(c.ledger.filter((l) => l.status === "delivered")).toHaveLength(1);
+  });
+
+  test("forced timeout/abort releases the lease immediately instead of waiting for expiry", async () => {
+    const c = clockRepo(order("revamp", { status: "queued", paid_at: "x" }));
+    const m = models(["good"]);
+    m.write = async () => { c.advance(MODEL_CALL_TIMEOUT_MS / 1000); throw Object.assign(new Error("aborted"), { name: "AbortError" }); };
+    expect(await processOrder(c.repo, m, "o-revamp")).toBe("queued");
+    expect(c.rows.get("o-revamp")!.lease_id).toBe(null);
+    expect(await processOrder(c.repo, models(["good"]), "o-revamp")).toBe("ready");
+    expect(c.rows.get("o-revamp")!.attempts).toBe(2);
+  });
+
+  test("dead worker on the final attempt settles to failed (customer can retry) after the lease expires", async () => {
+    const c = clockRepo(order("revamp", { status: "queued", paid_at: "x", attempts: 2 }));
+    const hung = models(["good"]); hung.write = () => new Promise(() => undefined);
+    void processOrder(c.repo, hung, "o-revamp");
+    await Promise.resolve(); await Promise.resolve();
+    c.advance(LEASE_SECONDS + 1);
+    const settled = await settleStale(c.repo, c.rows.get("o-revamp")!, c.now());
+    expect(settled.status).toBe("failed");
+  });
+});
