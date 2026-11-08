@@ -61,7 +61,7 @@ async function sha256(text: string): Promise<string> {
  * order row, then open a Stripe session bound to it. Nothing from the browser except
  * the intake id, template and optional photo is trusted.
  */
-export async function createOrderCheckout(input: { intakeId: string; template: string; photo?: string | undefined; origin: string; mode: StripeMode; roastPersona?: PersonaId | undefined; roastReceipt?: string | undefined; roastOwner?: string | undefined }) {
+export async function createOrderCheckout(input: { intakeId: string; template: string; photo?: string | undefined; origin: string; mode: StripeMode; roastPersona?: PersonaId | undefined; roastReceipt?: string | undefined; roastOwner?: string | undefined; followupOptIn?: boolean | undefined }) {
   const roastPersona = input.roastPersona === undefined ? undefined : PersonaIdSchema.parse(input.roastPersona);
   // Fail closed before saving anything new: no payment unless the package can actually be prepared.
   const health = await checkoutAvailability();
@@ -114,6 +114,9 @@ export async function createOrderCheckout(input: { intakeId: string; template: s
       intake_id: row.id, tier: row.tier, email: snapshot.email, template: input.template,
       snapshot, source_text: sourceText, job_text: jobText, source_sha256: await sha256(sourceText + "\n" + (jobText ?? "")), photo,
       stripe_mode: input.mode,
+      // Optional commercial follow-up consent; default off, never required to purchase, never for test orders.
+      followup_opt_in: input.followupOptIn === true && input.mode === "live",
+      ...(input.followupOptIn === true && input.mode === "live" ? { followup_opt_in_at: new Date().toISOString() } : {}),
     } as never).select("*").single();
     if (error?.code === "23505") {
       const { data: raced } = await db.from("fulfillment_orders" as never).select("*").eq("intake_id", row.id).gt("expires_at", new Date().toISOString()).maybeSingle();
