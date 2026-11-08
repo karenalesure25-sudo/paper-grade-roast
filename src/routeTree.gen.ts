@@ -17,6 +17,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RoastRouteImport } from './routes/roast'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as EmailPreferencesPrefRouteImport } from './routes/email-preferences.$pref'
 import { Route as OrderTierRouteImport } from './routes/order.$tier'
 import { Route as OrdersTokenRouteImport } from './routes/orders.$token'
 import { Route as ApiPublicFulfillmentTickRouteImport } from './routes/api/public/fulfillment-tick'
@@ -63,6 +64,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmailPreferencesPrefRoute = EmailPreferencesPrefRouteImport.update({
+  id: '/email-preferences/$pref',
+  path: '/email-preferences/$pref',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrderTierRoute = OrderTierRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/roast': typeof RoastRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/email-preferences/$pref': typeof EmailPreferencesPrefRoute
   '/order/$tier': typeof OrderTierRoute
   '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/roast': typeof RoastRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/email-preferences/$pref': typeof EmailPreferencesPrefRoute
   '/order/$tier': typeof OrderTierRoute
   '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/roast': typeof RoastRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/email-preferences/$pref': typeof EmailPreferencesPrefRoute
   '/order/$tier': typeof OrderTierRoute
   '/orders/$token': typeof OrdersTokenRoute
   '/api/public/fulfillment-tick': typeof ApiPublicFulfillmentTickRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/roast'
     | '/sitemap.xml'
     | '/terms'
+    | '/email-preferences/$pref'
     | '/order/$tier'
     | '/orders/$token'
     | '/api/public/fulfillment-tick'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/roast'
     | '/sitemap.xml'
     | '/terms'
+    | '/email-preferences/$pref'
     | '/order/$tier'
     | '/orders/$token'
     | '/api/public/fulfillment-tick'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/roast'
     | '/sitemap.xml'
     | '/terms'
+    | '/email-preferences/$pref'
     | '/order/$tier'
     | '/orders/$token'
     | '/api/public/fulfillment-tick'
@@ -219,6 +231,7 @@ export interface RootRouteChildren {
   RoastRoute: typeof RoastRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  EmailPreferencesPrefRoute: typeof EmailPreferencesPrefRoute
   OrderTierRoute: typeof OrderTierRoute
   OrdersTokenRoute: typeof OrdersTokenRoute
   ApiPublicFulfillmentTickRoute: typeof ApiPublicFulfillmentTickRoute
@@ -286,6 +299,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/email-preferences/$pref': {
+      id: '/email-preferences/$pref'
+      path: '/email-preferences/$pref'
+      fullPath: '/email-preferences/$pref'
+      preLoaderRoute: typeof EmailPreferencesPrefRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/order/$tier': {
       id: '/order/$tier'
       path: '/order/$tier'
@@ -347,6 +367,7 @@ const rootRouteChildren: RootRouteChildren = {
   RoastRoute: RoastRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  EmailPreferencesPrefRoute: EmailPreferencesPrefRoute,
   OrderTierRoute: OrderTierRoute,
   OrdersTokenRoute: OrdersTokenRoute,
   ApiPublicFulfillmentTickRoute: ApiPublicFulfillmentTickRoute,
