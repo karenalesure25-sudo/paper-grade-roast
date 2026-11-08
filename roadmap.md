@@ -3,9 +3,9 @@
 # Roadmap
 
 ## Focused roast reliability repair
-- [ ] Preserve grading/verification; improve presentation rewrite, tone and structured schema retry guidance.
-- [ ] Run full regressions and automatic compilation; one synthetic live roast and 390/1440 output checks.
-- [ ] Verify saved revision and connected-branch sync where available; no publication or customer operations.
+- [x] Preserve grading/verification; add substantive source-grounded rewrite guidance, exact tone/schema diagnostics and matching evidence wire limits. Strict verifier approval contract clarified after live malformed approval.
+- [x] Full regressions: 190 pass; automatic build OK. One live strong fixture reached A assessment but malformed styled-verifier approval was withheld. Five-section 390/1440 layout QA is explicitly MOCKED, not verified delivery; no further live generation authorized this turn.
+- [ ] Connected main sync: local saved revisions exceed remote main 511ac64; platform synchronization pending, manual Git writes prohibited. No publication or customer operations.
 
 ## Customer-facing copy cleanup
 - [x] Remove public AI wording across pages, errors, email copy, accessibility text, metadata and static assets; preserve internal identifiers and all safeguards.
