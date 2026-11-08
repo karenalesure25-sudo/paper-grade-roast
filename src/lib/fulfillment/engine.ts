@@ -15,7 +15,7 @@ import { isTransient, outageOf, transientBackoffSeconds } from "../ops/guard";
  */
 import type { TierId } from "../products";
 import {
-  buildKeywordReport, missingEssentials, validatePackage,
+  buildKeywordReport, missingEssentials, placeholderKind, validatePackage,
   type FullResume, type KeywordReport, type Package, type SourceFacts, type Violation,
 } from "./validate";
 import type { ModelPort } from "./writer.server";
