@@ -6,7 +6,7 @@ describe("share card", () => {
     for (const g of ["A", "B", "C", "D", "F"] as const) {
       const c = shareCopy(g);
       expect(c.quip).toBe(SHARE_QUIPS[g]);
-      expect(c.url).toBe("https://paper-grade-roast.lovable.app/roast");
+      expect(c.url).toBe("https://kays-career-solutions.com/roast");
       expect(c.text).toContain(c.url);
     }
   });
