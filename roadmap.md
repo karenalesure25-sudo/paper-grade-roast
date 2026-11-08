@@ -2,6 +2,11 @@
 - [x] Metallic-logo signature homepage revision and responsive cross-route verification
 # Roadmap
 
+## Focused roast reliability repair
+- [ ] Preserve grading/verification; improve presentation rewrite, tone and structured schema retry guidance.
+- [ ] Run full regressions and automatic compilation; one synthetic live roast and 390/1440 output checks.
+- [ ] Verify saved revision and connected-branch sync where available; no publication or customer operations.
+
 ## Customer-facing copy cleanup
 - [x] Remove public AI wording across pages, errors, email copy, accessibility text, metadata and static assets; preserve internal identifiers and all safeguards.
 - [x] Verify source sweep and desktop/mobile rendered screens without customer operations; report saved revision and Git sync visibility. Browser-only private-order fixtures; 1280/390/360 widths, no public AI strings, overflow or page errors.

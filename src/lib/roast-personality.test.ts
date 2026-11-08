@@ -112,6 +112,38 @@ describe("one analysis engine, three presentation voices", () => {
     for (const c of cases) expect(checkPersonalityOutput(JSON.stringify(c), SOURCE, assessment()).ok).toBe(false);
   });
 
+  test("schema rejection reports field and unchanged limit without echoing private extra keys", () => {
+    const result = checkPersonalityOutput(JSON.stringify({ ...SECTIONS, glowUp: "x".repeat(501), "private@example.invalid": "private value" }), SOURCE, assessment());
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Overlong field accepted");
+    expect(JSON.parse(result.reason).issues).toContainEqual({ field: "glowUp", code: "too_big", limit: 500 });
+    expect(result.reason).not.toContain("private@example.invalid"); expect(result.reason).not.toContain("private value");
+  });
+
+  test("saved B-grade sign-off severity stays rejected and names only the prohibited word and field", () => {
+    const fixed = { ...assessment(), grade: "B" as const };
+    const result = checkPersonalityOutput(JSON.stringify({ ...SECTIONS, signOff: "Give the vague reporting wording that same energy, bestie." }), SOURCE, fixed);
+    expect(result.ok).toBe(false);
+    if (result.ok) throw new Error("Strong-grade severity accepted");
+    expect(JSON.parse(result.reason)).toMatchObject({ rejected: "strong_grade_tone", field: "signOff", grade: "B", prohibitedSeverity: "vague" });
+    expect(result.reason).not.toContain("reporting wording");
+  });
+
+  test("presentation retry repairs the precise tone/schema issue before independent approval, with two attempts maximum", async () => {
+    for (const bad of [{ ...SECTIONS, vibe: "Those results are weak, bestie." }, { ...SECTIONS, glowUp: "x".repeat(501) }]) {
+      let calls = 0; let verified = 0;
+      const result = await styleVerifiedAssessment(SOURCE, assessment(), "fashion-bestie", {
+        write: async (_s, fixed, _p, feedback) => {
+          expect(fixed.grade).toBe("A"); calls++;
+          if (calls === 1) return JSON.stringify(bad);
+          expect(JSON.parse(feedback ?? "{}").rejected).toBe("vibe" in bad && bad.vibe.includes("weak") ? "strong_grade_tone" : "schema");
+          return JSON.stringify(SECTIONS);
+        }, verify: async () => { verified++; return true; },
+      }, Date.now() + 60_000);
+      expect(calls).toBe(2); expect(verified).toBe(1); expect(result?.grade).toBe("A");
+    }
+  });
+
   test("an independent rejection of invented nonnumeric facts or the wrong voice never releases a roast", async () => {
     let checked = 0;
     const result = await styleVerifiedAssessment(SOURCE, assessment(), "fashion-bestie", {
