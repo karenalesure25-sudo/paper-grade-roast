@@ -120,3 +120,37 @@ export const nudgeOrderRevision = createServerFn({ method: "POST" })
     const { runRevisionByToken } = await import("./fulfillment/service.server");
     return runRevisionByToken(data.token, data.id);
   });
+
+const PrefToken = z.string().regex(/^[a-f0-9]{64}$/);
+
+/** Optional follow-up emails (default off) from the private order page. */
+export const setFollowupConsent = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ token: Token, optIn: z.boolean() }).parse(i))
+  .handler(async ({ data }) => {
+    const { setFollowupConsentByToken } = await import("./fulfillment/service.server");
+    return setFollowupConsentByToken(data.token, data.optIn);
+  });
+
+export const getEmailPreferences = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ pref: PrefToken }).parse(i))
+  .handler(async ({ data }) => {
+    const { preferencesByPref } = await import("./fulfillment/service.server");
+    return preferencesByPref(data.pref);
+  });
+
+export const updateEmailPreferences = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({ pref: PrefToken, optIn: z.boolean() }).parse(i))
+  .handler(async ({ data }) => {
+    const { updatePreferencesByPref } = await import("./fulfillment/service.server");
+    return updatePreferencesByPref(data.pref, data.optIn);
+  });
+
+export const submitOrderFeedback = createServerFn({ method: "POST" })
+  .inputValidator((i: unknown) => z.object({
+    pref: PrefToken, rating: z.number().int().min(1).max(5),
+    comment: z.string().trim().max(1000).optional(), shareOk: z.boolean(),
+  }).parse(i))
+  .handler(async ({ data }) => {
+    const { submitFeedbackByPref } = await import("./fulfillment/service.server");
+    return submitFeedbackByPref(data.pref, data);
+  });
