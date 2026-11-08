@@ -120,8 +120,8 @@ const SCHEMA = {
         completeness: { type: "integer" },
       },
     },
-    strengths: { type: "array", items: { $ref: "#/$defs/item" } },
-    weaknesses: { type: "array", items: { $ref: "#/$defs/item" } },
+    strengths: { type: "array", maxItems: 3, items: { $ref: "#/$defs/item" } },
+    weaknesses: { type: "array", maxItems: 3, items: { $ref: "#/$defs/item" } },
     roast: { type: "string" },
     roast_quote: { type: ["string", "null"] },
     tip: { type: "string" },
@@ -412,7 +412,10 @@ Check every factual statement in: the roast, each strength and weakness point (w
 - anything judges fit to a specific job (no job description was supplied) or promises hiring outcomes
 - a comment is about fonts, colours, layout, or page count (only text was available)
 Opinions about writing quality are allowed if they're reasonable given the text. Do not reject for
-tone alone. Be strict about facts. Give short reasons (no résumé quotes longer than 10 words).`;
+tone alone. Be strict about facts. Give short reasons (no résumé quotes longer than 10 words).
+Verdict contract: approved=true requires reasons=[] exactly. The reasons array is ONLY for
+rejection objections, never approval explanations. If approved=false, provide short rejection
+reasons. An approval with any reasons is malformed and will be rejected.`;
 
 const VERIFIER_SCHEMA = {
   type: "object",

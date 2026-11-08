@@ -43,6 +43,10 @@ test("the neutral request schema communicates existing evidence limits without c
       expect(body.text.format.schema.$defs.item.properties.point).toEqual({ type: "string", minLength: 1, maxLength: 140 });
       expect(body.text.format.schema.$defs.item.properties.quote).toEqual({ type: ["string", "null"], minLength: 6, maxLength: 120 });
       expect(body.model).toBe("openai/gpt-6-astra");
+      expect(body.text.format.schema.properties.strengths.maxItems).toBe(3);
+      expect(body.text.format.schema.properties.weaknesses.maxItems).toBe(3);
+    } else {
+      expect(body.instructions).toContain("approved=true requires reasons=[] exactly");
     }
     const text = body.text.format.name === "roast" ? JSON.stringify(raw) : JSON.stringify({ approved: true, reasons: [] });
     return new Response(`data: ${JSON.stringify({ type: "response.output_text.done", text })}\n\n`);
