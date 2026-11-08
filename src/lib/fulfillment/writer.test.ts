@@ -1,6 +1,10 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { beforeEach, afterEach, describe, expect, test } from "bun:test";
+import { installFakeOps } from "../ops/fake-ops-db";
 import { liveModels } from "./writer.server";
 import type { SourceFacts } from "./validate";
+
+// Explicitly injected ops DB (breaker closed); no global module mock.
+beforeEach(() => { installFakeOps(); });
 
 const originalFetch = globalThis.fetch;
 const originalKey = process.env["LOVABLE_API_KEY"];

@@ -1,5 +1,9 @@
-import { afterEach, expect, test } from "bun:test";
+import { beforeEach, afterEach, expect, test } from "bun:test";
+import { installFakeOps } from "./ops/fake-ops-db";
 import { checkModelOutput, gradeResumeText } from "./roast.server";
+
+// Explicitly injected ops DB (breaker closed); no global module mock.
+beforeEach(() => { installFakeOps(); });
 
 const source = `Synthetic Candidate
 synthetic@example.invalid | 202-555-0100

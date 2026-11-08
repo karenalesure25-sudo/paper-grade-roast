@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, test } from "bun:test";
+import { beforeEach, afterEach, describe, expect, test } from "bun:test";
+import { installFakeOps } from "./ops/fake-ops-db";
 import { gradeAnySource } from "./roast-pipeline.server";
 import { checkModelOutput } from "./roast.server";
 import { buildPersonalityPrompt, checkPersonalityOutput, styleVerifiedAssessment, type Assessment } from "./roast-personality.server";
@@ -11,6 +12,9 @@ import { factsFor, type OrderRow } from "./fulfillment/engine";
 import { buildMessage } from "./fulfillment/notify";
 import { readPersona, savePersona } from "./roast-personas";
 import { clearRoasts, readRoastForOrder, readRoasts, saveRoast, selectRoastForOrder } from "./roast-session";
+
+// Explicitly injected ops DB (breaker closed); no global module mock.
+beforeEach(() => { installFakeOps(); });
 
 const SOURCE = `Jordan Rivera
 jordan@example.test | (312) 555-0182
