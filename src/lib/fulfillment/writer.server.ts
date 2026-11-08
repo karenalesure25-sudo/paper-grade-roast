@@ -83,8 +83,10 @@ async function call(model: string, system: string, user: string): Promise<string
     if (!res.ok) {
       // Status only — never log bodies (could echo customer content).
       console.error("fulfillment model call failed", { status: res.status });
-      throw Object.assign(new Error(`AI ${res.status}`), { retryable: res.status !== 402 });
+      const type = res.status === 403 ? await errorType(res) : null;
+      throw Object.assign(new Error(`AI ${res.status}`), { retryable: res.status !== 402, status: res.status, type });
     }
+    void noteGatewayOk().catch(() => undefined);
     const j = (await res.json()) as {
       output_text?: string;
       output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>;

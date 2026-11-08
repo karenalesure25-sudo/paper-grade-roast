@@ -1,6 +1,7 @@
 import type { PersonaId } from "../roast-personas";
 import type { DeliveredRoast } from "../roast-delivery";
 import { livemodeMatches, modeOf } from "./stripe-mode";
+import { isTransient, outageCode, transientBackoffSeconds } from "../ops/guard";
 /**
  * Fulfillment state machine. I/O is injected (repo, Stripe reader, models) so the
  * exact production logic is exercised by tests with isolated fakes.
