@@ -37,7 +37,7 @@ function memAlerts(items: Array<{ key: string; detail: string }>) {
   const rows = new Map(items.map((i) => [i.key, { ...i, pending: true, attempts: 0, nextAt: 0, token: null as string | null } as Record<string, unknown>]));
   let n = 0;
   const repo: AlertRepo = {
-    async due() { return [...rows.values()].filter((r) => r["pending"] && (r["nextAt"] as number) <= Date.now()).map((r) => ({ key: r["key"] as string, detail: r["detail"] as string, attempts: r["attempts"] as number })); },
+    async due() { return [...rows.values()].filter((r) => r["pending"] && (r["nextAt"] as number) <= Date.now()).map((r) => ({ key: r["key"] as string, detail: r["detail"] as string, attempts: r["attempts"] as number, incident: `inc-${r["key"] as string}` })); },
     async claim(k) { const r = rows.get(k)!; if (r["token"]) return null; r["token"] = `t${++n}`; return r["token"] as string; },
     async finish(k, t, patch) {
       const r = rows.get(k)!; if (r["token"] !== t) return false;
