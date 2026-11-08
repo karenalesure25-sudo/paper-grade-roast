@@ -129,7 +129,8 @@ describe("email templates render", () => {
     for (const [name, t] of Object.entries(ORDER_EMAILS)) {
       const C = t.component as (p: unknown) => React.ReactElement;
       const html = await render(C(t.previewData));
-      expect(html).toContain("/orders/sample");
+      // The owner alert is internal and carries no customer order link.
+      if (name !== "owner-alert") expect(html).toContain("/orders/sample");
       expect(html.toLowerCase()).not.toContain("unsubscribe");
       expect(html).toContain("#ffffff");
       expect(name.length).toBeGreaterThan(0);
