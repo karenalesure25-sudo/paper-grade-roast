@@ -118,11 +118,24 @@ export function RevisionReadyEmail({ firstName, packageName, orderUrl, expires, 
   );
 }
 
+export type OwnerAlertProps = { title?: string; detail?: string; at?: string };
+/** Internal owner notice. Never contains customer names, emails or résumé content. */
+export function OwnerAlertEmail({ title, detail, at }: OwnerAlertProps) {
+  return (
+    <Shell preview="Action may be needed on your site">
+      <Heading style={h1}>Site alert: {title ?? "attention needed"}</Heading>
+      <Text style={p}>{detail ?? "Something needs your attention."}</Text>
+      {at ? <Text style={p}>Raised: {at} (UTC)</Text> : null}
+    </Shell>
+  );
+}
+
 export const ORDER_EMAILS = {
   "order-confirmation": { component: OrderConfirmationEmail, subject: "Payment confirmed — your package is in progress", displayName: "Order confirmation", previewData: { firstName: "Avery", packageName: "Resume Revamp", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", expires: "Nov 21, 2026" } },
   "order-ready": { component: OrderReadyEmail, subject: "Your files are ready", displayName: "Order ready", previewData: { firstName: "Avery", packageName: "Revamp + ATS Optimization", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", hasCoverLetter: true } },
   "revision-ready": { component: RevisionReadyEmail, subject: "Your revised files are ready", displayName: "Revision ready", previewData: { firstName: "Avery", packageName: "Resume Revamp", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", version: 2 } },
   "order-links": { component: OrderLinksEmail, subject: "Your Kay's Career Solutions order links", displayName: "Order link recovery", previewData: { orders: [{ packageName: "Resume Revamp", url: "https://paper-grade-roast.lovable.app/orders/sample", status: "Ready" }] } },
+  "owner-alert": { component: OwnerAlertEmail, subject: "Kay's Career Solutions — site alert", displayName: "Owner alert", previewData: { title: "gateway-outage", detail: "Résumé generation is paused.", at: "2026-11-08T15:00:00Z" } },
 } as const;
 
 export type OrderEmailName = keyof typeof ORDER_EMAILS;

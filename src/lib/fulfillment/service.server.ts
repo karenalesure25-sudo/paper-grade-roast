@@ -24,6 +24,7 @@ import { RECOVERY_LIMITS, requestOrderLinks } from "./recovery";
 import { productionEmailPort } from "./email-transport.server";
 import { PUBLIC_SITE_ORIGIN } from "../site";
 import { livemodeMatches, modeOf, type StripeMode } from "./stripe-mode";
+import { aiGate, checkoutAvailability, flushOwnerAlerts, raiseAlert, tripOutage } from "../ops/ops.server";
 
 const BUCKET = "intake-uploads";
 
@@ -61,6 +62,9 @@ async function sha256(text: string): Promise<string> {
  */
 export async function createOrderCheckout(input: { intakeId: string; template: string; photo?: string | undefined; origin: string; mode: StripeMode; roastPersona?: PersonaId | undefined; roastReceipt?: string | undefined; roastOwner?: string | undefined }) {
   const roastPersona = input.roastPersona === undefined ? undefined : PersonaIdSchema.parse(input.roastPersona);
+  // Fail closed before saving anything new: no payment unless the package can actually be prepared.
+  const health = await checkoutAvailability();
+  if (!health.ok) throw new Error(health.message);
   const layout = RESUME_TEMPLATES.find((t) => t.id === input.template);
   if (!layout) throw new Error("Choose one of the available layouts.");
   if (layout.usesPhoto && !/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(input.photo ?? "")) throw new Error("Confirm a valid photo for this layout before paying.");
@@ -127,6 +131,19 @@ async function checkoutForOrder(order: OrderRow, origin: string) {
   const db = await admin();
   const { createCheckoutSession, getCheckoutSession } = await import("../stripe.server");
   if (order.status !== "awaiting_payment") return { already: true as const, token: order.access_token };
+  const health = await checkoutAvailability();
+  if (!health.ok) {
+    // Close an unpaid open session so it can't be paid during a known outage. Paid/complete is never touched.
+    if (order.stripe_session_id) {
+      const prev = await getCheckoutSession(order.stripe_session_id, modeOf(order));
+      if (prev.payment_status === "paid" || prev.status === "complete") return { already: true as const, token: order.access_token };
+      if (prev.status === "open") {
+        const { expireCheckoutSession } = await import("../stripe.server");
+        await expireCheckoutSession(order.stripe_session_id, modeOf(order)).catch(() => undefined);
+      }
+    }
+    throw new Error(health.message);
+  }
   let attempt = order.checkout_attempt ?? 0;
   if (order.stripe_session_id) {
     const prev = await getCheckoutSession(order.stripe_session_id, modeOf(order));
@@ -327,7 +344,7 @@ export async function runRevisionByToken(token: string, id: string) {
 export async function runByToken(token: string): Promise<PublicStatus | null> {
   const o = await orderByToken(token);
   if (!o) return null;
-  await processOrder(supabaseRepo, liveModels, o.id);
+  if ((await aiGate()) === "closed") await processOrder(supabaseRepo, liveModels, o.id, { onOutage: tripOutage });
   return statusByToken(token);
 }
 
@@ -442,15 +459,25 @@ export async function sweep(limit = 2) {
     .eq("status", "awaiting_payment").not("stripe_session_id", "is", null)
     .gt("created_at", new Date(Date.now() - 2 * 24 * 3600_000).toISOString()).limit(10);
   for (const o of (pending ?? []) as OrderRow[]) await confirm(o).catch(() => undefined);
-  const ids = await supabaseRepo.due(limit);
+  // Known outage: queued paid orders wait (no attempts burned). After the cooldown one order is the probe.
+  const gate = await aiGate();
+  const ids = gate === "open" ? [] : await supabaseRepo.due(gate === "probe" ? 1 : limit);
   const results: string[] = [];
-  for (const id of ids) results.push(await processOrder(supabaseRepo, liveModels, id));
-  const { data: revIds } = await db.rpc("due_revisions" as never, { _limit: limit } as never);
+  for (const id of ids) {
+    const r = await processOrder(supabaseRepo, liveModels, id, { onOutage: tripOutage });
+    results.push(r);
+    if (r === "paused") break;
+    if (r === "failed") await raiseAlert(`order-failed-${id}`, `A paid order (internal id ${id}) could not be completed after all automatic attempts. The customer can retry from their order page without paying again; review it if retries also fail.`);
+  }
+  const { data: revIds } = gate === "closed" && !results.includes("paused")
+    ? await db.rpc("due_revisions" as never, { _limit: limit } as never)
+    : { data: [] as unknown[] };
   const revisions: string[] = [];
   for (const r of (revIds ?? []) as unknown[]) {
     const rid = typeof r === "string" ? r : (r as { due_revisions: string }).due_revisions;
     revisions.push(await processRevision(revisionRepo, liveRevisionModels, rid).catch(() => "error"));
   }
   const emails = await sweepNotifications(10).catch(() => [] as string[]);
-  return { confirmed: (pending ?? []).length, processed: results, revisions, emails };
+  await flushOwnerAlerts().catch(() => undefined);
+  return { gate, confirmed: (pending ?? []).length, processed: results, revisions, emails };
 }
