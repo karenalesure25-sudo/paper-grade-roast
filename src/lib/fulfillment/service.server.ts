@@ -336,7 +336,7 @@ export async function retryRevisionByToken(token: string, id: string) {
 /** Claim-guarded nudge; the background worker processes it too if the tab closes. */
 export async function runRevisionByToken(token: string, id: string) {
   const r = await ownedRevision(token, id);
-  if (r && r.status === "queued") await processRevision(revisionRepo, liveRevisionModels, r.id);
+  if (r && r.status === "queued" && (await aiGate()) === "closed") await processRevision(revisionRepo, liveRevisionModels, r.id);
   return statusByToken(token);
 }
 
