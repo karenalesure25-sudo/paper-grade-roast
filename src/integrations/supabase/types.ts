@@ -187,6 +187,24 @@ export type Database = {
         }
         Relationships: []
       }
+      ops_state: {
+        Row: {
+          data: Json
+          key: string
+          updated_at: string
+        }
+        Insert: {
+          data?: Json
+          key: string
+          updated_at?: string
+        }
+        Update: {
+          data?: Json
+          key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       order_revisions: {
         Row: {
           attempts: number
@@ -438,6 +456,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      ai_breaker_close: { Args: never; Returns: boolean }
+      ai_breaker_gate: {
+        Args: { _probe_lease_seconds: number }
+        Returns: string
+      }
+      ai_breaker_trip: {
+        Args: { _code: string; _cooldown_seconds: number }
+        Returns: boolean
+      }
       claim_fulfillment: {
         Args: { _lease_seconds?: number; _order_id: string }
         Returns: {
@@ -554,6 +581,26 @@ export type Database = {
         Args: { _delivered: string }
         Returns: string
       }
+      ops_alert_claim: {
+        Args: { _key: string; _lease_seconds: number }
+        Returns: string
+      }
+      ops_alert_finish: {
+        Args: { _key: string; _patch: Json; _token: string }
+        Returns: boolean
+      }
+      ops_alert_raise: {
+        Args: { _dedupe_seconds: number; _detail: string; _key: string }
+        Returns: boolean
+      }
+      ops_alerts_due: {
+        Args: { _limit: number }
+        Returns: {
+          attempts: number
+          detail: string
+          key: string
+        }[]
+      }
       purge_expired_fulfillments: { Args: never; Returns: number }
       renew_fulfillment_lease: {
         Args: { _lease_id: string; _lease_seconds?: number; _order_id: string }
@@ -582,6 +629,7 @@ export type Database = {
         Args: { _name: string; _token: string }
         Returns: boolean
       }
+      worker_heartbeat: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
