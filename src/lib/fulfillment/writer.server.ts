@@ -6,6 +6,8 @@
 import type { Certification, FullResume, SourceFacts, Violation } from "./validate";
 import type { Classification, RevisionInput, RevisionModelPort } from "./revision";
 import type { Package } from "./validate";
+import { errorType } from "../ops/guard";
+import { noteGatewayOk } from "../ops/ops.server";
 
 const RESPONSES_URL = "https://ai.gateway.lovable.dev/v1/responses";
 const WRITER_MODEL = "openai/gpt-6-astra";
@@ -83,8 +85,10 @@ async function call(model: string, system: string, user: string): Promise<string
     if (!res.ok) {
       // Status only — never log bodies (could echo customer content).
       console.error("fulfillment model call failed", { status: res.status });
-      throw Object.assign(new Error(`AI ${res.status}`), { retryable: res.status !== 402 });
+      const type = res.status === 403 ? await errorType(res) : null;
+      throw Object.assign(new Error(`AI ${res.status}`), { retryable: res.status !== 402, status: res.status, type });
     }
+    void noteGatewayOk().catch(() => undefined);
     const j = (await res.json()) as {
       output_text?: string;
       output?: Array<{ type?: string; content?: Array<{ type?: string; text?: string }> }>;

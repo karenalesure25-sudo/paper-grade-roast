@@ -285,3 +285,55 @@ describe("simulated complete orders (synthetic data, isolated fakes)", () => {
     expect(rows.get(o.id)!.result).toBeNull();
   });
 });
+
+describe("generation outage handling", () => {
+  function throwing(status: number, type?: string): ModelPort {
+    return {
+      async write() { throw Object.assign(new Error(`AI ${status}`), { status, type }); },
+      async check() { return { approved: true, problems: [] }; },
+    };
+  }
+
+  test("402 hands the attempt back, requeues the paid order and opens the breaker once", async () => {
+    const { repo, rows, ledger } = memRepo(order("revamp", { status: "queued", paid_at: "2026-11-08T00:00:00Z", attempts: 1 }));
+    const trips: string[] = [];
+    expect(await processOrder(repo, throwing(402), "o-revamp", { onOutage: async (c) => { trips.push(c); } })).toBe("paused");
+    const r = rows.get("o-revamp")!;
+    expect(r.status).toBe("queued");
+    expect(r.attempts).toBe(1);
+    expect(r.failure_reason).toBe(null);
+    expect(trips).toEqual(["credits_exhausted"]);
+    expect(ledger).toEqual([]);
+  });
+
+  test("repeated 402s never exhaust attempts or fail a paid order", async () => {
+    const { repo, rows } = memRepo(order("revamp", { status: "queued", paid_at: "2026-11-08T00:00:00Z", max_attempts: 1 }));
+    for (let i = 0; i < 5; i++) expect(await processOrder(repo, throwing(402), "o-revamp")).toBe("paused");
+    expect(rows.get("o-revamp")!.status).toBe("queued");
+    expect(rows.get("o-revamp")!.attempts).toBe(0);
+    // Once credits are back the same paid order completes — no new checkout involved.
+    expect(await processOrder(repo, models(["good"]), "o-revamp")).toBe("ready");
+  });
+
+  test("account-limit 403 pauses; a provider/content 403 does not open the breaker", async () => {
+    const a = memRepo(order("revamp", { status: "queued", paid_at: "x" }));
+    expect(await processOrder(a.repo, throwing(403, "credit_limit_reached"), "o-revamp")).toBe("paused");
+    const b = memRepo(order("revamp", { status: "queued", paid_at: "x", max_attempts: 1 }));
+    expect(await processOrder(b.repo, throwing(403, "permission_error"), "o-revamp")).toBe("failed");
+  });
+
+  test("429 keeps the attempt counted and backs off before the next claim", async () => {
+    const { repo, rows } = memRepo(order("revamp", { status: "queued", paid_at: "x" }));
+    expect(await processOrder(repo, throwing(429), "o-revamp")).toBe("queued");
+    const r = rows.get("o-revamp")!;
+    expect(r.attempts).toBe(1);
+    expect(r.lease_id).toBe(null);
+    expect(new Date(r.locked_until!).getTime()).toBeGreaterThan(Date.now() + 50_000);
+    expect(await repo.claim("o-revamp")).toBe(null);
+  });
+
+  test("429 on the final attempt fails normally (bounded, customer can retry)", async () => {
+    const { repo } = memRepo(order("revamp", { status: "queued", paid_at: "x", max_attempts: 1 }));
+    expect(await processOrder(repo, throwing(429), "o-revamp")).toBe("failed");
+  });
+});

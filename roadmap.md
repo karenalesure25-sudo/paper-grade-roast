@@ -56,3 +56,10 @@
 - [ ] Separate test payment environment (needs isolated test backend/deployment and Stripe test key + matching test prices + test webhook secret; do not replace live credentials). No simulated paid state or customer mutation used.
 - [x] Readiness/concurrency validation: 86 isolated tests pass (189 assertions); preview compiler reports build OK. Browser-only recovery responses at 1280px/390px verify the saved Classic layout remains selected and disabled after refresh, and Start a new intake opens a fresh intake; no page errors. Screenshots: /tmp/browser/purchase-lock/{desktop,mobile}_locked.png and {desktop,mobile}_new_intake.png. These are mocked recovery reads, not evidence of payment-to-delivery or real cookie restoration. No real records, payments or emails were touched.
 - [ ] Activation sequence: obtain Stripe resource access (workspace admin), register/verify live webhook, securely save signing secret, provision matching server-only cron credential and authenticated schedule while paused, then request publication/update of the verified version; only after publication verify unauthorized requests are rejected and activate processing with explicit authorization. Current production runtime readiness remains blocked. Email sender is unconfigured; private links remain the delivery channel.
+
+## Operational safeguards (Nov 8)
+- [x] Shared outage breaker (roast + paid worker), 402 no-retry-burn, 429 backoff
+- [x] Checkout availability guard (new + resumed), expire unpaid open sessions on outage
+- [x] Worker heartbeat + owner alerts (deduped, backoff)
+- [ ] Owner alert recipient — blocked: OWNER_ALERT_EMAIL secret + verified email domain
+- [ ] Activate kcs-fulfillment-sweep — blocked: publish this version first

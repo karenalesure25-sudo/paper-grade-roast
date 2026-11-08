@@ -25,9 +25,12 @@ export const Route = createFileRoute("/api/public/fulfillment-tick")({
       POST: async ({ request }) => {
         const denied = await authorized(request);
         if (denied) return denied;
+        // Heartbeat only after authentication: checkout refuses payment while this goes stale.
+        const { heartbeat } = await import("@/lib/ops/ops.server");
+        await heartbeat();
         const { sweep } = await import("@/lib/fulfillment/service.server");
         const r = await sweep(2);
-        return Response.json({ confirmed: r.confirmed, processed: r.processed.length, emails: r.emails.length });
+        return Response.json({ gate: r.gate, confirmed: r.confirmed, processed: r.processed.length, emails: r.emails.length });
       },
     },
   },
