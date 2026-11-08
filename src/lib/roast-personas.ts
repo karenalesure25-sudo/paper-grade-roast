@@ -5,7 +5,7 @@ export type PersonaId = z.infer<typeof PersonaIdSchema>;
 
 /** Public copy only. Backend style instructions live exclusively in .server.ts. */
 export const ROAST_PERSONAS = [
-  { id: "fashion-bestie", emoji: "💅", name: "Fashion Nova Bestie", description: "Bestie, we’re about to find out if your résumé is giving CEO energy or clearance rack.", preview: "Babe, let’s give those bullet points a promotion-worthy outfit." },
+  { id: "fashion-bestie", emoji: "💅", name: "The Career Bestie", description: "Bestie, we’re about to find out if your résumé is giving CEO energy or clearance rack.", preview: "Babe, let’s give those bullet points a promotion-worthy outfit." },
   { id: "crypto-bro", emoji: "🚀", name: "Hypebeast Crypto Bro", description: "Bro, is your résumé going to the moon or getting liquidated?", preview: "Bro, let’s get your experience off the bench and into the starting lineup." },
   { id: "corporate-demon", emoji: "💀", name: "The Corporate Demon", description: "Your résumé has entered the HR department. Good luck.", preview: "Your bullet points have been invited to a mandatory performance review." },
 ] as const satisfies ReadonlyArray<{ id: PersonaId; emoji: string; name: string; description: string; preview: string }>;
