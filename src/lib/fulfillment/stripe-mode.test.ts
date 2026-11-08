@@ -26,3 +26,4 @@ describe("stripe mode isolation", () => {
   test("test event never matches the live route", () => expect(livemodeMatches("live", false)).toBe(false));
   test("session id prefix marks ledger mode", () => expect(sessionIdMode("cs_test_abc")).toBe("test"));
 });
+// Preview rebuild trigger: test webhook secret was configured (2026-11-08).
