@@ -40,6 +40,9 @@ const RULES = `Hard rules — any breach rejects the package:
 - Every number you write must appear in <source>. If none is given, write a strong bullet without a number.
 - Keep EVERY role, education entry and certification from <source>. Do not drop or merge entries.
 - Copy employer names, job titles, dates, schools and credentials exactly as written in <source>.
+- The "title" headline must be one job title copied exactly from <source> (scratch tier: or the intake targetTitle). Never coin a new headline such as "Operations Professional".
+- Never compute or summarise numbers: no years of experience, totals, averages, counts or percentages that are not written in <source>.
+- Never write the name, email, phone, URLs or any contact details in any field — they are added automatically from <intake>.
 - Skills must be skills/tools stated in <source>.
 - No placeholders, brackets, "TBD", sample names or filler.
 - Do not mention fonts, layout, page count or visual design.

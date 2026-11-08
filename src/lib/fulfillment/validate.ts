@@ -94,6 +94,22 @@ export function hasPlaceholder(value: string): boolean {
   return PLACEHOLDER.test(value);
 }
 
+/** The matched placeholder text (for actionable writer feedback), or null. */
+export function placeholderMatch(value: string): string | null {
+  return PLACEHOLDER.exec(value)?.[0] ?? null;
+}
+
+/** Non-identifying category of a placeholder hit, safe for server logs (never the matched text). */
+export function placeholderKind(match: string): string {
+  const m = match.toLowerCase();
+  if (m.startsWith("[")) return "brackets";
+  if (m.includes("{") || m.includes("}") || m.startsWith("<")) return "template_tag";
+  if (m.includes("example.com")) return "example_domain";
+  if (m.startsWith("555")) return "test_phone";
+  if (/^0+$/.test(m)) return "zeros";
+  return "filler_phrase";
+}
+
 /** Text that is a document instruction rather than résumé content. */
 const INJECTION =
   /(ignore (all|any|previous|prior) (instructions|rules)|system prompt|as an ai\b|you are (chatgpt|an ai)|grade (this|me) (an )?a\b|assistant:)/i;
@@ -189,7 +205,13 @@ export function validatePackage(pkg: Package, facts: SourceFacts): Violation[] {
   }
 
   // Placeholders and leaked document instructions.
-  check(!hasPlaceholder(prose) && !hasPlaceholder(r.name), v, "placeholder", "Output contains placeholder text.");
+  const filler = placeholderMatch(prose) ?? placeholderMatch(r.name);
+  if (filler) {
+    v.push({
+      code: "placeholder",
+      detail: `Output contains placeholder-looking text "${filler}". Remove it; never write email addresses, phone numbers or contact details in résumé fields (they are added automatically).`,
+    });
+  }
   check(!INJECTION.test(prose), v, "injection", "Output repeats instructions found inside the document.");
 
   // Completeness: nothing from the source may be silently dropped.
