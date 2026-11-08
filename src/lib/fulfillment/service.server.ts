@@ -10,7 +10,7 @@ import {
 import { extractDocumentText } from "./extract.server";
 import { orderByToken, revisionRepo, supabaseRepo } from "./repo.server";
 import { buildSnapshotSource } from "./snapshot";
-import { liveModels, liveRevisionModels } from "./writer.server";
+import { liveModels, liveRevisionModels, makeLiveModels } from "./writer.server";
 import {
   answerRevision, minorRevisionState, processRevision, requestRevision, retryRevision, settleStaleRevision,
   MAX_REVISION_RETRIES, type RevisionKind, type RevisionRow,
@@ -24,7 +24,8 @@ import { RECOVERY_LIMITS, requestOrderLinks } from "./recovery";
 import { productionEmailPort } from "./email-transport.server";
 import { PUBLIC_SITE_ORIGIN } from "../site";
 import { livemodeMatches, modeOf, type StripeMode } from "./stripe-mode";
-import { aiGate, checkoutAvailability, flushOwnerAlerts, raiseAlert, tripOutage } from "../ops/ops.server";
+import { acquireProbe, breakerState, checkoutAvailability, finishProbe, flushOwnerAlerts, raiseIncidentAlert } from "../ops/ops.server";
+import type { ProbeCtx } from "../ops/guard";
 
 const BUCKET = "intake-uploads";
 
@@ -165,6 +166,13 @@ async function checkoutForOrder(order: OrderRow, origin: string) {
     if (!latest || latest.stripe_session_id !== s.id) throw new Error("Your checkout changed. Reopen your order page.");
   }
   if (!s.url) throw new Error("Checkout couldn't start. Try again.");
+  // Race recheck: an outage may have opened while this session was being created. Close it before handing it out.
+  const after = await checkoutAvailability();
+  if (!after.ok) {
+    const { expireCheckoutSession } = await import("../stripe.server");
+    await expireCheckoutSession(s.id, modeOf(order)).catch(() => console.error("post-create expire failed", { orderId: order.id }));
+    throw new Error(after.message);
+  }
   return { already: false as const, token: order.access_token, url: s.url };
 }
 
@@ -336,7 +344,8 @@ export async function retryRevisionByToken(token: string, id: string) {
 /** Claim-guarded nudge; the background worker processes it too if the tab closes. */
 export async function runRevisionByToken(token: string, id: string) {
   const r = await ownedRevision(token, id);
-  if (r && r.status === "queued" && (await aiGate()) === "closed") await processRevision(revisionRepo, liveRevisionModels, r.id);
+  // Browser nudges never probe a known outage; the worker owns recovery probes.
+  if (r && r.status === "queued" && (await breakerState()) === "closed") await processRevision(revisionRepo, liveRevisionModels, r.id);
   return statusByToken(token);
 }
 
@@ -344,7 +353,7 @@ export async function runRevisionByToken(token: string, id: string) {
 export async function runByToken(token: string): Promise<PublicStatus | null> {
   const o = await orderByToken(token);
   if (!o) return null;
-  if ((await aiGate()) === "closed") await processOrder(supabaseRepo, liveModels, o.id, { onOutage: tripOutage });
+  if ((await breakerState()) === "closed") await processOrder(supabaseRepo, liveModels, o.id);
   return statusByToken(token);
 }
 
@@ -452,22 +461,69 @@ export function emailDeliveryActive() {
   return productionEmailPort.available();
 }
 
-/** Background sweep: confirm pending payments, process due orders, then send due emails. */
+/**
+ * Persistent failure scan: settles dead final-attempt leases, then raises one owner alert per
+ * failed order/revision round — whether it failed in the worker, a browser nudge, or a stale lease.
+ */
+export async function scanFailures(limit = 50) {
+  const db = await admin();
+  const now = new Date().toISOString();
+  const { data: staleOrders, error: e1 } = await db.from("fulfillment_orders" as never).select("*")
+    .eq("status", "processing").lt("locked_until", now).limit(limit);
+  if (e1) throw new Error("stale order scan failed");
+  for (const o of (staleOrders ?? []) as OrderRow[]) if (o.attempts >= o.max_attempts) await settleStale(supabaseRepo, o);
+  const { data: staleRevs, error: e2 } = await db.from("order_revisions" as never).select("*")
+    .eq("status", "processing").lt("locked_until", now).limit(limit);
+  if (e2) throw new Error("stale revision scan failed");
+  for (const r of (staleRevs ?? []) as RevisionRow[]) await settleStaleRevision(revisionRepo, r);
+
+  const since = new Date(Date.now() - 14 * 24 * 3600_000).toISOString();
+  const { data: failed, error: e3 } = await db.from("fulfillment_orders" as never).select("id,retry_rounds,stripe_mode")
+    .eq("status", "failed").gt("updated_at", since).order("updated_at", { ascending: false }).limit(limit);
+  if (e3) throw new Error("failed order scan failed");
+  let raised = 0;
+  for (const o of (failed ?? []) as Array<{ id: string; retry_rounds: number; stripe_mode: string }>) {
+    if (await raiseIncidentAlert(`order-failed-${o.id}-r${o.retry_rounds}`, `A paid${o.stripe_mode === "test" ? " TEST-mode" : ""} order (internal id ${o.id}) could not be completed after all automatic attempts. The customer can retry from their order page without paying again; review it if retries also fail.`)) raised++;
+  }
+  const { data: failedRevs, error: e4 } = await db.from("order_revisions" as never).select("id,order_id,retry_rounds")
+    .eq("status", "failed").gt("updated_at", since).order("updated_at", { ascending: false }).limit(limit);
+  if (e4) throw new Error("failed revision scan failed");
+  for (const r of (failedRevs ?? []) as Array<{ id: string; order_id: string; retry_rounds: number }>) {
+    if (await raiseIncidentAlert(`revision-failed-${r.id}-r${r.retry_rounds}`, `A revision request (internal id ${r.id}, order ${r.order_id}) could not be completed after all automatic attempts. The customer's delivered files are unchanged; they can retry from their order page.`)) raised++;
+  }
+  return raised;
+}
+
+/** Background sweep: confirm pending payments, process due orders, scan failures, then send due emails. Throws if a core step fails. */
 export async function sweep(limit = 2) {
   const db = await admin();
   const { data: pending } = await db.from("fulfillment_orders" as never).select("*")
     .eq("status", "awaiting_payment").not("stripe_session_id", "is", null)
     .gt("created_at", new Date(Date.now() - 2 * 24 * 3600_000).toISOString()).limit(10);
   for (const o of (pending ?? []) as OrderRow[]) await confirm(o).catch(() => undefined);
-  // Known outage: queued paid orders wait (no attempts burned). After the cooldown one order is the probe.
-  const gate = await aiGate();
-  const ids = gate === "open" ? [] : await supabaseRepo.due(gate === "probe" ? 1 : limit);
+  // Known outage: queued paid orders wait (no attempts burned). After the cooldown one due order owns the probe;
+  // a probe is acquired only when there is real work to send.
+  const gate = await breakerState();
+  const ctx: ProbeCtx = {};
+  let ids: string[] = [];
+  if (gate === "closed") ids = await supabaseRepo.due(limit);
+  else if (gate === "probe_ready") {
+    const candidate = await supabaseRepo.due(1);
+    if (candidate.length) {
+      ctx.probe = (await acquireProbe()) ?? undefined;
+      if (ctx.probe) ids = candidate;
+    }
+  }
   const results: string[] = [];
-  for (const id of ids) {
-    const r = await processOrder(supabaseRepo, liveModels, id, { onOutage: tripOutage });
-    results.push(r);
-    if (r === "paused") break;
-    if (r === "failed") await raiseAlert(`order-failed-${id}`, `A paid order (internal id ${id}) could not be completed after all automatic attempts. The customer can retry from their order page without paying again; review it if retries also fail.`);
+  try {
+    const models = ctx.probe ? makeLiveModels(ctx) : liveModels;
+    for (const id of ids) {
+      const r = await processOrder(supabaseRepo, models, id);
+      results.push(r);
+      if (r === "paused") break;
+    }
+  } finally {
+    await finishProbe(ctx);
   }
   const { data: revIds } = gate === "closed" && !results.includes("paused")
     ? await db.rpc("due_revisions" as never, { _limit: limit } as never)
@@ -475,9 +531,12 @@ export async function sweep(limit = 2) {
   const revisions: string[] = [];
   for (const r of (revIds ?? []) as unknown[]) {
     const rid = typeof r === "string" ? r : (r as { due_revisions: string }).due_revisions;
-    revisions.push(await processRevision(revisionRepo, liveRevisionModels, rid).catch(() => "error"));
+    const out = await processRevision(revisionRepo, liveRevisionModels, rid).catch(() => "error");
+    revisions.push(out);
+    if (out === "paused") break;
   }
+  const alerts = await scanFailures();
   const emails = await sweepNotifications(10).catch(() => [] as string[]);
   await flushOwnerAlerts().catch(() => undefined);
-  return { gate, confirmed: (pending ?? []).length, processed: results, revisions, emails };
+  return { gate, confirmed: (pending ?? []).length, processed: results, revisions, emails, alerts };
 }
