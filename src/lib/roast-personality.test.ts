@@ -177,6 +177,7 @@ describe("one analysis engine, three presentation voices", () => {
       if (name === "personality_verdict") {
         styleChecks++;
         expect(body.instructions).toContain("approved=true requires reasons=[] exactly");
+        expect(body.instructions).toContain("is allowed but OPTIONAL (never require any specific word)");
       }
       const answer = name === "roast" ? RAW : name === "roast_personality" ? JSON.stringify(SECTIONS)
         : name === "personality_verdict" ? JSON.stringify({ approved: true, reasons: ["All claims align with the source."] })
