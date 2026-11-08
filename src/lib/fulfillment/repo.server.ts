@@ -1,7 +1,7 @@
 import { sessionIdMode } from "./stripe-mode";
 /** Supabase-backed repository for fulfillment orders (service role, server-only). */
 import type { TierId } from "../products";
-import type { OrderRow, OrderStatus, Repo } from "./engine";
+import { LEASE_SECONDS, type OrderRow, type OrderStatus, type Repo } from "./engine";
 import { MAX_REVISION_RETRIES, type RetryOutcome, type RevisionRepo, type RevisionRow } from "./revision";
 
 async function admin() {
