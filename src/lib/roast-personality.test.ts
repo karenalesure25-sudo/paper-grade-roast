@@ -141,6 +141,8 @@ describe("one analysis engine, three presentation voices", () => {
     const fixed = { ...assessment(), grade: "B" as const };
     expect(checkPersonalityOutput(JSON.stringify({ ...SECTIONS, signOff: "That shitty wording needs work, bestie, hell." }), SOURCE, fixed).ok).toBe(false);
     expect(checkPersonalityOutput(JSON.stringify({ ...SECTIONS, redFlags: ["Invented problem"] }), SOURCE, fixed).ok).toBe(false);
+    // Live false positive: satire about office culture ("corporate bullshit") is not a fault claim about a strong résumé.
+    expect(checkPersonalityOutput(JSON.stringify({ ...SECTIONS, signOff: "Memo closed, bestie: those shipping results beat corporate bullshit, hell yes." }), SOURCE, fixed).ok).toBe(true);
   });
 
   test("all three persona prompts carry distinct attitude and the required 3–4 profanity rule", () => {
