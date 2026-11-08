@@ -2,7 +2,7 @@ import { PersonaIdSchema, type PersonaId } from "../roast-personas";
 import type { DeliveredRoast } from "../roast-delivery";
 import { verifyRoastReceipt } from "../roast-receipt.server";
 /** Production wiring of the fulfillment engine (Supabase + Stripe + Lovable AI). Server-only. */
-import type { TierId } from "../products";
+import { getTier, type TierId } from "../products";
 import {
   addClarification, confirmPayment, processOrder, retryFailed, settleStale,
   type OrderRow, type StripeSessionView,
@@ -222,6 +222,7 @@ export type PublicStatus = {
   /** True only after the managed sender accepted the "ready" email. */
   emailed: boolean;
   emailActive: boolean;
+  followupOptIn: boolean;
   /** Stripe test-mode order: no real charge, no customer email. */
   testMode: boolean;
   paidAt: string | null;
