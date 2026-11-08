@@ -1,3 +1,4 @@
+import { outageOf } from "../ops/guard";
 /**
  * Post-delivery revisions. I/O injected so tests run the exact logic.
  *
@@ -173,7 +174,7 @@ export async function requestRevision(
   return { ok: false, reason, message: MESSAGES[reason] };
 }
 
-export type RevisionOutcome = RevisionStatus | "busy" | "lease_lost";
+export type RevisionOutcome = RevisionStatus | "busy" | "lease_lost" | "paused";
 
 const NOT_PROVEN = "We couldn’t confirm this as an error we introduced: the quoted text must appear in your delivered file and the correct detail must appear in the résumé or answers you gave us. Nothing was used up. You can quote the exact lines, or send it as your included minor revision.";
 
@@ -254,6 +255,14 @@ export async function processRevision(
     return failedAttempt("Our accuracy checks couldn’t approve a revised version that uses only facts you already gave us. Your original files are unchanged and nothing was used up.");
   } catch (e) {
     if (e instanceof LeaseLost) return "lease_lost";
+    if (outageOf(e)) {
+      // Account-level outage: give the attempt back and requeue (no attempt or retry round used), like paid orders.
+      console.error("revision paused by gateway outage", { id });
+      const done = await repo.finish(claimed.id, lease, {
+        status: "queued", attempts: Math.max(0, claimed.attempts - 1), lease_id: null, locked_until: null, failure_reason: null,
+      });
+      return done ? "paused" : "lease_lost";
+    }
     console.error("revision attempt errored", { id });
     return failedAttempt("We hit a temporary problem preparing your revision. Your original files are unchanged and nothing was used up.");
   }

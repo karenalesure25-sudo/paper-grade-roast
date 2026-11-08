@@ -1,7 +1,7 @@
 import type { PersonaId } from "../roast-personas";
 import type { DeliveredRoast } from "../roast-delivery";
 import { livemodeMatches, modeOf } from "./stripe-mode";
-import { isTransient, outageCode, transientBackoffSeconds } from "../ops/guard";
+import { isTransient, outageOf, transientBackoffSeconds } from "../ops/guard";
 /**
  * Fulfillment state machine. I/O is injected (repo, Stripe reader, models) so the
  * exact production logic is exercised by tests with isolated fakes.
@@ -220,14 +220,14 @@ export async function processOrder(
   } catch (e) {
     if (e instanceof LeaseLost) return "lease_lost";
     const status = (e as { status?: number }).status;
-    const outage = typeof status === "number" ? outageCode(status, (e as { type?: string }).type) : null;
+    const outage = outageOf(e);
     if (outage) {
       // Account-level outage: hand the attempt back (no automatic retries burned), requeue, pause the queue.
       console.error("fulfillment paused by gateway outage", { orderId, status });
       const done = await repo.finish(claimed.id, lease, {
         status: "queued", attempts: Math.max(0, claimed.attempts - 1), locked_until: null, lease_id: null, failure_reason: null,
       });
-      await opts.onOutage?.(outage);
+      if (outage !== "probe_superseded") await opts.onOutage?.(outage);
       return done ? "paused" : "lease_lost";
     }
     if (isTransient(status) && claimed.attempts < claimed.max_attempts) {
