@@ -227,6 +227,21 @@ describe("reservation and consumption", () => {
     expect(await reserve(repo, o, "minor", "Another tweak to the summary wording please.", "key-00000009")).toMatchObject({ ok: false, reason: "already_used" });
   });
 
+  test("lease is renewed before every model call, including the fact check after the scope check", async () => {
+    const o = order(); const { repo } = memRepo(o);
+    const r = await reserve(repo, o); if (!r.ok) throw new Error("reserve");
+    let renews = 0; let calls = 0;
+    const renew = repo.renew.bind(repo);
+    repo.renew = async (id, lease) => { renews++; return renew(id, lease); };
+    const m = models();
+    for (const k of ["classify", "revise", "scopeCheck", "check"] as const) {
+      const f = (m as unknown as Record<string, (...a: unknown[]) => unknown>)[k]!.bind(m);
+      (m as unknown as Record<string, unknown>)[k] = (...a: unknown[]) => { calls++; expect(renews).toBe(calls); return f(...a); };
+    }
+    expect(await processRevision(repo, m, r.id)).toBe("ready");
+    expect(calls).toBe(4);
+  });
+
   test("failure after max attempts keeps original, allows bounded retry, and does not consume", async () => {
     const o = order(); const { repo, rows } = memRepo(o);
     const r = await reserve(repo, o); if (!r.ok) throw new Error("reserve");

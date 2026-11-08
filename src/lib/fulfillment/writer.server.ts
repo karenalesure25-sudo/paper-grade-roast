@@ -8,11 +8,12 @@ import type { Classification, RevisionInput, RevisionModelPort } from "./revisio
 import type { Package } from "./validate";
 import { errorType, outageCode, outageOf, type ProbeCtx } from "../ops/guard";
 import { settleProbe, tripOutage } from "../ops/ops.server";
+import { MODEL_CALL_TIMEOUT_MS } from "./engine";
 
 const RESPONSES_URL = "https://ai.gateway.lovable.dev/v1/responses";
 const WRITER_MODEL = "openai/gpt-6-astra";
 const CHECKER_MODEL = "openai/gpt-6-astra";
-const TIMEOUT_MS = 120_000;
+const TIMEOUT_MS = MODEL_CALL_TIMEOUT_MS;
 
 export type WriterOutput =
   | { kind: "package"; resume: Omit<FullResume, "name" | "email" | "phone">; coverLetter?: string; keywords: string[] }

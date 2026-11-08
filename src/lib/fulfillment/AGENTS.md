@@ -1,0 +1,1 @@
+- Paid generation (orders and revisions) runs only in the scheduled worker, never in a browser-attached request; the lease is one model-call timeout plus grace and is renewed before every model call — a closed tab cancels its request and would strand the order.

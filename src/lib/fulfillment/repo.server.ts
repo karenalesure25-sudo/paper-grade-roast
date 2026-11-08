@@ -1,7 +1,7 @@
 import { sessionIdMode } from "./stripe-mode";
 /** Supabase-backed repository for fulfillment orders (service role, server-only). */
 import type { TierId } from "../products";
-import type { OrderRow, OrderStatus, Repo } from "./engine";
+import { LEASE_SECONDS, type OrderRow, type OrderStatus, type Repo } from "./engine";
 import { MAX_REVISION_RETRIES, type RetryOutcome, type RevisionRepo, type RevisionRow } from "./revision";
 
 async function admin() {
@@ -39,13 +39,13 @@ export const supabaseRepo: Repo = {
   },
   async renew(id, leaseId) {
     const db = await admin();
-    const { data, error } = await db.rpc("renew_fulfillment_lease" as never, { _order_id: id, _lease_id: leaseId, _lease_seconds: 600 } as never);
+    const { data, error } = await db.rpc("renew_fulfillment_lease" as never, { _order_id: id, _lease_id: leaseId, _lease_seconds: LEASE_SECONDS } as never);
     if (error) throw new Error("lease renew failed");
     return data === true;
   },
   async claim(id) {
     const db = await admin();
-    const { data, error } = await db.rpc("claim_fulfillment" as never, { _order_id: id, _lease_seconds: 600 } as never);
+    const { data, error } = await db.rpc("claim_fulfillment" as never, { _order_id: id, _lease_seconds: LEASE_SECONDS } as never);
     if (error) throw new Error("claim failed");
     const rows = (data ?? []) as OrderRow[];
     return rows[0] ?? null;
@@ -96,7 +96,7 @@ export const revisionRepo: RevisionRepo = {
   },
   async claim(id) {
     const db = await admin();
-    const { data, error } = await db.rpc("claim_revision" as never, { _id: id, _lease_seconds: 600 } as never);
+    const { data, error } = await db.rpc("claim_revision" as never, { _id: id, _lease_seconds: LEASE_SECONDS } as never);
     if (error) throw new Error("revision claim failed");
     return ((data ?? []) as RevisionRow[])[0] ?? null;
   },
@@ -108,7 +108,7 @@ export const revisionRepo: RevisionRepo = {
   },
   async renew(id, lease) {
     const db = await admin();
-    const { data, error } = await db.from(RV).update({ locked_until: new Date(Date.now() + 600_000).toISOString() } as never)
+    const { data, error } = await db.from(RV).update({ locked_until: new Date(Date.now() + LEASE_SECONDS * 1000).toISOString() } as never)
       .eq("id", id).eq("status", "processing").eq("lease_id", lease).select("id").maybeSingle();
     if (error) throw new Error("revision renew failed");
     return Boolean(data);
