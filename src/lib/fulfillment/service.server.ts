@@ -346,19 +346,21 @@ export async function retryRevisionByToken(token: string, id: string) {
   return status && res && !res.ok ? { ...status, notice: res.message } : status;
 }
 
-/** Claim-guarded nudge; the background worker processes it too if the tab closes. */
+/**
+ * Browser nudge: status read only. Paid generation never runs inside a page-attached request —
+ * a closed tab or navigation cancels that request (and its in-flight model call), stranding the
+ * lease. The scheduled worker (every 2 minutes) owns all processing.
+ */
 export async function runRevisionByToken(token: string, id: string) {
   const r = await ownedRevision(token, id);
-  // Browser nudges never probe a known outage; the worker owns recovery probes.
-  if (r && r.status === "queued" && (await breakerState()) === "closed") await processRevision(revisionRepo, liveRevisionModels, r.id);
+  if (!r) return statusByToken(token);
   return statusByToken(token);
 }
 
-/** Runs one processing attempt if due (claim-guarded). */
+/** Browser nudge: status read only; the scheduled worker processes due orders. */
 export async function runByToken(token: string): Promise<PublicStatus | null> {
   const o = await orderByToken(token);
   if (!o) return null;
-  if ((await breakerState()) === "closed") await processOrder(supabaseRepo, liveModels, o.id);
   return statusByToken(token);
 }
 
