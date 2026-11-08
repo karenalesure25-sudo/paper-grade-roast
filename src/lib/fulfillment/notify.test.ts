@@ -127,6 +127,8 @@ describe("email templates render", () => {
     const { render } = await import("@react-email/render");
     const { ORDER_EMAILS } = await import("../order-emails/templates");
     for (const [name, t] of Object.entries(ORDER_EMAILS)) {
+      // Commercial opt-in follow-ups carry their own unsubscribe and no order link (see followups.test.ts).
+      if ("purpose" in t && t.purpose === "commercial") continue;
       const C = t.component as (p: unknown) => React.ReactElement;
       const html = await render(C(t.previewData));
       // The owner alert is internal and carries no customer order link.
