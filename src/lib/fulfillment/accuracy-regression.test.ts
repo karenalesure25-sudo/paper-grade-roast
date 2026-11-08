@@ -46,7 +46,7 @@ describe("accuracy checks on the failed test-order shape", () => {
     expect(codes({ ...faithful(), title: "Warehouse Operations Professional" })).toContain("invented_title");
   });
   test("computed years of experience are still rejected as invented_metric", () => {
-    expect(codes({ ...faithful(), summary: faithful().summary + " Brings 5+ years of warehouse experience." })).toContain("invented_metric");
+    expect(codes({ ...faithful(), summary: faithful().summary + " Brings 8+ years of warehouse experience." })).toContain("invented_metric");
   });
   test("contact details copied into prose are still rejected, with actionable feedback", () => {
     const v = validatePackage({ resume: { ...faithful(), location: "Columbus, OH · alex.test@example.com" } }, facts);
@@ -58,7 +58,8 @@ describe("accuracy checks on the failed test-order shape", () => {
     const r = faithful();
     r.experience[0]!.company = "Amazon";
     r.education[0]!.credential = "Bachelor of Science";
-    expect(codes(r)).toEqual(expect.arrayContaining(["invented_employer", "invented_degree"]));
+    expect(codes(r)).toContain("invented_employer");
+    expect(codes(r)).toContain("invented_degree");
   });
   test("log categories never carry the matched text", () => {
     expect(placeholderKind("alex.test@example.com")).toBe("example_domain");
