@@ -456,11 +456,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      ai_breaker_acquire_probe: {
+        Args: { _lease_seconds: number }
+        Returns: string
+      }
       ai_breaker_close: { Args: never; Returns: boolean }
+      ai_breaker_close_probe: { Args: { _token: string }; Returns: boolean }
       ai_breaker_gate: {
         Args: { _probe_lease_seconds: number }
         Returns: string
       }
+      ai_breaker_release_probe: { Args: { _token: string }; Returns: boolean }
+      ai_breaker_state: { Args: never; Returns: string }
       ai_breaker_trip: {
         Args: { _code: string; _cooldown_seconds: number }
         Returns: boolean
@@ -593,11 +600,24 @@ export type Database = {
         Args: { _dedupe_seconds: number; _detail: string; _key: string }
         Returns: boolean
       }
+      ops_alert_raise_once: {
+        Args: { _detail: string; _key: string }
+        Returns: boolean
+      }
       ops_alerts_due: {
         Args: { _limit: number }
         Returns: {
           attempts: number
           detail: string
+          key: string
+        }[]
+      }
+      ops_alerts_due_v2: {
+        Args: { _limit: number }
+        Returns: {
+          attempts: number
+          detail: string
+          incident: string
           key: string
         }[]
       }
