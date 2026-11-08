@@ -6,7 +6,7 @@ import { followupEligible, type FollowupOrder } from "./followups";
 import { ORDER_EMAILS } from "../order-emails/templates";
 import { createLovableEmailPort, marketingEmailPort } from "./email-transport.server";
 
-const ORIGIN = "https://paper-grade-roast.lovable.app";
+const ORIGIN = "https://kays-career-solutions.com";
 const TOKEN = "11111111-1111-4111-8111-111111111111";
 const PREF = "a".repeat(64);
 const DELIVERED = "2026-10-22T12:00:00Z";

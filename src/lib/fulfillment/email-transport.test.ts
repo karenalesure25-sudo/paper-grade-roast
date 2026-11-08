@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { EmailAPIError } from "@lovable.dev/email-js";
 import { createLovableEmailPort, mapEmailError } from "./email-transport.server";
 
-const msg = { template: "order-ready" as const, to: "avery@kcs-test.dev", data: { firstName: "Avery", orderUrl: "https://paper-grade-roast.lovable.app/orders/x" }, idempotencyKey: "order-ready-o1" };
+const msg = { template: "order-ready" as const, to: "avery@kcs-test.dev", data: { firstName: "Avery", orderUrl: "https://kays-career-solutions.com/orders/x" }, idempotencyKey: "order-ready-o1" };
 
 describe("managed email adapter", () => {
   test("disabled without a configured sender domain; nothing sent", async () => {
@@ -24,7 +24,7 @@ describe("managed email adapter", () => {
     expect(s.opts["idempotencyKey"]).toBe("order-ready-o1");
     expect(s.payload["sender_domain"]).toBe("notify.example.test");
     expect(s.payload["purpose"]).toBe("transactional");
-    expect(String(s.payload["html"])).toContain("https://paper-grade-roast.lovable.app/orders/x");
+    expect(String(s.payload["html"])).toContain("https://kays-career-solutions.com/orders/x");
   });
 
   test("error mapping", () => {

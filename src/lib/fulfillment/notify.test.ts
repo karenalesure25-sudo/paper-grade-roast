@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { backoffSeconds, buildMessage, deliverNotification, MAX_NOTIFY_ATTEMPTS, type EmailMessage, type EmailPort, type EmailResult, type NotificationKind, type NotificationState, type NotifyRepo } from "./notify";
 import type { OrderRow } from "./engine";
 
-const ORIGIN = "https://paper-grade-roast.lovable.app";
+const ORIGIN = "https://kays-career-solutions.com";
 function order(over: Partial<OrderRow> = {}): OrderRow & { notifications: Record<string, NotificationState> } {
   return {
     id: "o1", access_token: "11111111-1111-4111-8111-111111111111", tier: "bundle", email: "avery@kcs-test.dev", template: "classic",

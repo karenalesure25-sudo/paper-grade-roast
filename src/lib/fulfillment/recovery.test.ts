@@ -14,7 +14,7 @@ function deps(orders: Record<string, Array<{ access_token: string; tier: string;
     },
     ordersFor: async (e) => orders[e] ?? [],
     port: { available: () => available, send: async (m) => { sent.push(m); return { status: "sent" }; } },
-    origin: "https://paper-grade-roast.lovable.app",
+    origin: "https://kays-career-solutions.com",
     now: () => new Date("2026-10-22T01:00:00Z"),
   };
   return { d, sent, log };
@@ -37,7 +37,7 @@ describe("lost-link recovery", () => {
     const a = deps(known);
     await requestOrderLinks("avery@kcs-test.dev", "1.1.1.1", a.d);
     expect(a.sent[0]!.to).toBe("avery@kcs-test.dev");
-    expect(JSON.stringify(a.sent[0]!.data)).toContain("https://paper-grade-roast.lovable.app/orders/tok-1");
+    expect(JSON.stringify(a.sent[0]!.data)).toContain("https://kays-career-solutions.com/orders/tok-1");
   });
 
   test("rate limited per email and per IP", async () => {

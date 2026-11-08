@@ -15,4 +15,4 @@ Allow: /
 Disallow: /orders/
 Disallow: /api/
 
-Sitemap: https://paper-grade-roast.lovable.app/sitemap.xml
+Sitemap: https://kays-career-solutions.com/sitemap.xml

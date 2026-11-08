@@ -342,9 +342,9 @@ describe("revision ready email", () => {
     };
     const sent: EmailMessage[] = [];
     const port = { available: () => true, async send(m: EmailMessage) { sent.push(m); return { status: "sent" as const }; } };
-    expect(await deliverNotification(repo, port, "o1", "revision:rev-a", "https://paper-grade-roast.lovable.app")).toBe("sent");
-    expect(await deliverNotification(repo, port, "o1", "revision:rev-a", "https://paper-grade-roast.lovable.app")).toBe("busy");
-    expect(await deliverNotification(repo, port, "o1", "revision:rev-b", "https://paper-grade-roast.lovable.app")).toBe("sent");
+    expect(await deliverNotification(repo, port, "o1", "revision:rev-a", "https://kays-career-solutions.com")).toBe("sent");
+    expect(await deliverNotification(repo, port, "o1", "revision:rev-a", "https://kays-career-solutions.com")).toBe("busy");
+    expect(await deliverNotification(repo, port, "o1", "revision:rev-b", "https://kays-career-solutions.com")).toBe("sent");
     expect(sent.map((m) => m.idempotencyKey)).toEqual(["revision-ready-rev-a", "revision-ready-rev-b"]);
     expect(sent[0]!.template).toBe("revision-ready");
     expect(buildMessage(o, "ready", "https://x").idempotencyKey).toBe("order-ready-o1");
