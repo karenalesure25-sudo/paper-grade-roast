@@ -204,8 +204,8 @@ export async function processOrder(
   repo: Repo,
   models: ModelPort,
   orderId: string,
-  opts: { exportCheck?: ExportCheck } = {},
-): Promise<OrderStatus | "busy" | "lease_lost"> {
+  opts: { exportCheck?: ExportCheck; onOutage?: (code: string) => Promise<void> } = {},
+): Promise<OrderStatus | "busy" | "lease_lost" | "paused"> {
   const claimed = await repo.claim(orderId);
   if (!claimed) return "busy";
   const lease = claimed.lease_id;
@@ -218,6 +218,25 @@ export async function processOrder(
     outcome = await generateValidated(factsFor(claimed), models, { ...opts, beforeCall });
   } catch (e) {
     if (e instanceof LeaseLost) return "lease_lost";
+    const status = (e as { status?: number }).status;
+    const outage = typeof status === "number" ? outageCode(status, (e as { type?: string }).type) : null;
+    if (outage) {
+      // Account-level outage: hand the attempt back (no automatic retries burned), requeue, pause the queue.
+      console.error("fulfillment paused by gateway outage", { orderId, status });
+      const done = await repo.finish(claimed.id, lease, {
+        status: "queued", attempts: Math.max(0, claimed.attempts - 1), locked_until: null, lease_id: null, failure_reason: null,
+      });
+      await opts.onOutage?.(outage);
+      return done ? "paused" : "lease_lost";
+    }
+    if (isTransient(status) && claimed.attempts < claimed.max_attempts) {
+      // Rate limit / transient: keep the attempt counted, but back off before the next claim.
+      const done = await repo.finish(claimed.id, lease, {
+        status: "processing", lease_id: null, failure_reason: null,
+        locked_until: new Date(Date.now() + transientBackoffSeconds(claimed.attempts) * 1000).toISOString(),
+      });
+      return done ? "queued" : "lease_lost";
+    }
     console.error("fulfillment attempt errored", { orderId });
     return finishFailedAttempt(repo, claimed, lease, "We hit a temporary problem writing your package.");
   }
