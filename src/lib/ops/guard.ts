@@ -23,6 +23,17 @@ export function outageCode(status: number, type?: string | null): string | null 
   return null;
 }
 
+/** Reads only the gateway's error `type` field (never logs or returns the body). */
+export async function errorType(res: Response): Promise<string | null> {
+  try {
+    const j = (await res.clone().json()) as { type?: unknown; error?: { type?: unknown } };
+    const t = j.type ?? j.error?.type;
+    return typeof t === "string" ? t.slice(0, 60) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function isTransient(status: number | undefined): boolean {
   return status === 429 || (typeof status === "number" && status >= 500);
 }

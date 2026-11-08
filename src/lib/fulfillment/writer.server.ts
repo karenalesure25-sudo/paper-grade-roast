@@ -6,6 +6,8 @@
 import type { Certification, FullResume, SourceFacts, Violation } from "./validate";
 import type { Classification, RevisionInput, RevisionModelPort } from "./revision";
 import type { Package } from "./validate";
+import { errorType } from "../ops/guard";
+import { noteGatewayOk } from "../ops/ops.server";
 
 const RESPONSES_URL = "https://ai.gateway.lovable.dev/v1/responses";
 const WRITER_MODEL = "openai/gpt-6-astra";
