@@ -44,7 +44,7 @@ function assessment(): Assessment {
 }
 
 const SECTIONS: PersonalitySections = {
-  vibe: "Bestie, those shipping results are dressed for the promotion meeting.",
+  vibe: "Damn bestie, those shipping results showed up dressed for the promotion meeting.",
   redFlags: [], glowUp: "Babe, the turnover achievement deserves the opening spot; that’s optional polish.",
   rewrite: { before: "Reduced order fulfillment time by 32% by redesigning pick routes across 3 warehouses.", after: "Redesigned pick routes across 3 warehouses, reducing order fulfillment time by 32%." },
   ats: "Bestie, Excel and scheduling are clearly named skills, and the experience and education headings make the text easy to follow.",
@@ -114,6 +114,37 @@ describe("one analysis engine, three presentation voices", () => {
       { ...SECTIONS, glowUp: "x".repeat(501) },
     ];
     for (const c of cases) expect(checkPersonalityOutput(JSON.stringify(c), SOURCE, assessment()).ok).toBe(false);
+  });
+
+  test("profanity: clean roast rejected, 1–2 permitted swears accepted, excess and censored rejected, rewrite stays professional", () => {
+    const run = (x: object) => checkPersonalityOutput(JSON.stringify(x), SOURCE, assessment());
+    const clean = run({ ...SECTIONS, vibe: "Bestie, those shipping results showed up dressed for the promotion meeting." });
+    expect(clean.ok).toBe(false);
+    if (clean.ok) throw new Error("clean accepted");
+    expect(JSON.parse(clean.reason).rejected).toBe("profanity_missing");
+    expect(run({ ...SECTIONS, signOff: "Those shipping results are hot as hell, bestie—let the turnover win join them." }).ok).toBe(true);
+    for (const word of ["WTF", "BS", "shit", "hell"]) expect(run({ ...SECTIONS, vibe: `Bestie, no ${word} here: those shipping results showed up dressed for the promotion meeting.` }).ok).toBe(true);
+    const excess = run({ ...SECTIONS, signOff: "Damn, those results are hot as hell and no BS, bestie." });
+    expect(excess.ok).toBe(false);
+    if (excess.ok) throw new Error("excess accepted");
+    expect(JSON.parse(excess.reason)).toMatchObject({ rejected: "profanity_excess", found: 4 });
+    expect(run({ ...SECTIONS, vibe: "F**k bestie, those shipping results showed up dressed." }).ok).toBe(false);
+    expect(run({ ...SECTIONS, vibe: "Fucking bestie, those shipping results showed up dressed." }).ok).toBe(false);
+    const rw = run({ ...SECTIONS, rewrite: { ...SECTIONS.rewrite!, after: "Redesigned damn pick routes across 3 warehouses, reducing order fulfillment time by 32%." } });
+    expect(rw.ok).toBe(false);
+    if (rw.ok) throw new Error("rewrite accepted");
+    expect(JSON.parse(rw.reason).rejected).toBe("rewrite_unprofessional");
+  });
+
+  test("all three persona prompts carry distinct attitude and the required restrained profanity rule", () => {
+    const voices = { "fashion-bestie": "group-chat", "crypto-bro": "sneaker-drop", "corporate-demon": "HR Slack" } as const;
+    for (const [id, marker] of Object.entries(voices)) {
+      const p = buildPersonalityPrompt(id as keyof typeof voices, SOURCE, assessment()).instructions;
+      expect(p).toContain(marker);
+      expect(p).toContain("At least one is REQUIRED; more than two is rejected");
+      expect(p).toContain("NEVER put any swear word or slang in rewrite.after");
+      expect(p).toContain("damn, hell, shit");
+    }
   });
 
   test("schema rejection reports field and unchanged limit without echoing private extra keys", () => {
