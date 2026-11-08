@@ -44,6 +44,8 @@ export function createLovableEmailPort(env: () => Env, send: Sender = sendLovabl
       if (!c) return { status: "unconfigured" };
       const entry = ORDER_EMAILS[msg.template];
       if (!entry) return { status: "permanent", code: "unknown_template" };
+      // Commercial follow-ups are never sent as app (transactional) email.
+      if ("purpose" in entry && entry.purpose === "commercial") return { status: "unconfigured" };
       const el = createElement(entry.component as never, msg.data as never);
       const [html, text] = await Promise.all([render(el), render(el, { plainText: true })]);
       try {
@@ -66,3 +68,13 @@ export const productionEmailPort: EmailPort = createLovableEmailPort(() => ({
   fromDomain: process.env["EMAIL_FROM_DOMAIN"],
   apiKey: process.env["LOVABLE_API_KEY"],
 }));
+
+/**
+ * Commercial follow-ups (opt-in review/share request, interview check-in) need a dedicated
+ * marketing-email provider with unsubscribe compliance. None is configured, so this port is
+ * disabled: nothing is claimed, no attempts are consumed, and nothing is sent.
+ */
+export const marketingEmailPort: EmailPort = {
+  available: () => false,
+  send: async () => ({ status: "unconfigured" }),
+};

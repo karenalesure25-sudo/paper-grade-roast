@@ -2,7 +2,7 @@ import { PersonaIdSchema, type PersonaId } from "../roast-personas";
 import type { DeliveredRoast } from "../roast-delivery";
 import { verifyRoastReceipt } from "../roast-receipt.server";
 /** Production wiring of the fulfillment engine (Supabase + Stripe + Lovable AI). Server-only. */
-import type { TierId } from "../products";
+import { getTier, type TierId } from "../products";
 import {
   addClarification, confirmPayment, processOrder, retryFailed, settleStale,
   type OrderRow, type StripeSessionView,
@@ -21,7 +21,7 @@ import { originalRoastForDelivery } from "./roast-delivery";
 import { assertPurchaseSelection, recoveredPurchaseSelection } from "./purchase-selection";
 import { deliverNotification, type NotificationKind, type NotificationState, type NotifyRepo } from "./notify";
 import { RECOVERY_LIMITS, requestOrderLinks } from "./recovery";
-import { productionEmailPort } from "./email-transport.server";
+import { marketingEmailPort, productionEmailPort } from "./email-transport.server";
 import { PUBLIC_SITE_ORIGIN } from "../site";
 import { livemodeMatches, modeOf, type StripeMode } from "./stripe-mode";
 import { acquireProbe, breakerState, checkoutAvailability, finishProbe, flushOwnerAlerts, raiseIncidentAlert } from "../ops/ops.server";
@@ -222,6 +222,7 @@ export type PublicStatus = {
   /** True only after the managed sender accepted the "ready" email. */
   emailed: boolean;
   emailActive: boolean;
+  followupOptIn: boolean;
   /** Stripe test-mode order: no real charge, no customer email. */
   testMode: boolean;
   paidAt: string | null;
@@ -280,6 +281,7 @@ function toPublic(o: OrderRow, revisions: RevisionRow[] = []): PublicStatus {
     ...(o.status === "ready" && o.result ? { checks: o.result.checks } : {}),
     emailed: ((o as OrderRow & { notifications?: Record<string, NotificationState> }).notifications?.["ready"]?.outcome) === "sent",
     emailActive: modeOf(o) === "live" && productionEmailPort.available(),
+    followupOptIn: (o as OrderRow & { followup_opt_in?: boolean }).followup_opt_in === true && !(o as OrderRow & { followup_unsubscribed_at?: string | null }).followup_unsubscribed_at,
     testMode: modeOf(o) === "test",
     paidAt: o.paid_at, expiresAt: o.expires_at ?? null,
     deliveredAt: o.delivered_at ?? null,
@@ -428,6 +430,13 @@ export async function sweepNotifications(limit = 10) {
     if (!o || modeOf(o) === "test") continue;
     out.push(await deliverNotification(notifyRepo, productionEmailPort, r.order_id, r.kind, PUBLIC_SITE_ORIGIN).catch(() => "retry" as const));
   }
+  // Opt-in commercial follow-ups use their own (currently disabled) port; never the app-email sender.
+  if (marketingEmailPort.available()) {
+    const { data: fu } = await db.rpc("due_followups" as never, { _limit: limit } as never);
+    for (const r of (fu ?? []) as Array<{ order_id: string; kind: NotificationKind }>) {
+      out.push(await deliverNotification(notifyRepo, marketingEmailPort, r.order_id, r.kind, PUBLIC_SITE_ORIGIN).catch(() => "retry" as const));
+    }
+  }
   return out;
 }
 
@@ -539,4 +548,58 @@ export async function sweep(limit = 2) {
   const emails = await sweepNotifications(10).catch(() => [] as string[]);
   await flushOwnerAlerts().catch(() => undefined);
   return { gate, confirmed: (pending ?? []).length, processed: results, revisions, emails, alerts };
+}
+
+// ---- Optional follow-up consent (default off) and private feedback ----
+type ConsentRow = { id: string; stripe_mode: string; paid_at: string | null; followup_opt_in: boolean; followup_unsubscribed_at: string | null; tier: string; status: string };
+
+/** Order page (private access token). Only paid live orders can opt in; test orders never get follow-ups. */
+export async function setFollowupConsentByToken(token: string, optIn: boolean) {
+  const db = await admin();
+  const { data } = await db.from("fulfillment_orders" as never).select("id,stripe_mode,paid_at").eq("access_token", token).gt("expires_at", new Date().toISOString()).maybeSingle();
+  const o = data as Pick<ConsentRow, "id" | "stripe_mode" | "paid_at"> | null;
+  if (!o) return { ok: false as const, reason: "not_found" };
+  if (o.stripe_mode !== "live" || !o.paid_at) return { ok: false as const, reason: "not_eligible" };
+  await writeConsent(o.id, optIn);
+  return { ok: true as const, optIn };
+}
+
+async function writeConsent(id: string, optIn: boolean) {
+  const db = await admin();
+  const now = new Date().toISOString();
+  const patch = optIn ? { followup_opt_in: true, followup_opt_in_at: now, followup_unsubscribed_at: null } : { followup_opt_in: false, followup_unsubscribed_at: now };
+  const { error } = await db.from("fulfillment_orders" as never).update(patch as never).eq("id", id);
+  if (error) throw new Error("consent update failed");
+}
+
+async function byPref(pref: string) {
+  const db = await admin();
+  const { data } = await db.from("fulfillment_orders" as never).select("id,stripe_mode,paid_at,followup_opt_in,followup_unsubscribed_at,tier,status").eq("pref_token", pref).maybeSingle();
+  return data as ConsentRow | null;
+}
+
+/** Email preference page (separate pref token): no PII, no order contents, no file access. */
+export async function preferencesByPref(pref: string) {
+  const o = await byPref(pref);
+  if (!o) return null;
+  const db = await admin();
+  const { data: fb } = await db.from("order_feedback" as never).select("rating").eq("order_id", o.id).maybeSingle();
+  return { optedIn: o.followup_opt_in && !o.followup_unsubscribed_at, packageName: getTier(o.tier)?.name ?? "your package", feedbackGiven: Boolean(fb), canGiveFeedback: o.status === "ready" && o.stripe_mode === "live" && Boolean(o.paid_at) };
+}
+
+export async function updatePreferencesByPref(pref: string, optIn: boolean) {
+  const o = await byPref(pref);
+  if (!o) return { ok: false as const };
+  if (optIn && (o.stripe_mode !== "live" || !o.paid_at)) return { ok: false as const };
+  await writeConsent(o.id, optIn);
+  return { ok: true as const, optIn };
+}
+
+export async function submitFeedbackByPref(pref: string, input: { rating: number; comment?: string | undefined; shareOk: boolean }) {
+  const o = await byPref(pref);
+  if (!o || o.status !== "ready" || o.stripe_mode !== "live" || !o.paid_at) return { ok: false as const };
+  const db = await admin();
+  const { error } = await db.from("order_feedback" as never).upsert({ order_id: o.id, rating: input.rating, comment: input.comment?.trim() || null, share_ok: input.shareOk, updated_at: new Date().toISOString() } as never);
+  if (error) throw new Error("feedback save failed");
+  return { ok: true as const };
 }
