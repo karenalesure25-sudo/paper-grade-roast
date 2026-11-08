@@ -133,8 +133,8 @@ const SCHEMA = {
       additionalProperties: false,
       required: ["point", "quote", "missing"],
       properties: {
-        point: { type: "string" },
-        quote: { type: ["string", "null"] },
+        point: { type: "string", minLength: 1, maxLength: 140 },
+        quote: { type: ["string", "null"], minLength: 6, maxLength: 120 },
         missing: {
           type: ["string", "null"],
           enum: [
