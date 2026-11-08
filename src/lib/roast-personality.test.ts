@@ -251,7 +251,7 @@ describe("signed original roast through checkout and delivery", () => {
     expect(originalRoastForDelivery({ ...order, status: "ready", paid_at: "2026-11-07", result: {} as NonNullable<OrderRow["result"]> })).toEqual(original);
     expect(originalRoastForDelivery({ ...order, snapshot: { ...order.snapshot, roastPersona: "crypto-bro" }, status: "ready", paid_at: "2026-11-07", result: {} as NonNullable<OrderRow["result"]> })).toBeNull();
     const message = buildMessage(order, "ready", "https://example.test");
-    expect(message.data["roastPersonality"]).toBe("Fashion Nova Bestie");
+    expect(message.data["roastPersonality"]).toBe("The Career Bestie");
     expect(message.data["orderUrl"]).toBe("https://example.test/orders/test-private-token");
     expect(message.idempotencyKey).toBe("order-ready-test-order");
   });
