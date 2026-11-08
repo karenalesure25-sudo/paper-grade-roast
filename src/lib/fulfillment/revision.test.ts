@@ -455,3 +455,27 @@ describe("revision scope validation (review follow-up)", () => {
     expect(scopeViolations(base, resume("Operations Coordinator", "Scheduled inbound freight for twelve regional carriers."))).toEqual([]);
   });
 });
+
+describe("revision during an account outage", () => {
+  const outageErr = () => Object.assign(new Error("AI 402"), { status: 402, outage: "credits_exhausted" });
+  for (const where of ["classify", "revise", "scopeCheck", "check"] as const) {
+    test(`outage thrown from ${where} requeues without using an attempt or retry round`, async () => {
+      const o = order(); const { repo, rows } = memRepo(o);
+      const r = await reserve(repo, o);
+      const m = models();
+      (m as unknown as Record<string, () => Promise<never>>)[where] = async () => { throw outageErr(); };
+      expect(await processRevision(repo, m, r.ok ? r.id : "")).toBe("paused");
+      const row = [...rows.values()][0]!;
+      expect(row.status).toBe("queued");
+      expect(row.attempts).toBe(0);
+      expect(row.retry_rounds).toBe(0);
+      expect(row.failure_reason).toBe(null);
+    });
+  }
+  test("a non-outage error still counts as a failed attempt", async () => {
+    const o = order(); const { repo, rows } = memRepo(o);
+    const r = await reserve(repo, o);
+    await processRevision(repo, models({ cls: "throw" }), r.ok ? r.id : "");
+    expect([...rows.values()][0]!.attempts).toBe(1);
+  });
+});

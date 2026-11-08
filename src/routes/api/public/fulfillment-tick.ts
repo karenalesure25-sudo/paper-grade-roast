@@ -25,12 +25,12 @@ export const Route = createFileRoute("/api/public/fulfillment-tick")({
       POST: async ({ request }) => {
         const denied = await authorized(request);
         if (denied) return denied;
-        // Heartbeat only after authentication: checkout refuses payment while this goes stale.
-        const { heartbeat } = await import("@/lib/ops/ops.server");
-        await heartbeat();
         const { sweep } = await import("@/lib/fulfillment/service.server");
         const r = await sweep(2);
-        return Response.json({ gate: r.gate, confirmed: r.confirmed, processed: r.processed.length, emails: r.emails.length });
+        // Heartbeat only after a completed sweep: a worker that keeps failing (500) goes stale and checkout pauses.
+        const { heartbeat } = await import("@/lib/ops/ops.server");
+        await heartbeat();
+        return Response.json({ gate: r.gate, confirmed: r.confirmed, processed: r.processed.length, emails: r.emails.length, alerts: r.alerts });
       },
     },
   },

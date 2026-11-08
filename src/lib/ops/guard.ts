@@ -10,7 +10,9 @@
  *   key is missing, or the breaker is open.
  */
 
-export type BreakerGate = "closed" | "probe" | "open";
+export type BreakerState = "closed" | "probe_ready" | "open";
+/** Per-request probe ownership: only the holder of the current DB probe token may close the breaker. */
+export type ProbeCtx = { probe?: string | undefined };
 export const BREAKER_COOLDOWN_SECONDS = 15 * 60;
 export const PROBE_LEASE_SECONDS = 180;
 export const WORKER_STALE_SECONDS = 10 * 60;
@@ -24,6 +26,15 @@ export function outageCode(status: number, type?: string | null): string | null 
 }
 
 /** Reads only the gateway's error `type` field (never logs or returns the body). */
+/** Outage code carried by a thrown gateway error (writer, checker, classifier or reviser), else null. */
+export function outageOf(e: unknown): string | null {
+  if (!e || typeof e !== "object") return null;
+  const o = (e as { outage?: unknown }).outage;
+  if (typeof o === "string" && o) return o;
+  const status = (e as { status?: unknown }).status;
+  return typeof status === "number" ? outageCode(status, (e as { type?: string | null }).type ?? null) : null;
+}
+
 export async function errorType(res: Response): Promise<string | null> {
   try {
     const j = (await res.clone().json()) as { type?: unknown; error?: { type?: unknown } };
@@ -74,7 +85,8 @@ export type AlertSend = (a: { key: string; detail: string; idempotencyKey: strin
 >;
 
 export type AlertRepo = {
-  due(limit: number): Promise<Array<{ key: string; detail: string; attempts: number }>>;
+  /** `incident` is stable for one raised alert across claims/retries (delivery idempotency). */
+  due(limit: number): Promise<Array<{ key: string; detail: string; attempts: number; incident: string }>>;
   claim(key: string): Promise<string | null>;
   finish(key: string, token: string, patch: Record<string, unknown>): Promise<boolean>;
 };
@@ -89,7 +101,7 @@ export async function flushAlerts(repo: AlertRepo, send: AlertSend | null, now =
     const attempts = a.attempts + 1;
     let r: Awaited<ReturnType<AlertSend>>;
     try {
-      r = await send({ key: a.key, detail: a.detail, idempotencyKey: `owner-alert-${a.key}-${token}` });
+      r = await send({ key: a.key, detail: a.detail, idempotencyKey: `owner-alert-${a.key}-${a.incident}` });
     } catch {
       r = { status: "retry", code: "send_threw" };
     }
@@ -116,4 +128,33 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/i;
 export function ownerRecipient(raw: string | undefined): string | null {
   const v = raw?.trim();
   return v && EMAIL.test(v) ? v : null;
+}
+
+// ---------- Unpaid checkout expiry (paginated so a long backlog can't starve later sessions) ----------
+
+export type UnpaidSession = { id: string; stripe_session_id: string; stripe_mode: string };
+export type SessionPort = {
+  get(id: string, mode: "live" | "test"): Promise<{ status?: string | null; payment_status?: string | null }>;
+  expire(id: string, mode: "live" | "test"): Promise<unknown>;
+};
+
+/** Walks every unpaid order with a session (keyset by id), expiring only open, unpaid sessions. */
+export async function expireUnpaidSessions(
+  page: (afterId: string | null, n: number) => Promise<UnpaidSession[]>, stripe: SessionPort, pageSize = 25, maxRows = 1000,
+): Promise<{ expired: number; scanned: number }> {
+  let after: string | null = null, expired = 0, scanned = 0;
+  while (scanned < maxRows) {
+    const rows = await page(after, pageSize);
+    for (const o of rows) {
+      scanned++;
+      const mode = o.stripe_mode === "test" ? "test" : "live";
+      try {
+        const s = await stripe.get(o.stripe_session_id, mode);
+        if (s.status === "open" && s.payment_status !== "paid") { await stripe.expire(o.stripe_session_id, mode); expired++; }
+      } catch { /* complete/paid sessions refuse expiry; leave them */ }
+    }
+    if (rows.length < pageSize) break;
+    after = rows[rows.length - 1]!.id;
+  }
+  return { expired, scanned };
 }

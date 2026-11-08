@@ -64,6 +64,13 @@
       "when": 1794151879127,
       "tag": "0008_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794153493497,
+      "tag": "0009_ops_fenced_probe_incidents",
+      "breakpoints": true
     }
   ]
 }

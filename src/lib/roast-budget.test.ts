@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { installFakeOps } from "./ops/fake-ops-db";
 import { gradeResumeText, TOTAL_BUDGET_MS } from "./roast.server";
+
+// Explicitly injected ops DB (breaker closed); no global module mock.
+beforeEach(() => { installFakeOps(); });
 
 const RESUME = `Jordan Rivera
 Operations Coordinator | Chicago, IL | jordan@example.test

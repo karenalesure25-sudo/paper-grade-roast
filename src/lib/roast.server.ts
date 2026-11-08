@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { errorType, outageCode } from "./ops/guard";
-import { aiGate, noteGatewayOk, tripOutage } from "./ops/ops.server";
+import { errorType, outageCode, type ProbeCtx } from "./ops/guard";
+import { acquireProbe, breakerState, finishProbe, settleProbe, tripOutage } from "./ops/ops.server";
 import type { PersonaId, PersonalitySections } from "./roast-personas";
 import {
   SECTION_LABEL,
@@ -193,6 +193,7 @@ async function callModel(
   resume: string,
   feedback: string | null,
   timeoutMs = ATTEMPT_TIMEOUT_MS,
+  ctx?: ProbeCtx,
 ): Promise<string> {
   const user = [
     "Grade this résumé. Reply as json matching the schema.",
@@ -201,7 +202,7 @@ async function callModel(
   ]
     .filter(Boolean)
     .join("\n\n");
-  return callGateway(apiKey, SYSTEM_PROMPT, user, "roast", SCHEMA, timeoutMs);
+  return callGateway(apiKey, SYSTEM_PROMPT, user, "roast", SCHEMA, timeoutMs, ctx);
 }
 
 export async function callGateway(
@@ -211,6 +212,7 @@ export async function callGateway(
   name: string,
   schema: unknown,
   timeoutMs: number,
+  ctx?: ProbeCtx,
 ): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -245,7 +247,8 @@ export async function callGateway(
       }
       throw err;
     }
-    void noteGatewayOk().catch(() => undefined);
+    // Only the probe owner closes the breaker (awaited); a newer outage supersedes the probe.
+    if (!(await settleProbe(ctx))) throw Object.assign(new Error("probe superseded"), { outage: "probe_superseded" });
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -497,8 +500,23 @@ export async function gradeResumeText(source: string, kind: SourceKind): Promise
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { status: "unavailable", message: "Grading isn't configured right now." };
   // Known outage: don't spend calls. After the cooldown one visitor's roast is the recovery probe.
-  if ((await aiGate()) === "open") return { status: "unavailable", message: "Grading is paused right now. Try again later." };
+  const state = await breakerState();
+  if (state === "open") return PAUSED;
+  const ctx: ProbeCtx = {};
+  if (state === "probe_ready") {
+    ctx.probe = (await acquireProbe()) ?? undefined;
+    if (!ctx.probe) return PAUSED;
+  }
+  try {
+    return await gradeWithBudget(apiKey, source, kind, ctx);
+  } finally {
+    await finishProbe(ctx);
+  }
+}
 
+const PAUSED: RoastOutcome = { status: "unavailable", message: "Grading is paused right now. Try again later." };
+
+async function gradeWithBudget(apiKey: string, source: string, kind: SourceKind, ctx: ProbeCtx): Promise<RoastOutcome> {
   const deadline = Date.now() + TOTAL_BUDGET_MS;
   let feedback: string | null = null;
   for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
@@ -506,12 +524,12 @@ export async function gradeResumeText(source: string, kind: SourceKind): Promise
     if (remaining(deadline) < MIN_STEP_MS * 3) break;
     let raw: string;
     try {
-      raw = await callModel(apiKey, source, feedback, Math.min(ATTEMPT_TIMEOUT_MS, remaining(deadline) - MIN_STEP_MS * 2));
+      raw = await callModel(apiKey, source, feedback, Math.min(ATTEMPT_TIMEOUT_MS, remaining(deadline) - MIN_STEP_MS * 2), ctx);
     } catch (error) {
       const status = (error as { status?: number }).status;
       console.error("roast attempt failed", { attempt, status: status ?? "network/timeout" });
       if (status === 429) return { status: "unavailable", message: "The grader is busy. Try again in a minute." };
-      if (status === 402 || (error as { outage?: string }).outage) return { status: "unavailable", message: "Grading is paused right now. Try again later." };
+      if (status === 402 || (error as { outage?: string }).outage) return PAUSED;
       continue;
     }
     const checked = checkModelOutput(raw, source, kind);
