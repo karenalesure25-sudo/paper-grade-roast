@@ -1,4 +1,5 @@
-import { mock } from "bun:test";
+import * as bunTest from "bun:test";
+const mock = bunTest.mock as unknown as { module: (path: string, factory: () => unknown) => void };
 
 /** In-memory stand-in for src/lib/ops/ops.server (test-only; loaded via bunfig preload). */
 export const opsFake = { gate: "closed" as "closed" | "probe" | "open", trips: [] as string[], oks: 0 };
