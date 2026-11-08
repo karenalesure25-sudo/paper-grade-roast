@@ -10,9 +10,10 @@ import { getTier } from "../products";
 import { formatCustomerTime } from "../customer-time";
 import type { OrderRow } from "./engine";
 import type { OrderEmailName } from "../order-emails/templates";
+import { followupEligible, followupLinks, isFollowupKind, type FollowupKind, type FollowupOrder } from "./followups";
 
 /** "revision:<id>" keys are per revision version, so the initial ready ledger never suppresses revision mail. */
-export type NotificationKind = "confirmation" | "ready" | `revision:${string}`;
+export type NotificationKind = "confirmation" | "ready" | `revision:${string}` | FollowupKind;
 export const MAX_NOTIFY_ATTEMPTS = 6;
 
 export type EmailMessage = {
@@ -55,8 +56,9 @@ export function backoffSeconds(attempts: number, retryAfter?: number | null): nu
   return Math.min(60 * 2 ** Math.max(0, attempts - 1), 3600);
 }
 
-export function eligible(order: OrderRow, kind: NotificationKind, rev?: { status: string } | null): boolean {
+export function eligible(order: OrderRow, kind: NotificationKind, rev?: { status: string } | null, now = new Date()): boolean {
   if (!order.paid_at) return false;
+  if (isFollowupKind(kind)) return followupEligible(order as FollowupOrder, kind, now);
   if (kind.startsWith("revision:")) return order.status === "ready" && rev?.status === "ready";
   if (kind === "ready") return order.status === "ready" && Boolean(order.result);
   return true;
@@ -64,6 +66,14 @@ export function eligible(order: OrderRow, kind: NotificationKind, rev?: { status
 
 export function buildMessage(order: OrderRow, kind: NotificationKind, origin: string, rev?: { id: string; version: number } | null): EmailMessage {
   const packageName = getTier(order.tier)?.name ?? "your package";
+  if (isFollowupKind(kind)) {
+    // Commercial follow-up: public site + preference links only, never the private order link.
+    return {
+      template: kind === "followup:review" ? "followup-review" : "followup-interview", to: order.email,
+      data: { firstName: order.snapshot.name.split(/\s+/)[0] ?? "", packageName, ...followupLinks(order as FollowupOrder, origin) },
+      idempotencyKey: `${kind.replace(":", "-")}-${order.id}`,
+    };
+  }
   const base = {
     firstName: order.snapshot.name.split(/\s+/)[0] ?? "",
     packageName,
@@ -78,7 +88,7 @@ export function buildMessage(order: OrderRow, kind: NotificationKind, origin: st
     };
   }
   if (kind === "confirmation") {
-    return { template: "order-confirmation", to: order.email, data: base, idempotencyKey: `order-confirmation-${order.id}` };
+    return { template: "order-confirmation", to: order.email, data: { ...base, hasCoverLetter: order.tier === "bundle" }, idempotencyKey: `order-confirmation-${order.id}` };
   }
   return {
     template: "order-ready", to: order.email,
@@ -101,7 +111,7 @@ export async function deliverNotification(
   };
   const order = await repo.byId(orderId);
   const rev = kind.startsWith("revision:") && repo.revision ? await repo.revision(orderId, kind.slice("revision:".length)) : null;
-  if (!order || !eligible(order, kind, rev)) {
+  if (!order || !eligible(order, kind, rev, now())) {
     await finish({});
     return "not_eligible";
   }
