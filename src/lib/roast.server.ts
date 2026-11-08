@@ -236,8 +236,14 @@ export async function callGateway(
       // Status only — never log the body (could echo résumé content).
       const err = new Error(`gateway ${res.status}`);
       (err as Error & { status?: number }).status = res.status;
+      const outage = outageCode(res.status, res.status === 403 ? await errorType(res) : null);
+      if (outage) {
+        (err as Error & { outage?: string }).outage = outage;
+        await tripOutage(outage).catch(() => undefined);
+      }
       throw err;
     }
+    void noteGatewayOk().catch(() => undefined);
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -488,6 +494,8 @@ export async function gradeResumeText(source: string, kind: SourceKind): Promise
   if (!length.ok || !readable.ok) return { status: "unavailable", message: !length.ok ? length.reason : !readable.ok ? readable.reason : "Unreadable résumé." };
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { status: "unavailable", message: "Grading isn't configured right now." };
+  // Known outage: don't spend calls. After the cooldown one visitor's roast is the recovery probe.
+  if ((await aiGate()) === "open") return { status: "unavailable", message: "Grading is paused right now. Try again later." };
 
   const deadline = Date.now() + TOTAL_BUDGET_MS;
   let feedback: string | null = null;
@@ -501,7 +509,7 @@ export async function gradeResumeText(source: string, kind: SourceKind): Promise
       const status = (error as { status?: number }).status;
       console.error("roast attempt failed", { attempt, status: status ?? "network/timeout" });
       if (status === 429) return { status: "unavailable", message: "The grader is busy. Try again in a minute." };
-      if (status === 402) return { status: "unavailable", message: "Grading is paused right now. Try again later." };
+      if (status === 402 || (error as { outage?: string }).outage) return { status: "unavailable", message: "Grading is paused right now. Try again later." };
       continue;
     }
     const checked = checkModelOutput(raw, source, kind);
