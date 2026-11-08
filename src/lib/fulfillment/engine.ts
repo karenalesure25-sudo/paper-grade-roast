@@ -23,7 +23,15 @@ import type { ModelPort } from "./writer.server";
 export const TIER_CENTS: Record<TierId, number> = { revamp: 4000, scratch: 5000, bundle: 6000 };
 export const MAX_GENERATIONS_PER_ATTEMPT = 3;
 export const MAX_CUSTOMER_RETRIES = 2;
-export const LEASE_SECONDS = 600;
+/**
+ * Hard abort for a single model call. Workers renew the lease immediately before EVERY model
+ * call, so a lease only has to outlive one call: timeout + grace for parsing/validation/DB writes.
+ * A worker that is killed mid-call therefore blocks the order for at most LEASE_SECONDS, while a
+ * live worker can never be overtaken (its call aborts before its lease can expire).
+ */
+export const MODEL_CALL_TIMEOUT_MS = 120_000;
+export const LEASE_GRACE_SECONDS = 60;
+export const LEASE_SECONDS = MODEL_CALL_TIMEOUT_MS / 1000 + LEASE_GRACE_SECONDS;
 
 export type OrderStatus = "awaiting_payment" | "queued" | "processing" | "needs_information" | "ready" | "failed";
 

@@ -240,6 +240,7 @@ export async function processRevision(
       await beat();
       const scope = await models.scopeCheck(input, pkg);
       if (!scope.approved) { feedback = (scope.problems.length ? scope.problems : ["scope check rejected"]).map((p) => ({ code: "scope_check", detail: p })); continue; }
+      await beat(); // one renewed lease per model call (lease covers a single timed-out call + grace)
       const verdict = await models.check(facts, { resume, coverLetter: pkg.coverLetter });
       if (!verdict.approved) { feedback = verdict.problems.map((p) => ({ code: "fact_check", detail: p })); continue; }
       const exportProblems = opts.exportCheck ? await opts.exportCheck(pkg) : [];
