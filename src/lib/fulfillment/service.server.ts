@@ -352,8 +352,7 @@ export async function retryRevisionByToken(token: string, id: string) {
  * lease. The scheduled worker (every 2 minutes) owns all processing.
  */
 export async function runRevisionByToken(token: string, id: string) {
-  const r = await ownedRevision(token, id);
-  if (!r) return statusByToken(token);
+  await ownedRevision(token, id);
   return statusByToken(token);
 }
 
