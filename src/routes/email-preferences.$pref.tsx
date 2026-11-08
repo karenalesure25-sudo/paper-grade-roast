@@ -71,7 +71,7 @@ function PreferencesPage() {
           <>
             <section className="mt-6 border border-border p-5">
               <h2 className="text-lg font-semibold">Follow-up emails</h2>
-              <p className="mt-2 text-sm text-muted-foreground">For your {prefs.packageName}: at most two optional emails — a feedback request and an interview check-in.</p>
+              <p className="mt-2 text-sm text-muted-foreground">For your {prefs.packageName}: one optional check-in email about 12 days after delivery.</p>
               <p className="mt-3 text-sm">Status: <strong>{prefs.optedIn ? "Subscribed" : "Not subscribed"}</strong></p>
               <div className="mt-4">
                 {prefs.optedIn
@@ -88,7 +88,7 @@ function PreferencesPage() {
                 {!sent && (
                   <form onSubmit={submit} className="mt-3 space-y-4">
                     <fieldset>
-                      <legend className="text-sm">How would you rate your experience?</legend>
+                      <legend className="text-sm">How would you rate your experience? You can also share any interview news in the comment.</legend>
                       <div className="mt-2 flex gap-2">
                         {[1, 2, 3, 4, 5].map((n) => (
                           <label key={n} className={`cursor-pointer border px-3 py-2 text-sm ${rating === n ? "border-gold" : "border-border"}`}>
