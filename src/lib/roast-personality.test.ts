@@ -124,6 +124,21 @@ describe("one analysis engine, three presentation voices", () => {
     expect(checked).toBe(2); expect(result).toBeNull();
   });
 
+  test("a rejected rewrite passes the specific verification reason to the bounded retry without changing the assessment", async () => {
+    const reasons = ["The rewrite only swaps synonyms; polish another source-grounded bullet."];
+    const feedback: Array<string | undefined> = [];
+    let checks = 0;
+    const result = await styleVerifiedAssessment(SOURCE, assessment(), "fashion-bestie", {
+      write: async (_source, fixed, persona, correction) => {
+        expect(fixed.grade).toBe("A"); expect(persona).toBe("fashion-bestie");
+        feedback.push(correction); return JSON.stringify(SECTIONS);
+      },
+      verify: async () => ++checks === 1 ? { approved: false, reasons } : { approved: true },
+    }, Date.now() + 60_000);
+    expect(feedback).toEqual([undefined, JSON.stringify({ verificationRejected: true, reasons })]);
+    expect(checks).toBe(2); expect(result?.grade).toBe("A"); expect(result?.persona).toBe("fashion-bestie");
+  });
+
   test("a failed or timed-out style step never falls back to the neutral/wrong voice", async () => {
     for (const throwing of [true, false]) {
       const result = await styleVerifiedAssessment(SOURCE, assessment(), "crypto-bro", {
