@@ -256,7 +256,13 @@ export async function processOrder(
     });
     return done ? "needs_information" : "lease_lost";
   }
-  console.error("fulfillment validation rejected", { orderId, codes: [...new Set(outcome.violations.map((v) => v.code))] });
+  // Codes plus non-identifying categories only — never résumé text or contact details.
+  console.error("fulfillment validation rejected", {
+    orderId,
+    codes: [...new Set(outcome.violations.map((v) => v.code))],
+    placeholderKinds: [...new Set(outcome.violations.filter((v) => v.code === "placeholder").map((v) => placeholderKind(/"([^"]*)"/.exec(v.detail)?.[1] ?? "")))],
+    unsupportedNumbers: outcome.violations.filter((v) => v.code === "invented_metric").length,
+  });
   return finishFailedAttempt(repo, claimed, lease, "Our accuracy checks couldn't approve a version that uses only your facts.");
 }
 
