@@ -5,10 +5,11 @@
  */
 import type { OrderRow } from "./engine";
 
-export type FollowupKind = "followup:review" | "followup:interview";
-export const FOLLOWUP_KINDS: FollowupKind[] = ["followup:review", "followup:interview"];
-/** Days after first delivery. One combined review/share request, one interview check-in — never more. */
-export const FOLLOWUP_DELAY_DAYS: Record<FollowupKind, number> = { "followup:review": 3, "followup:interview": 14 };
+/** ONE combined check-in (feedback, optional sharing of the public site, interview progress). No reminders. */
+export type FollowupKind = "followup:checkin";
+export const FOLLOWUP_KINDS: FollowupKind[] = ["followup:checkin"];
+/** Days after actual first delivery (within the owner's 10–14 day window). */
+export const FOLLOWUP_DELAY_DAYS: Record<FollowupKind, number> = { "followup:checkin": 12 };
 
 export type FollowupOrder = OrderRow & {
   followup_opt_in?: boolean | null;

@@ -53,7 +53,7 @@ describe("transactional confirmation and ready emails", () => {
       expect(out).toContain("Thank you for your purchase, Avery!");
       expect(out).toContain(name);
       expect(out.includes("cover letter included")).toBe(tier === "bundle");
-      expect(out).toContain("24–48 eligible hours, Sundays excluded");
+      expect(out).toContain("delivery target is 24–48 eligible hours, Sundays excluded");
       expect(out).not.toMatch(/\b(damn|hell|shit|fuck\w*|ass)\b/i);
       expect(out).not.toMatch(/files are ready|download your files/i);
       expect(m.data["orderUrl"]).toBe(`${ORIGIN}/orders/${TOKEN}`);
@@ -72,65 +72,58 @@ describe("transactional confirmation and ready emails", () => {
   });
 });
 
-describe("opt-in follow-ups", () => {
-  test("timing: review at 3 days and interview at 14 days after delivery, never before", () => {
-    expect(followupEligible(order(), "followup:review", day(2.9))).toBe(false);
-    expect(followupEligible(order(), "followup:review", day(3))).toBe(true);
-    expect(followupEligible(order(), "followup:interview", day(13.9))).toBe(false);
-    expect(followupEligible(order(), "followup:interview", day(14))).toBe(true);
+describe("opt-in follow-up (one check-in)", () => {
+  test("timing: only at 12 days after actual delivery, never before", () => {
+    expect(followupEligible(order(), "followup:checkin", day(11.9))).toBe(false);
+    expect(followupEligible(order(), "followup:checkin", day(12))).toBe(true);
   });
 
   test("missing opt-in, unsubscribe, test mode, unpaid, not ready, expired or missing pref token are suppressed", () => {
-    const at = day(20 - 5);
+    const at = day(13);
     for (const o of [
       order({ followup_opt_in: false }), order({ followup_opt_in: null }), order({ followup_unsubscribed_at: "2026-10-23T00:00:00Z" }),
-      order({ stripe_mode: "test" }), order({ paid_at: null }), order({ status: "processing" }), order({ result: null }),
+      order({ stripe_mode: "test" }), order({ paid_at: null }), order({ status: "processing" }), order({ status: "failed" }), order({ result: null }),
       order({ delivered_at: null }), order({ pref_token: null }), order({ expires_at: "2026-10-25T00:00:00Z" }),
-    ]) expect(followupEligible(o, "followup:review", at)).toBe(false);
+    ]) expect(followupEligible(o, "followup:checkin", at)).toBe(false);
   });
 
-  test("deliverNotification sends nothing when not opted in, and exactly once when opted in", async () => {
-    const p = port(); const now = () => day(4);
-    expect(await deliverNotification(memRepo(order({ followup_opt_in: false })), p, "o1", "followup:review", ORIGIN, now)).toBe("not_eligible");
+  test("sends nothing without opt-in, exactly once with opt-in, and never a second reminder", async () => {
+    const p = port(); const now = () => day(13);
+    expect(await deliverNotification(memRepo(order({ followup_opt_in: false })), p, "o1", "followup:checkin", ORIGIN, now)).toBe("not_eligible");
     expect(p.sent).toHaveLength(0);
     const row = order(); const repo = memRepo(row);
-    expect(await deliverNotification(repo, p, "o1", "followup:review", ORIGIN, now)).toBe("sent");
-    expect(await deliverNotification(repo, p, "o1", "followup:review", ORIGIN, now)).toBe("busy");
-    expect(p.sent).toHaveLength(1);
-    expect(p.sent[0]!.idempotencyKey).toBe("followup-review-o1");
+    expect(await deliverNotification(repo, p, "o1", "followup:checkin", ORIGIN, now)).toBe("sent");
+    expect(await deliverNotification(repo, p, "o1", "followup:checkin", ORIGIN, () => day(25))).toBe("busy");
+    expect(p.sent.map((m) => m.idempotencyKey)).toEqual(["followup-checkin-o1"]);
   });
 
-  test("retry with capped backoff, then gives up without duplicates", async () => {
-    const row = order(); const repo = memRepo(row); const now = () => day(15);
+  test("retry uses capped backoff", async () => {
+    const row = order(); const repo = memRepo(row);
     const p = port([{ status: "retry", code: "http_503" }]);
-    expect(await deliverNotification(repo, p, "o1", "followup:interview", ORIGIN, now)).toBe("retry");
-    expect(row.notifications["followup:interview"]?.attempts).toBe(1);
-    expect(row.notifications["followup:interview"]?.nextAt).toBe(new Date(day(15).getTime() + 60_000).toISOString());
+    expect(await deliverNotification(repo, p, "o1", "followup:checkin", ORIGIN, () => day(13))).toBe("retry");
+    expect(row.notifications["followup:checkin"]?.nextAt).toBe(new Date(day(13).getTime() + 60_000).toISOString());
   });
 
-  test("follow-up emails link only to the public site and preference page — never the private order link", async () => {
-    for (const kind of ["followup:review", "followup:interview"] as const) {
-      const m = buildMessage(order(), kind, ORIGIN);
-      const out = await html(m);
-      expect(out).not.toContain(TOKEN);
-      expect(out).not.toContain("/orders/");
-      expect(JSON.stringify(m.data)).not.toContain(TOKEN);
-      const hrefs = [...out.matchAll(/href="([^"]+)"/g)].map((x) => x[1]!);
-      expect(hrefs.length).toBeGreaterThan(0);
-      for (const h of hrefs) expect(h.startsWith(`${ORIGIN}/`)).toBe(true);
-      expect(out).toContain(`/email-preferences/${PREF}`);
-      expect(out).toMatch(/unsubscribe/i);
-      expect(out).not.toMatch(/guarantee|will get (you )?hired/i);
-    }
+  test("links only to the public site and preference page — never the private order link; no profanity or promises", async () => {
+    const m = buildMessage(order(), "followup:checkin", ORIGIN);
+    const out = await html(m);
+    expect(out).not.toContain(TOKEN); expect(out).not.toContain("/orders/");
+    expect(JSON.stringify(m.data)).not.toContain(TOKEN);
+    const hrefs = [...out.matchAll(/href="([^"]+)"/g)].map((x) => x[1]!);
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const h of hrefs) expect(h.startsWith(`${ORIGIN}/`)).toBe(true);
+    expect(out).toContain(`/email-preferences/${PREF}`);
+    expect(out).toMatch(/unsubscribe/i);
+    expect(out).not.toMatch(/guarantee|will get (you )?hired|google|facebook|instagram|discount|coupon/i);
+    expect(out).not.toMatch(/\b(damn|hell|shit|fuck\w*)\b/i);
   });
 
-  test("commercial follow-ups are never sent through the transactional app-email sender", async () => {
+  test("commercial follow-up is never sent through the transactional app-email sender", async () => {
     let calls = 0;
     const app = createLovableEmailPort(() => ({ senderDomain: "notify.example.com", apiKey: "k" }), (async () => { calls++; return { success: true }; }) as never);
-    expect(await app.send(buildMessage(order(), "followup:review", ORIGIN))).toEqual({ status: "unconfigured" });
+    expect(await app.send(buildMessage(order(), "followup:checkin", ORIGIN))).toEqual({ status: "unconfigured" });
     expect(calls).toBe(0);
     expect(marketingEmailPort.available()).toBe(false);
-    expect(ORDER_EMAILS["followup-review"].purpose).toBe("commercial");
-    expect(ORDER_EMAILS["followup-interview"].purpose).toBe("commercial");
+    expect(ORDER_EMAILS["followup-checkin"].purpose).toBe("commercial");
   });
 });

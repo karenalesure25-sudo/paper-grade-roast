@@ -69,7 +69,7 @@ export function buildMessage(order: OrderRow, kind: NotificationKind, origin: st
   if (isFollowupKind(kind)) {
     // Commercial follow-up: public site + preference links only, never the private order link.
     return {
-      template: kind === "followup:review" ? "followup-review" : "followup-interview", to: order.email,
+      template: "followup-checkin", to: order.email,
       data: { firstName: order.snapshot.name.split(/\s+/)[0] ?? "", packageName, ...followupLinks(order as FollowupOrder, origin) },
       idempotencyKey: `${kind.replace(":", "-")}-${order.id}`,
     };

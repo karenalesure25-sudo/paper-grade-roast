@@ -9,7 +9,7 @@ const Token = z.string().uuid();
 /** Snapshot the saved intake and open Stripe Checkout bound to that order. */
 export const startOrderCheckout = createServerFn({ method: "POST" })
   .inputValidator((i: unknown) =>
-    z.object({ intakeId: z.string().uuid(), template: z.string().trim().min(1).max(40), photo: z.string().max(900_000).optional(), roastPersona: PersonaIdSchema.optional(), roastReceipt: z.string().max(32_000).optional() }).parse(i),
+    z.object({ intakeId: z.string().uuid(), template: z.string().trim().min(1).max(40), photo: z.string().max(900_000).optional(), roastPersona: PersonaIdSchema.optional(), roastReceipt: z.string().max(32_000).optional(), followupOptIn: z.boolean().optional() }).parse(i),
   )
   .handler(async ({ data }) => {
     const { createOrderCheckout } = await import("./fulfillment/service.server");

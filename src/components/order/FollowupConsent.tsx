@@ -22,8 +22,8 @@ export function FollowupConsent({ token, initial }: { token: string; initial: bo
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" className="mt-1 h-4 w-4 accent-gold" checked={on} disabled={busy} onChange={(e) => change(e.target.checked)} />
         <span>
-          <span className="font-medium text-foreground">Optional: email me a short follow-up after delivery.</span>
-          <span className="block text-muted-foreground">At most two emails: a feedback request about 3 days after your files arrive, and an interview check-in about 2 weeks later. Unsubscribe anytime.</span>
+          <span className="font-medium text-foreground">Optional: send me one check-in email after delivery.</span>
+          <span className="block text-muted-foreground">A single note about 12 days after your files arrive, inviting feedback and asking how your applications are going. Unsubscribe anytime.</span>
         </span>
       </label>
       {note && <p role="status" className="mt-2 text-xs text-muted-foreground">{note}</p>}

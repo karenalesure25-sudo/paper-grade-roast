@@ -97,6 +97,7 @@ function Summary({ tier, template, photoNeeded, photo }: { tier: Tier; template:
 function OrderPage() {
   const { tier: tierId } = Route.useParams();
   const tier = getTier(tierId);
+  const [followupOptIn, setFollowupOptIn] = useState(false);
   const checkout = useServerFn(startOrderCheckout);
   const recover = useServerFn(recoverOrderProgress);
   const navigate = useNavigate();
@@ -196,7 +197,7 @@ function OrderPage() {
     try {
       // The order snapshot (service, price, template, photo) is created only here.
       const r = await checkout({
-        data: { intakeId, template, ...(roastPersona ? { roastPersona } : {}), ...(roastReceipt ? { roastReceipt } : {}), ...(templateUsesPhoto && photo ? { photo } : {}) },
+        data: { intakeId, template, followupOptIn, ...(roastPersona ? { roastPersona } : {}), ...(roastReceipt ? { roastReceipt } : {}), ...(templateUsesPhoto && photo ? { photo } : {}) },
       });
       if (r.already) {
         await navigate({ to: "/orders/$token", params: { token: r.token } });
@@ -326,6 +327,13 @@ function OrderPage() {
                     </div>
                   )}
                   <div className="premium-panel p-5 sm:p-7">
+                    <label className="mb-5 flex items-start gap-3 text-sm">
+                      <input type="checkbox" className="mt-1 h-4 w-4 accent-gold" checked={followupOptIn} disabled={pending} onChange={(e) => setFollowupOptIn(e.target.checked)} />
+                      <span>
+                        <span className="text-ivory">Optional: send me one check-in email about 12 days after delivery.</span>
+                        <span className="block text-muted-foreground">A single note inviting feedback and asking how your applications are going. Not required to order; unsubscribe anytime.</span>
+                      </span>
+                    </label>
                     <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                       {!selectionLocked && <Button type="button" variant="outline" disabled={pending} onClick={() => { setStage("template"); toTop(); }}>← Change template</Button>}
                       <StampButton type="button" onClick={startPayment} disabled={pending || !templateChosen}>
