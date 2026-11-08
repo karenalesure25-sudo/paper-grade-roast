@@ -49,18 +49,17 @@ function PrivateNote({ expires }: { expires?: string | undefined }) {
   );
 }
 
-export type ConfirmationProps = { firstName?: string; packageName?: string; orderUrl?: string; expires?: string };
-export function OrderConfirmationEmail({ firstName, packageName, orderUrl, expires }: ConfirmationProps) {
+export type ConfirmationProps = { firstName?: string; packageName?: string; orderUrl?: string; expires?: string; hasCoverLetter?: boolean };
+export function OrderConfirmationEmail({ firstName, packageName, orderUrl, expires, hasCoverLetter }: ConfirmationProps) {
+  const service = packageName ?? "package";
   return (
-    <Shell preview="Payment confirmed. Your package is in progress.">
-      <Heading style={h1}>Payment confirmed</Heading>
-      <Text style={p}>{firstName ? `Hi ${firstName},` : "Hi there,"}</Text>
+    <Shell preview={`Thank you for your purchase — we're working on your ${service}.`}>
+      <Heading style={h1}>{firstName ? `Thank you for your purchase, ${firstName}!` : "Thank you for your purchase!"}</Heading>
       <Text style={p}>
-        Stripe confirmed your payment for <strong>{packageName ?? "your package"}</strong>. We&apos;re writing it from the facts you gave us, and every file is checked before release.
-        We&apos;ll email you again when your files are ready. You can check progress anytime.
+        We&apos;re working on your <strong>{service}</strong>{hasCoverLetter ? " (cover letter included)" : ""}. Your payment is confirmed, and we&apos;ll email you again as soon as your files have passed our accuracy checks and are ready to download.
       </Text>
-      <Text style={small}>Delivery is typically sooner, but allow up to 48 hours after payment and any required details, not counting Sundays (Central Time).</Text>
-      {orderUrl && <Button href={orderUrl} style={button}>View your order</Button>}
+      <Text style={p}>Delivery is within 24–48 eligible hours, Sundays excluded (Central Time), counted from your confirmed payment or from when we receive any required details, whichever is later.</Text>
+      {orderUrl && <Button href={orderUrl} style={button}>Track your order</Button>}
       <PrivateNote expires={expires} />
     </Shell>
   );
@@ -130,11 +129,47 @@ export function OwnerAlertEmail({ title, detail, at }: OwnerAlertProps) {
   );
 }
 
+export type FollowupProps = { firstName?: string; packageName?: string; shareUrl?: string; preferencesUrl?: string; feedbackUrl?: string };
+function FollowupFooter({ preferencesUrl }: { preferencesUrl?: string | undefined }) {
+  return (
+    <>
+      <Hr style={{ borderColor: "#e3e7ef", margin: "22px 0 14px" }} />
+      <Text style={small}>You&apos;re receiving this because you opted in to occasional follow-ups after your order. We send at most two.{preferencesUrl ? " " : ""}{preferencesUrl && <a href={preferencesUrl} style={{ color: MUTED }}>Change your preference or unsubscribe</a>}</Text>
+    </>
+  );
+}
+export function FollowupReviewEmail({ firstName, packageName, shareUrl, preferencesUrl, feedbackUrl }: FollowupProps) {
+  return (
+    <Shell preview="How did your new résumé turn out? We'd love your honest feedback.">
+      <Heading style={h1}>How did we do?</Heading>
+      <Text style={p}>{firstName ? `Hi ${firstName},` : "Hi there,"}</Text>
+      <Text style={p}>A few days ago we delivered your <strong>{packageName ?? "package"}</strong>. If you have a minute, we&apos;d appreciate your honest feedback — good or bad — so we can keep improving.</Text>
+      {feedbackUrl && <Button href={feedbackUrl} style={button}>Leave quick feedback</Button>}
+      <Text style={{ ...p, marginTop: "18px" }}>Know someone job hunting? You&apos;re welcome to share our website{shareUrl ? `: ${shareUrl}` : "."} Totally optional.</Text>
+      <FollowupFooter preferencesUrl={preferencesUrl} />
+    </Shell>
+  );
+}
+export function FollowupInterviewEmail({ firstName, shareUrl, preferencesUrl, feedbackUrl }: FollowupProps) {
+  return (
+    <Shell preview="Quick check-in on your job search.">
+      <Heading style={h1}>Any interviews yet?</Heading>
+      <Text style={p}>{firstName ? `Hi ${firstName},` : "Hi there,"}</Text>
+      <Text style={p}>It&apos;s been about two weeks since your résumé was delivered, so we wanted to check in. If you&apos;ve landed an interview, congratulations — we&apos;d love to hear about it. If not yet, that&apos;s normal; job searches take time, and results depend on many things outside any résumé.</Text>
+      {feedbackUrl && <Button href={feedbackUrl} style={button}>Tell us how it&apos;s going</Button>}
+      <Text style={{ ...p, marginTop: "18px" }}>If you&apos;re applying for a different kind of role, our services are always on our website{shareUrl ? `: ${shareUrl}` : "."}</Text>
+      <FollowupFooter preferencesUrl={preferencesUrl} />
+    </Shell>
+  );
+}
+
 export const ORDER_EMAILS = {
-  "order-confirmation": { component: OrderConfirmationEmail, subject: "Payment confirmed — your package is in progress", displayName: "Order confirmation", previewData: { firstName: "Avery", packageName: "Resume Revamp", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", expires: "Nov 21, 2026" } },
+  "order-confirmation": { component: OrderConfirmationEmail, subject: "Thank you for your purchase — we're working on it", displayName: "Order confirmation", previewData: { firstName: "Avery", packageName: "Resume Revamp", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", expires: "Nov 21, 2026" } },
   "order-ready": { component: OrderReadyEmail, subject: "Your files are ready", displayName: "Order ready", previewData: { firstName: "Avery", packageName: "Revamp + ATS Optimization", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", hasCoverLetter: true } },
   "revision-ready": { component: RevisionReadyEmail, subject: "Your revised files are ready", displayName: "Revision ready", previewData: { firstName: "Avery", packageName: "Resume Revamp", orderUrl: "https://paper-grade-roast.lovable.app/orders/sample", version: 2 } },
   "order-links": { component: OrderLinksEmail, subject: "Your Kay's Career Solutions order links", displayName: "Order link recovery", previewData: { orders: [{ packageName: "Resume Revamp", url: "https://paper-grade-roast.lovable.app/orders/sample", status: "Ready" }] } },
+  "followup-review": { component: FollowupReviewEmail, subject: "How did your new résumé turn out?", displayName: "Follow-up: feedback request (opt-in)", purpose: "commercial", previewData: { firstName: "Avery", packageName: "Resume Revamp", shareUrl: "https://paper-grade-roast.lovable.app/", preferencesUrl: "https://paper-grade-roast.lovable.app/email-preferences/sample", feedbackUrl: "https://paper-grade-roast.lovable.app/email-preferences/sample#feedback" } },
+  "followup-interview": { component: FollowupInterviewEmail, subject: "Quick check-in: any interviews yet?", displayName: "Follow-up: interview check-in (opt-in)", purpose: "commercial", previewData: { firstName: "Avery", shareUrl: "https://paper-grade-roast.lovable.app/", preferencesUrl: "https://paper-grade-roast.lovable.app/email-preferences/sample", feedbackUrl: "https://paper-grade-roast.lovable.app/email-preferences/sample#feedback" } },
   "owner-alert": { component: OwnerAlertEmail, subject: "Kay's Career Solutions — site alert", displayName: "Owner alert", previewData: { title: "gateway-outage", detail: "Résumé generation is paused.", at: "2026-11-08T15:00:00Z" } },
 } as const;
 
