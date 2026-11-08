@@ -154,6 +154,8 @@ describe("one analysis engine, three presentation voices", () => {
       expect(p).toContain("AT LEAST TWO different sections");
       expect(p).toContain("NEVER put any swear word or slang in rewrite.after");
       expect(p).toContain('Do NOT open vibe with "Damn"');
+      expect(p).toContain("Never write a number or number word that is not in RESUME_TEXT");
+      expect(p).not.toContain("ticket numbers");
       return p;
     });
     expect(new Set(prompts).size).toBe(3);
