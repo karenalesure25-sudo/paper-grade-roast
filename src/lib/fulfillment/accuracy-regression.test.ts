@@ -46,7 +46,7 @@ describe("accuracy checks on the failed test-order shape", () => {
     expect(codes({ ...faithful(), title: "Warehouse Operations Professional" })).toContain("invented_title");
   });
   test("computed years of experience are still rejected as invented_metric", () => {
-    expect(codes({ ...faithful(), summary: faithful().summary + " Brings 8+ years of warehouse experience." })).toContain("invented_metric");
+    expect(codes({ ...faithful(), summary: faithful().summary + " Brings 7+ years of warehouse experience." })).toContain("invented_metric");
   });
   test("contact details copied into prose are still rejected, with actionable feedback", () => {
     const v = validatePackage({ resume: { ...faithful(), location: "Columbus, OH · alex.test@example.com" } }, facts);
